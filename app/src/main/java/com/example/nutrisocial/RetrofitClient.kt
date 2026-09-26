@@ -6,10 +6,11 @@ import com.example.nutrisocial.data.SessionManager
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    // 10.0.2.2 es como el emulador ve el "localhost" de tu PC
-    private const val BASE_URL = "http://10.0.2.2:3000/"
+    // Backend real desplegado en Render (plan gratuito).
+    private const val BASE_URL = "https://nutrisocial.onrender.com/"
 
     private lateinit var appContext: Context
 
@@ -19,8 +20,14 @@ object RetrofitClient {
     }
 
     val api: ApiService by lazy {
+        // El plan gratuito de Render "duerme" el servidor tras 15 min de inactividad.
+        // El primer request tras dormirse puede tardar 30-60s en despertar,
+        // por eso usamos timeouts largos en vez de los 10s por defecto.
         val okHttpClient = OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(SessionManager(appContext)))
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
 
         Retrofit.Builder()
