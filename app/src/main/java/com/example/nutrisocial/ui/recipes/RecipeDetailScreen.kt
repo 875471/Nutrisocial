@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,7 +30,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.nutrisocial.data.FoodRef
+import com.example.nutrisocial.data.Macros
+import com.example.nutrisocial.data.Nutrition
 import com.example.nutrisocial.data.Recipe
+import com.example.nutrisocial.data.RecipeIngredient
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
@@ -85,19 +91,25 @@ private fun RecipeDetailContent(recipe: Recipe, modifier: Modifier = Modifier) {
             RecipeInfoRow(servings = recipe.servings, prepMinutes = recipe.prepMinutes)
         }
 
+        NutritionSection(recipe)
+
         DetailSection(title = "Ingredientes") {
             recipe.ingredients.forEach { ingredient ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row {
                     Box(
                         modifier = Modifier
+                            .padding(top = 10.dp)
                             .size(Spacing.sm)
                             .background(MaterialTheme.colorScheme.primary, CircleShape)
                     )
-                    Text(
-                        text = ingredient,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(start = Spacing.md)
-                    )
+                    Column(modifier = Modifier.padding(start = Spacing.md)) {
+                        Text(text = ingredient.name, style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            text = ingredientDetail(ingredient),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
@@ -124,6 +136,151 @@ private fun RecipeDetailContent(recipe: Recipe, modifier: Modifier = Modifier) {
                     )
                 }
             }
+        }
+    }
+}
+
+/** Cantidad, peso estimado y avisos de un ingrediente, en una línea secundaria. */
+private fun ingredientDetail(ingredient: RecipeIngredient): String {
+    val quantity = ingredient.quantity
+    val amount = when {
+        quantity == null -> "Sin cantidad"
+        ingredient.unit in listOf("g", "ml") -> "${formatNumber(quantity)} ${ingredient.unit}"
+        ingredient.grams != null -> "${quantityLabel(quantity, ingredient.unit)} (≈ ${formatNumber(ingredient.grams)} g)"
+        else -> quantityLabel(quantity, ingredient.unit)
+    }
+    val food = ingredient.food
+    val note = when {
+        quantity == null -> null
+        food == null -> "sin datos nutricionales"
+        ingredient.grams == null -> "no se pudo estimar su peso"
+        // Emparejado por nombre en el servidor: se muestra con qué alimento se calculó.
+        !food.name.equals(ingredient.name, ignoreCase = true) -> "calculado como «${food.name}»"
+        else -> null
+    }
+    return listOfNotNull(amount, note).joinToString(" · ")
+}
+
+private fun quantityLabel(quantity: Double, unit: String?): String {
+    val plural = quantity != 1.0 && unit in listOf("unidad", "cucharada", "cucharadita", "taza", "pizca")
+    val unitText = when {
+        unit == null -> ""
+        plural && unit == "unidad" -> "unidades"
+        plural -> unit + "s"
+        else -> unit
+    }
+    return "${formatNumber(quantity)} $unitText".trim()
+}
+
+@Composable
+private fun NutritionSection(recipe: Recipe) {
+    val nutrition = recipe.nutrition
+    DetailSection(title = "Información nutricional") {
+        if (nutrition.total.kcal <= 0.0 && nutrition.uncountedIngredients.size == recipe.ingredients.size) {
+            Text(
+                text = "No hay datos suficientes para calcularla. Indica la cantidad de los ingredientes " +
+                    "y elígelos de la lista al crear la receta.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            return@DetailSection
+        }
+
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = formatNumber(nutrition.perServing.kcal),
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "kcal por ración",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = Spacing.sm, bottom = 6.dp)
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            MacroStat("Proteínas", nutrition.perServing.protein, Modifier.weight(1f))
+            MacroStat("Hidratos", nutrition.perServing.carbs, Modifier.weight(1f))
+            MacroStat("Grasas", nutrition.perServing.fat, Modifier.weight(1f))
+        }
+        nutrition.gramsPerServing?.let { perServing ->
+            ServingWeight(perServing = perServing, total = nutrition.totalWeightGrams)
+        }
+        Text(
+            text = "Receta completa (${servingsLabel(recipe.servings)}): ${formatNumber(nutrition.total.kcal)} kcal · " +
+                "${formatNumber(nutrition.total.protein)} g proteínas · ${formatNumber(nutrition.total.carbs)} g hidratos · " +
+                "${formatNumber(nutrition.total.fat)} g grasas",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (nutrition.uncountedIngredients.isNotEmpty()) {
+            Row(verticalAlignment = Alignment.Top) {
+                Icon(
+                    Icons.Filled.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = "Valores aproximados. No se han contado: " +
+                        nutrition.uncountedIngredients.joinToString(", ") + ".",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = Spacing.sm)
+                )
+            }
+        }
+        Text(
+            text = "Fuente: BEDCA (Base de Datos Española de Composición de Alimentos).",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/** Peso aproximado de la ración (en crudo), para dar sentido a los valores por ración. */
+@Composable
+private fun ServingWeight(perServing: Double, total: Double?) {
+    Surface(
+        shape = CardShape,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "1 ración ≈ ${formatNumber(perServing)} g",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
+            if (total != null) {
+                Text(
+                    text = "Receta ≈ ${formatNumber(total)} g en crudo",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MacroStat(label: String, grams: Double, modifier: Modifier = Modifier) {
+    Surface(
+        shape = CardShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = Spacing.sm),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "${formatNumber(grams)} g", style = MaterialTheme.typography.titleMedium)
+            Text(text = label, style = MaterialTheme.typography.labelMedium)
         }
     }
 }
@@ -161,7 +318,12 @@ private fun RecipeDetailScreenPreview() {
                 Recipe(
                     id = 1,
                     title = "Crema de calabaza",
-                    ingredients = listOf("1 calabaza mediana", "1 cebolla", "Aceite de oliva", "Sal y pimienta"),
+                    ingredients = listOf(
+                        RecipeIngredient("Calabaza, cruda", 800.0, "g", 800.0, FoodRef(1, "Calabaza, cruda")),
+                        RecipeIngredient("Cebolla, cruda", 1.0, "unidad", 150.0, FoodRef(2, "Cebolla, cruda")),
+                        RecipeIngredient("Aceite de oliva", 2.0, "cucharada", 30.0, FoodRef(3, "Aceite de oliva")),
+                        RecipeIngredient("Sal y pimienta")
+                    ),
                     steps = listOf(
                         "Pelar y trocear la calabaza y la cebolla.",
                         "Pochar la cebolla con un poco de aceite.",
@@ -170,7 +332,14 @@ private fun RecipeDetailScreenPreview() {
                     servings = 4,
                     prepMinutes = 35,
                     authorId = 1,
-                    createdAt = ""
+                    createdAt = "",
+                    nutrition = Nutrition(
+                        total = Macros(560.0, 12.4, 58.0, 31.2),
+                        perServing = Macros(140.0, 3.1, 14.5, 7.8),
+                        totalWeightGrams = 980.0,
+                        gramsPerServing = 245.0,
+                        uncountedIngredients = listOf("Sal y pimienta")
+                    )
                 )
             ),
             onBack = {},

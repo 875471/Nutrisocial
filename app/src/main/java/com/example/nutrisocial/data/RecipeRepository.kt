@@ -16,4 +16,10 @@ class RecipeRepository(
         safeApiCall(defaultErrorMessage = { code -> if (code == 404) "Receta no encontrada" else null }) {
             api.getRecipe(id)
         }
+
+    suspend fun searchFoods(query: String): ApiResult<List<FoodSuggestion>> =
+        safeApiCall { api.searchFoods(query) }
+
+    suspend fun parseOcr(rawText: String): ApiResult<OcrRecipeProposal> =
+        safeApiCall { api.parseOcr(ParseOcrRequest(rawText)) }
 }

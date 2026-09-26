@@ -4,8 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nutrisocial.data.ApiResult
 import com.example.nutrisocial.data.CreateRecipeRequest
+import com.example.nutrisocial.data.FoodRef
+import com.example.nutrisocial.data.FoodSuggestion
+import com.example.nutrisocial.data.IngredientInput
+import com.example.nutrisocial.data.IngredientUnits
+import com.example.nutrisocial.data.OcrRecipeProposal
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RecipeRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,19 +31,33 @@ sealed interface RecipeDetailUiState {
     data class Error(val message: String) : RecipeDetailUiState
 }
 
+/**
+ * Fila de ingrediente del formulario. [food] es el alimento elegido en el autocompletado;
+ * se descarta en cuanto el usuario vuelve a editar el nombre.
+ */
+data class IngredientFormItem(
+    val name: String = "",
+    val quantity: String = "",
+    val unit: String = "g",
+    val food: FoodRef? = null
+)
+
 /** Contenido del formulario de creación. Los números se guardan como texto tal cual se escriben. */
 data class RecipeFormState(
     val title: String = "",
-    val ingredients: List<String> = listOf(""),
+    val ingredients: List<IngredientFormItem> = listOf(IngredientFormItem()),
     val steps: List<String> = listOf(""),
     val servings: String = "",
     val prepMinutes: String = "",
+    // Sugerencias de alimentos para el ingrediente que se está escribiendo.
+    val suggestionsFor: Int? = null,
+    val suggestions: List<FoodSuggestion> = emptyList(),
+    // true si el contenido viene de escanear una foto y el usuario aún debe revisarlo.
+    val fromOcr: Boolean = false,
     val isSaving: Boolean = false,
     val error: String? = null,
     val saved: Boolean = false
 )
-
-enum class RecipeListField { INGREDIENTS, STEPS }
 
 class RecipeViewModel(
     private val repository: RecipeRepository = RecipeRepository()
@@ -97,32 +118,109 @@ class RecipeViewModel(
     fun onPrepMinutesChange(value: String) =
         _formState.update { it.copy(prepMinutes = value.filter(Char::isDigit).take(4), error = null) }
 
-    fun onItemChange(field: RecipeListField, index: Int, value: String) = updateList(field) { list ->
-        list.toMutableList().also { if (index in it.indices) it[index] = value }
+    // -- Ingredientes --
+
+    private var searchJob: Job? = null
+
+    fun onIngredientNameChange(index: Int, value: String) {
+        updateIngredient(index) { it.copy(name = value, food = null) }
+        searchFoods(index, value)
     }
 
-    fun addItem(field: RecipeListField) = updateList(field) { it + "" }
-
-    fun removeItem(field: RecipeListField, index: Int) = updateList(field) { list ->
-        // Siempre queda al menos un campo visible.
-        if (list.size <= 1) listOf("") else list.filterIndexed { i, _ -> i != index }
+    fun onIngredientQuantityChange(index: Int, value: String) {
+        // Solo dígitos y un separador decimal (coma o punto).
+        var separatorSeen = false
+        val clean = value.filter { c ->
+            c.isDigit() || ((c == ',' || c == '.') && !separatorSeen).also { if (it) separatorSeen = true }
+        }.take(7)
+        updateIngredient(index) { it.copy(quantity = clean) }
     }
 
-    private fun updateList(field: RecipeListField, transform: (List<String>) -> List<String>) {
+    fun onIngredientUnitChange(index: Int, unit: String) = updateIngredient(index) { it.copy(unit = unit) }
+
+    fun onSuggestionSelected(index: Int, food: FoodSuggestion) {
+        searchJob?.cancel()
+        updateIngredient(index) { it.copy(name = food.name, food = FoodRef(food.id, food.name)) }
+        dismissSuggestions()
+    }
+
+    /** Al salir del campo se ocultan sus sugerencias (tocar una no le quita el foco). */
+    fun onIngredientFocusLost(index: Int) {
+        if (_formState.value.suggestionsFor == index) {
+            searchJob?.cancel()
+            dismissSuggestions()
+        }
+    }
+
+    fun dismissSuggestions() = _formState.update { it.copy(suggestionsFor = null, suggestions = emptyList()) }
+
+    fun addIngredient() = _formState.update { it.copy(ingredients = it.ingredients + IngredientFormItem(), error = null) }
+
+    fun removeIngredient(index: Int) {
+        searchJob?.cancel()
         _formState.update { state ->
-            when (field) {
-                RecipeListField.INGREDIENTS -> state.copy(ingredients = transform(state.ingredients), error = null)
-                RecipeListField.STEPS -> state.copy(steps = transform(state.steps), error = null)
+            // Siempre queda al menos una fila visible.
+            val list = state.ingredients
+            val updated = if (list.size <= 1) listOf(IngredientFormItem()) else list.filterIndexed { i, _ -> i != index }
+            state.copy(ingredients = updated, suggestionsFor = null, suggestions = emptyList(), error = null)
+        }
+    }
+
+    private fun updateIngredient(index: Int, transform: (IngredientFormItem) -> IngredientFormItem) {
+        _formState.update { state ->
+            val list = state.ingredients.toMutableList()
+            if (index in list.indices) list[index] = transform(list[index])
+            state.copy(ingredients = list, error = null)
+        }
+    }
+
+    /** Busca alimentos con una pequeña espera, para no lanzar una petición por cada tecla. */
+    private fun searchFoods(index: Int, query: String) {
+        searchJob?.cancel()
+        if (query.trim().length < 2) {
+            dismissSuggestions()
+            return
+        }
+        searchJob = viewModelScope.launch {
+            delay(300)
+            val result = repository.searchFoods(query.trim())
+            if (result is ApiResult.Success) {
+                _formState.update { it.copy(suggestionsFor = index, suggestions = result.data) }
             }
         }
     }
+
+    // -- Pasos --
+
+    fun onStepChange(index: Int, value: String) = updateSteps { list ->
+        list.toMutableList().also { if (index in it.indices) it[index] = value }
+    }
+
+    fun addStep() = updateSteps { it + "" }
+
+    fun removeStep(index: Int) = updateSteps { list ->
+        if (list.size <= 1) listOf("") else list.filterIndexed { i, _ -> i != index }
+    }
+
+    private fun updateSteps(transform: (List<String>) -> List<String>) =
+        _formState.update { it.copy(steps = transform(it.steps), error = null) }
 
     fun saveRecipe() {
         val form = _formState.value
         if (form.isSaving) return
 
         val title = form.title.trim()
-        val ingredients = form.ingredients.map(String::trim).filter(String::isNotEmpty)
+        val filledIngredients = form.ingredients.filter { it.name.isNotBlank() }
+        val badQuantity = filledIngredients.firstOrNull { it.quantity.isNotEmpty() && parseQuantity(it.quantity) == null }
+        val ingredients = filledIngredients.map { item ->
+            val quantity = parseQuantity(item.quantity)
+            IngredientInput(
+                name = item.name.trim(),
+                quantity = quantity,
+                unit = if (quantity != null) item.unit else null,
+                foodId = item.food?.id
+            )
+        }
         val steps = form.steps.map(String::trim).filter(String::isNotEmpty)
         val servings = form.servings.toIntOrNull()
         val prepMinutes = form.prepMinutes.toIntOrNull()
@@ -130,6 +228,7 @@ class RecipeViewModel(
         val error = when {
             title.isEmpty() -> "El título no puede estar vacío"
             ingredients.isEmpty() -> "Añade al menos un ingrediente"
+            badQuantity != null -> "La cantidad de «${badQuantity.name.trim()}» no es válida"
             steps.isEmpty() -> "Añade al menos un paso"
             servings == null || servings < 1 -> "Indica cuántas raciones salen (mínimo 1)"
             else -> null
@@ -139,7 +238,8 @@ class RecipeViewModel(
             return
         }
 
-        _formState.update { it.copy(isSaving = true, error = null) }
+        searchJob?.cancel()
+        _formState.update { it.copy(isSaving = true, error = null, suggestionsFor = null, suggestions = emptyList()) }
         viewModelScope.launch {
             val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes)
             when (val result = repository.createRecipe(request)) {
@@ -155,6 +255,39 @@ class RecipeViewModel(
             }
         }
     }
+
+    /**
+     * Vuelca en el formulario la propuesta extraída de una foto. Es un borrador normal: el
+     * usuario lo edita con los mismos controles y, al guardar, el servidor recalcula los valores.
+     */
+    fun loadOcrProposal(proposal: OcrRecipeProposal) {
+        searchJob?.cancel()
+        val ingredients = proposal.ingredients.map { ing ->
+            IngredientFormItem(
+                name = ing.rawName,
+                quantity = ing.quantity?.let(::formatQuantity).orEmpty(),
+                unit = ing.unit?.takeIf { it in IngredientUnits } ?: "g",
+                food = if (ing.foodId != null && ing.foodName != null) FoodRef(ing.foodId, ing.foodName) else null
+            )
+        }
+        _formState.value = RecipeFormState(
+            title = proposal.title.orEmpty(),
+            ingredients = ingredients.ifEmpty { listOf(IngredientFormItem()) },
+            steps = proposal.steps.ifEmpty { listOf("") },
+            servings = proposal.servings?.toString().orEmpty(),
+            fromOcr = true
+        )
+    }
+
+    fun dismissOcrNotice() = _formState.update { it.copy(fromOcr = false) }
+
+    /** 0.5 → "0,5", 0.333 → "0,33", 2.0 → "2" (el campo acepta coma decimal). */
+    private fun formatQuantity(value: Double): String =
+        if (value % 1.0 == 0.0) value.toLong().toString()
+        else "%.2f".format(java.util.Locale.ROOT, value).trimEnd('0').trimEnd('.').replace('.', ',')
+
+    private fun parseQuantity(text: String): Double? =
+        text.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 }
 
     /** Deja el formulario vacío para la próxima receta (tras guardar o al abrirlo de nuevo). */
     fun resetForm() {

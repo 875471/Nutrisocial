@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carpetas que FileProvider puede compartir. Las fotos de recetas escaneadas son
+     temporales: van a la caché de la app, que Android puede vaciar cuando necesite espacio. -->
+<paths>
+    <cache-path name="ocr_images" path="ocr/" />
+</paths>

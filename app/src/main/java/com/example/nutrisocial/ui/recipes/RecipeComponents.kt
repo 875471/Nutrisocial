@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.data.Recipe
+import com.example.nutrisocial.data.RecipeIngredient
 import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
@@ -33,6 +34,11 @@ import com.example.nutrisocial.ui.theme.Spacing
 val RecipeCardElevation = 3.dp
 
 fun servingsLabel(servings: Int): String = if (servings == 1) "1 ración" else "$servings raciones"
+
+/** Número sin decimales si es entero y con uno (y coma decimal) si no: 800, 2,5. */
+fun formatNumber(value: Double): String =
+    if (value % 1.0 == 0.0) value.toLong().toString()
+    else String.format(java.util.Locale("es", "ES"), "%.1f", value)
 
 fun prepTimeLabel(minutes: Int): String = when {
     minutes < 60 -> "$minutes min"
@@ -72,14 +78,18 @@ fun RecipeCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                RecipeInfoRow(servings = recipe.servings, prepMinutes = recipe.prepMinutes)
+                RecipeInfoRow(
+                    servings = recipe.servings,
+                    prepMinutes = recipe.prepMinutes,
+                    kcalPerServing = recipe.nutrition?.perServing?.kcal
+                )
             }
         }
     }
 }
 
 @Composable
-fun RecipeInfoRow(servings: Int, prepMinutes: Int?) {
+fun RecipeInfoRow(servings: Int, prepMinutes: Int?, kcalPerServing: Double? = null) {
     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         InfoPill(
             text = servingsLabel(servings),
@@ -91,6 +101,13 @@ fun RecipeInfoRow(servings: Int, prepMinutes: Int?) {
                 text = prepTimeLabel(prepMinutes),
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+        if (kcalPerServing != null && kcalPerServing > 0) {
+            InfoPill(
+                text = "${formatNumber(kcalPerServing)} kcal/ración",
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
             )
         }
     }
@@ -172,7 +189,7 @@ fun CenteredMessage(
 private fun RecipeCardPreview() {
     NutriSocialTheme {
         RecipeCard(
-            recipe = Recipe(1, "Ensalada de garbanzos", listOf("Garbanzos"), listOf("Mezclar"), 2, 15, 1, ""),
+            recipe = Recipe(1, "Ensalada de garbanzos", listOf(RecipeIngredient("Garbanzos")), listOf("Mezclar"), 2, 15, 1, ""),
             onClick = {},
             modifier = Modifier.padding(Spacing.md)
         )

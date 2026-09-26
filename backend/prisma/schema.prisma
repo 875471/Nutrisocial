@@ -20,16 +20,54 @@ model User {
 }
 
 model Recipe {
-  id          Int      @id @default(autoincrement())
-  title       String
-  // SQLite no tiene tipo lista: se guardan como JSON serializado (array de strings)
-  ingredients String
-  steps       String
-  servings    Int
-  prepMinutes Int?
-  authorId    Int
-  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
+  id               Int                @id @default(autoincrement())
+  title            String
+  // SQLite no tiene tipo lista: los pasos se guardan como JSON serializado (array de strings)
+  steps            String
+  servings         Int
+  prepMinutes      Int?
+  // Totales de la receta completa, calculados al crearla a partir de sus ingredientes
+  kcal             Float              @default(0)
+  protein          Float              @default(0)
+  carbs            Float              @default(0)
+  fat              Float              @default(0)
+  // Peso en crudo de los ingredientes con peso conocido; null si no se pudo estimar ninguno
+  totalWeightGrams Float?
+  authorId         Int
+  author           User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  ingredients      RecipeIngredient[]
+  createdAt        DateTime           @default(now())
 
   @@index([authorId])
+}
+
+// Alimento de referencia con sus valores por 100 g. Se carga desde
+// data/bedca_foods.json con `npx prisma db seed` (ver prisma/seed.js).
+model Food {
+  id          Int                @id @default(autoincrement())
+  name        String             @unique
+  kcal        Float
+  protein     Float
+  carbs       Float
+  fat         Float
+  source      String             @default("BEDCA")
+  ingredients RecipeIngredient[]
+}
+
+model RecipeIngredient {
+  id       Int     @id @default(autoincrement())
+  recipeId Int
+  recipe   Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  position Int
+  // Nombre tal como lo escribió el usuario
+  name     String
+  quantity Float?
+  unit     String?
+  // Peso estimado en gramos; null si no se pudo convertir la unidad
+  grams    Float?
+  // Alimento de la tabla Food asociado; null si no se encontró ninguno
+  foodId   Int?
+  food     Food?   @relation(fields: [foodId], references: [id], onDelete: SetNull)
+
+  @@index([recipeId])
 }

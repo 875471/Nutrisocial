@@ -13,10 +13,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
+import com.example.nutrisocial.R
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.ui.theme.ButtonShape
@@ -29,12 +34,23 @@ fun RecipeListScreen(
     state: RecipeListUiState,
     onRecipeClick: (Int) -> Unit,
     onCreateRecipe: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onScanRecipe: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Mis recetas") },
+                actions = {
+                    TextButton(onClick = onScanRecipe) {
+                        Icon(
+                            painterResource(R.drawable.ic_photo_camera),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text("Escanear", modifier = Modifier.padding(start = Spacing.sm))
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -66,7 +82,8 @@ fun RecipeListScreen(
             is RecipeListUiState.Success -> if (state.recipes.isEmpty()) {
                 CenteredMessage(
                     title = "Todavía no tienes recetas",
-                    message = "Pulsa «Nueva receta» para guardar la primera.",
+                    message = "Pulsa «Nueva receta» para guardar la primera, o «Escanear» para " +
+                        "pasar una receta en papel con la cámara.",
                     modifier = contentModifier
                 )
             } else {

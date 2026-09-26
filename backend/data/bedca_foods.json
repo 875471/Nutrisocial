@@ -1,0 +1,7626 @@
+[
+  {
+    "name": "Aceite de algodón",
+    "kcal": 884.3,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 100.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de cacahuete",
+    "kcal": 883.4,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 99.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de coco",
+    "kcal": 884.3,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 100.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de colza",
+    "kcal": 884.3,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 100.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de germen de trigo",
+    "kcal": 883.4,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 99.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de girasol",
+    "kcal": 883.4,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 99.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de grano de uva",
+    "kcal": 883.4,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 99.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de hígado de bacalao",
+    "kcal": 883.4,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 99.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de lino",
+    "kcal": 884.3,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 100.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de nuez",
+    "kcal": 882.5,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 99.79,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de oliva",
+    "kcal": 883.4,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 99.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de oliva virgen extra",
+    "kcal": 884.3,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 100.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de oliva virgen extra, producción ecologica",
+    "kcal": 884.3,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 100.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de palma",
+    "kcal": 884.3,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 100.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de soja",
+    "kcal": 884.2,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 99.99,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceite de sésamo",
+    "kcal": 884.3,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 100.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceituna",
+    "kcal": 119.9,
+    "protein": 1.3,
+    "carbs": 1.0,
+    "fat": 12.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aceituna negra, con hueso",
+    "kcal": 287.9,
+    "protein": 2.0,
+    "carbs": 4.0,
+    "fat": 29.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Acelga, cruda",
+    "kcal": 21.3,
+    "protein": 2.1,
+    "carbs": 2.7,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Acelga, en conserva",
+    "kcal": 17.4,
+    "protein": 1.8,
+    "carbs": 2.3,
+    "fat": 0.08,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Acelgas, hervidas",
+    "kcal": 28.9,
+    "protein": 1.9,
+    "carbs": 4.37,
+    "fat": 0.39,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Achicoria, cruda",
+    "kcal": 18.7,
+    "protein": 0.5,
+    "carbs": 2.8,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Agua de la red",
+    "kcal": 0.0,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Agua mineral, mineralización debil",
+    "kcal": 0.0,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Agua, con gas, embotellada",
+    "kcal": 0.0,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aguacate",
+    "kcal": 136.2,
+    "protein": 1.5,
+    "carbs": 0.4,
+    "fat": 12.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aguacate congelado",
+    "kcal": 223.3,
+    "protein": 1.9,
+    "carbs": 0.0,
+    "fat": 23.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aguardiente",
+    "kcal": 235.7,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ajo",
+    "kcal": 116.8,
+    "protein": 3.94,
+    "carbs": 24.3,
+    "fat": 0.23,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ajo, en polvo",
+    "kcal": 369.2,
+    "protein": 16.55,
+    "carbs": 72.73,
+    "fat": 0.73,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ajo, frito",
+    "kcal": 101.4,
+    "protein": 7.7,
+    "carbs": 15.97,
+    "fat": 0.59,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Albahaca",
+    "kcal": 177.0,
+    "protein": 14.4,
+    "carbs": 20.5,
+    "fat": 3.98,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Albaricoque",
+    "kcal": 41.8,
+    "protein": 0.8,
+    "carbs": 9.5,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Albondigas en conserva",
+    "kcal": 141.2,
+    "protein": 6.8,
+    "carbs": 6.8,
+    "fat": 9.72,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Alcachofa, cruda",
+    "kcal": 22.7,
+    "protein": 2.9,
+    "carbs": 2.26,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Alcachofas en conserva",
+    "kcal": 18.1,
+    "protein": 2.9,
+    "carbs": 1.2,
+    "fat": 0.16,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Alcaparra",
+    "kcal": 25.7,
+    "protein": 2.36,
+    "carbs": 2.1,
+    "fat": 0.86,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Alioli",
+    "kcal": 781.8,
+    "protein": 0.46,
+    "carbs": 2.84,
+    "fat": 86.89,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Almeja",
+    "kcal": 47.9,
+    "protein": 10.7,
+    "carbs": 0.0,
+    "fat": 1.61,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Almejas en conserva",
+    "kcal": 80.5,
+    "protein": 17.43,
+    "carbs": 1.5,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Almendra, cruda",
+    "kcal": 586.2,
+    "protein": 19.13,
+    "carbs": 6.2,
+    "fat": 45.22,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Almendra, cruda, con cáscara",
+    "kcal": 586.4,
+    "protein": 21.22,
+    "carbs": 5.36,
+    "fat": 54.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Almendra, frita, salada",
+    "kcal": 590.4,
+    "protein": 19.0,
+    "carbs": 4.5,
+    "fat": 55.96,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Almendra, tostada",
+    "kcal": 587.9,
+    "protein": 22.9,
+    "carbs": 6.6,
+    "fat": 52.93,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Almidón de arroz",
+    "kcal": 348.5,
+    "protein": 0.76,
+    "carbs": 85.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Almidón de maíz",
+    "kcal": 372.5,
+    "protein": 0.26,
+    "carbs": 91.3,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Almidón de trigo",
+    "kcal": 352.7,
+    "protein": 0.4,
+    "carbs": 86.1,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Altramuz",
+    "kcal": 397.2,
+    "protein": 36.17,
+    "carbs": 40.38,
+    "fat": 9.74,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Alubia blanca, en conserva",
+    "kcal": 93.1,
+    "protein": 6.7,
+    "carbs": 15.7,
+    "fat": 0.24,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Alubia blanca, seca, cruda",
+    "kcal": 271.3,
+    "protein": 22.23,
+    "carbs": 41.64,
+    "fat": 1.34,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Alubia negra, seca, remojada, hervida",
+    "kcal": 91.7,
+    "protein": 8.4,
+    "carbs": 13.7,
+    "fat": 0.21,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Anacardo, crudo",
+    "kcal": 574.3,
+    "protein": 17.5,
+    "carbs": 32.0,
+    "fat": 43.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Anchoas en aceite vegetal",
+    "kcal": 203.3,
+    "protein": 28.89,
+    "carbs": 0.0,
+    "fat": 9.71,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Anguila, al horno",
+    "kcal": 222.1,
+    "protein": 23.7,
+    "carbs": 0.0,
+    "fat": 14.22,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Anguila, cruda",
+    "kcal": 218.4,
+    "protein": 19.97,
+    "carbs": 0.0,
+    "fat": 15.53,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Anguila, hervida",
+    "kcal": 196.3,
+    "protein": 20.5,
+    "carbs": 0.0,
+    "fat": 12.78,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Angula, cruda",
+    "kcal": 212.1,
+    "protein": 16.3,
+    "carbs": 0.0,
+    "fat": 16.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Anís, seco",
+    "kcal": 264.0,
+    "protein": 0.0,
+    "carbs": 1.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Aperitivos de trigo",
+    "kcal": 507.4,
+    "protein": 10.3,
+    "carbs": 58.2,
+    "fat": 25.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Apio, crudo",
+    "kcal": 10.6,
+    "protein": 0.9,
+    "carbs": 1.5,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Apio, en conserva en salmuera",
+    "kcal": 8.5,
+    "protein": 0.8,
+    "carbs": 1.3,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Arandano",
+    "kcal": 32.4,
+    "protein": 0.62,
+    "carbs": 6.05,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Arenque, ahumado",
+    "kcal": 252.6,
+    "protein": 23.0,
+    "carbs": 0.0,
+    "fat": 13.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Arenque, salado",
+    "kcal": 299.0,
+    "protein": 17.0,
+    "carbs": 0.0,
+    "fat": 26.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Arroz",
+    "kcal": 385.8,
+    "protein": 7.0,
+    "carbs": 86.0,
+    "fat": 0.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Arroz con leche",
+    "kcal": 91.5,
+    "protein": 3.3,
+    "carbs": 16.4,
+    "fat": 1.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Arroz hinchado, para el desayuno, enriquecido",
+    "kcal": 387.2,
+    "protein": 6.3,
+    "carbs": 87.7,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Arroz integral, crudo",
+    "kcal": 384.1,
+    "protein": 7.5,
+    "carbs": 81.3,
+    "fat": 2.64,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Arroz integral, hervido",
+    "kcal": 111.6,
+    "protein": 2.6,
+    "carbs": 22.9,
+    "fat": 0.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Arroz, hervido",
+    "kcal": 391.8,
+    "protein": 7.54,
+    "carbs": 85.28,
+    "fat": 1.66,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Atun en aceite vegetal",
+    "kcal": 203.7,
+    "protein": 23.81,
+    "carbs": 0.0,
+    "fat": 12.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Atún en aceite de oliva isabel",
+    "kcal": 179.2,
+    "protein": 26.53,
+    "carbs": 0.0,
+    "fat": 8.08,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Atún en escabeche",
+    "kcal": 100.8,
+    "protein": 23.5,
+    "carbs": 0.0,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Atún, al horno",
+    "kcal": 189.2,
+    "protein": 29.4,
+    "carbs": 0.0,
+    "fat": 7.89,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Atún, al natural",
+    "kcal": 100.8,
+    "protein": 23.5,
+    "carbs": 0.0,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Atún, crudo",
+    "kcal": 118.6,
+    "protein": 22.0,
+    "carbs": 0.0,
+    "fat": 3.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Atún, plancha",
+    "kcal": 199.6,
+    "protein": 23.0,
+    "carbs": 0.0,
+    "fat": 12.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Avellana",
+    "kcal": 653.0,
+    "protein": 12.01,
+    "carbs": 10.5,
+    "fat": 56.25,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Avellana, cruda, con cáscara",
+    "kcal": 636.2,
+    "protein": 12.01,
+    "carbs": 10.5,
+    "fat": 61.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Avena, cruda",
+    "kcal": 399.1,
+    "protein": 16.9,
+    "carbs": 66.3,
+    "fat": 6.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Avestruz, solomillo, crudo",
+    "kcal": 114.1,
+    "protein": 21.67,
+    "carbs": 0.0,
+    "fat": 2.95,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Azafrán",
+    "kcal": 348.4,
+    "protein": 11.4,
+    "carbs": 61.5,
+    "fat": 5.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Azúcar blanca",
+    "kcal": 406.3,
+    "protein": 0.0,
+    "carbs": 100.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Azúcar, moreno",
+    "kcal": 396.6,
+    "protein": 0.0,
+    "carbs": 97.6,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bacaladilla",
+    "kcal": 76.9,
+    "protein": 17.4,
+    "carbs": 0.0,
+    "fat": 0.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bacalao, ahumado",
+    "kcal": 79.2,
+    "protein": 18.3,
+    "carbs": 0.0,
+    "fat": 0.55,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bacalao, crudo",
+    "kcal": 82.8,
+    "protein": 18.2,
+    "carbs": 0.0,
+    "fat": 1.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bacalao, fresco, al horno",
+    "kcal": 99.1,
+    "protein": 22.1,
+    "carbs": 0.0,
+    "fat": 1.06,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bacalao, frito",
+    "kcal": 75.1,
+    "protein": 16.97,
+    "carbs": 0.0,
+    "fat": 0.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bacalao, salado, crudo",
+    "kcal": 320.2,
+    "protein": 75.0,
+    "carbs": 0.0,
+    "fat": 1.75,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bacalao, salado, remojado, crudo",
+    "kcal": 109.2,
+    "protein": 26.0,
+    "carbs": 0.0,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bacon, crudo, con grasa separable",
+    "kcal": 544.2,
+    "protein": 8.7,
+    "carbs": 0.09,
+    "fat": 57.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bacón, ahumado, a la parrilla",
+    "kcal": 290.5,
+    "protein": 23.4,
+    "carbs": 0.0,
+    "fat": 22.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bambú, crudo",
+    "kcal": 34.3,
+    "protein": 2.6,
+    "carbs": 5.2,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Barra chocolate, tipo \"bounty\"",
+    "kcal": 489.6,
+    "protein": 4.6,
+    "carbs": 58.0,
+    "fat": 26.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Barra de chocolate, tipo \"Kit-kat\"",
+    "kcal": 498.8,
+    "protein": 6.5,
+    "carbs": 63.0,
+    "fat": 24.48,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Barra de chocolate, tipo \"Mars\"",
+    "kcal": 454.0,
+    "protein": 5.6,
+    "carbs": 65.9,
+    "fat": 18.48,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Barrita cereales con chocolate",
+    "kcal": 395.1,
+    "protein": 9.0,
+    "carbs": 73.0,
+    "fat": 7.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Barrita cereales con frutas",
+    "kcal": 393.6,
+    "protein": 8.0,
+    "carbs": 78.0,
+    "fat": 5.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Barrita cereales maíz y trigo",
+    "kcal": 429.6,
+    "protein": 7.4,
+    "carbs": 68.3,
+    "fat": 13.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Barrita cereales trigo y chocolate",
+    "kcal": 435.2,
+    "protein": 8.3,
+    "carbs": 66.6,
+    "fat": 14.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Batido de chocolate",
+    "kcal": 82.6,
+    "protein": 2.7,
+    "carbs": 9.8,
+    "fat": 3.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Batido de fresa",
+    "kcal": 65.7,
+    "protein": 2.8,
+    "carbs": 11.2,
+    "fat": 1.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Batido de soja",
+    "kcal": 82.1,
+    "protein": 5.0,
+    "carbs": 3.9,
+    "fat": 5.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Batido fermentado de soja",
+    "kcal": 89.3,
+    "protein": 2.35,
+    "carbs": 17.06,
+    "fat": 1.18,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Batido lácteo de cacao, bajo en calorías",
+    "kcal": 48.1,
+    "protein": 3.1,
+    "carbs": 4.6,
+    "fat": 1.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Batido lácteo, de fresa, bajo en calorías",
+    "kcal": 111.5,
+    "protein": 3.8,
+    "carbs": 22.9,
+    "fat": 0.34,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bebida de soja",
+    "kcal": 52.7,
+    "protein": 3.2,
+    "carbs": 5.76,
+    "fat": 1.84,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bebida energética",
+    "kcal": 4.6,
+    "protein": 0.25,
+    "carbs": 0.7,
+    "fat": 0.08,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bebida isotónica",
+    "kcal": 32.1,
+    "protein": 0.0,
+    "carbs": 7.9,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Berberechos",
+    "kcal": 47.9,
+    "protein": 10.7,
+    "carbs": 0.0,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Berberechos en conserva",
+    "kcal": 47.9,
+    "protein": 10.7,
+    "carbs": 0.0,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Berenjena",
+    "kcal": 20.1,
+    "protein": 0.7,
+    "carbs": 3.8,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Berenjena, frita, en aceite de girasol",
+    "kcal": 298.0,
+    "protein": 1.2,
+    "carbs": 2.71,
+    "fat": 31.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Berro, crudo",
+    "kcal": 11.9,
+    "protein": 2.2,
+    "carbs": 0.3,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Besugo",
+    "kcal": 89.5,
+    "protein": 18.12,
+    "carbs": 0.0,
+    "fat": 1.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bizcocho",
+    "kcal": 381.0,
+    "protein": 6.5,
+    "carbs": 39.6,
+    "fat": 21.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bocadillo",
+    "kcal": 224.4,
+    "protein": 11.06,
+    "carbs": 35.28,
+    "fat": 4.08,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bogavante",
+    "kcal": 92.0,
+    "protein": 18.3,
+    "carbs": 0.0,
+    "fat": 2.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bogavante, hervido",
+    "kcal": 103.7,
+    "protein": 22.1,
+    "carbs": 0.0,
+    "fat": 1.57,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bollería, genérico",
+    "kcal": 446.4,
+    "protein": 7.0,
+    "carbs": 52.8,
+    "fat": 23.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bombón",
+    "kcal": 475.1,
+    "protein": 4.8,
+    "carbs": 66.0,
+    "fat": 21.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Boniato, crudo",
+    "kcal": 101.0,
+    "protein": 1.2,
+    "carbs": 23.0,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bonito del norte, al vapor",
+    "kcal": 163.5,
+    "protein": 30.0,
+    "carbs": 0.0,
+    "fat": 4.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bonito del norte, enlatado en aceite de soja",
+    "kcal": 205.1,
+    "protein": 32.2,
+    "carbs": 0.0,
+    "fat": 8.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bonito en aceite vegetal",
+    "kcal": 198.7,
+    "protein": 23.88,
+    "carbs": 0.0,
+    "fat": 11.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bonito, enlatado en aceite, escurrido",
+    "kcal": 203.6,
+    "protein": 26.23,
+    "carbs": 0.0,
+    "fat": 4.73,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Boquerón",
+    "kcal": 127.2,
+    "protein": 17.6,
+    "carbs": 0.0,
+    "fat": 6.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Boquerón, frito",
+    "kcal": 136.7,
+    "protein": 20.09,
+    "carbs": 0.5,
+    "fat": 6.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Borraja",
+    "kcal": 25.9,
+    "protein": 1.8,
+    "carbs": 3.06,
+    "fat": 0.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Breca, cruda",
+    "kcal": 75.5,
+    "protein": 15.4,
+    "carbs": 1.0,
+    "fat": 1.59,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Brécol, crudo",
+    "kcal": 25.5,
+    "protein": 3.0,
+    "carbs": 2.4,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Brécol, hervido",
+    "kcal": 24.1,
+    "protein": 3.1,
+    "carbs": 1.1,
+    "fat": 0.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Butifarra",
+    "kcal": 239.8,
+    "protein": 10.0,
+    "carbs": 5.5,
+    "fat": 20.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Bígaro, hervido",
+    "kcal": 94.9,
+    "protein": 20.75,
+    "carbs": 0.0,
+    "fat": 1.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Caballa, al horno",
+    "kcal": 247.7,
+    "protein": 16.7,
+    "carbs": 0.0,
+    "fat": 20.33,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Caballa, cruda",
+    "kcal": 181.1,
+    "protein": 18.68,
+    "carbs": 0.0,
+    "fat": 11.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Caballa, enlatada en aceite, escurrida",
+    "kcal": 207.3,
+    "protein": 14.9,
+    "carbs": 0.0,
+    "fat": 16.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cabracho o rascacio, crudo",
+    "kcal": 92.1,
+    "protein": 19.0,
+    "carbs": 0.0,
+    "fat": 1.69,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cabrito lechal, costillar, asado",
+    "kcal": 263.7,
+    "protein": 22.46,
+    "carbs": 0.0,
+    "fat": 19.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cabrito lechal, costillar, crudo",
+    "kcal": 224.2,
+    "protein": 17.11,
+    "carbs": 0.0,
+    "fat": 17.49,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cabrito lechal, espalda, cruda",
+    "kcal": 204.6,
+    "protein": 18.63,
+    "carbs": 0.0,
+    "fat": 14.58,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cabrito lechal, pierna, cruda",
+    "kcal": 189.4,
+    "protein": 18.78,
+    "carbs": 0.0,
+    "fat": 12.79,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cabrito, parte s/e, crudo, con grasa separable",
+    "kcal": 113.8,
+    "protein": 19.3,
+    "carbs": 0.0,
+    "fat": 4.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cacahuete, crudo, con cáscara",
+    "kcal": 541.4,
+    "protein": 25.23,
+    "carbs": 7.91,
+    "fat": 43.06,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cacahuete, frito, salado",
+    "kcal": 590.0,
+    "protein": 26.8,
+    "carbs": 8.9,
+    "fat": 50.31,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cacahuete, tostado, salado",
+    "kcal": 597.1,
+    "protein": 24.5,
+    "carbs": 7.1,
+    "fat": 53.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cacao en polvo, azucarado",
+    "kcal": 388.5,
+    "protein": 5.88,
+    "carbs": 81.02,
+    "fat": 4.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cacao, en polvo, azucarado, bajo en calorías",
+    "kcal": 384.1,
+    "protein": 9.8,
+    "carbs": 67.1,
+    "fat": 8.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Café, con leche",
+    "kcal": 37.8,
+    "protein": 1.7,
+    "carbs": 2.45,
+    "fat": 2.37,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Café, en grano o molido, descafeinado",
+    "kcal": 302.0,
+    "protein": 10.4,
+    "carbs": 30.4,
+    "fat": 15.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Café, en polvo, sin reconstituir",
+    "kcal": 110.3,
+    "protein": 18.5,
+    "carbs": 8.0,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Café, en polvo, soluble",
+    "kcal": 119.9,
+    "protein": 18.5,
+    "carbs": 11.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Café, infusión",
+    "kcal": 2.1,
+    "protein": 0.12,
+    "carbs": 0.0,
+    "fat": 0.18,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Café, infusión, descafeinado",
+    "kcal": 2.1,
+    "protein": 0.12,
+    "carbs": 0.0,
+    "fat": 0.18,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Café, sucedáneo, soluble",
+    "kcal": 408.7,
+    "protein": 12.3,
+    "carbs": 80.9,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Calabacín",
+    "kcal": 17.2,
+    "protein": 1.8,
+    "carbs": 2.0,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Calabacín, asado",
+    "kcal": 17.8,
+    "protein": 1.76,
+    "carbs": 1.76,
+    "fat": 0.39,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Calabaza, cruda",
+    "kcal": 32.1,
+    "protein": 1.2,
+    "carbs": 5.6,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Calabaza, hervida",
+    "kcal": 12.3,
+    "protein": 0.6,
+    "carbs": 2.1,
+    "fat": 0.15,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Calamar, asado",
+    "kcal": 80.9,
+    "protein": 16.58,
+    "carbs": 0.5,
+    "fat": 1.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Calamar, conserva",
+    "kcal": 88.8,
+    "protein": 17.0,
+    "carbs": 0.5,
+    "fat": 2.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Calamar, crudo",
+    "kcal": 71.5,
+    "protein": 14.0,
+    "carbs": 1.09,
+    "fat": 1.47,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Calamares en aceite vegetal",
+    "kcal": 215.9,
+    "protein": 22.5,
+    "carbs": 0.6,
+    "fat": 13.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Caldo vegetal",
+    "kcal": 104.1,
+    "protein": 11.3,
+    "carbs": 9.1,
+    "fat": 2.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Callos de ternera",
+    "kcal": 94.7,
+    "protein": 14.56,
+    "carbs": 0.0,
+    "fat": 3.95,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Camarón",
+    "kcal": 82.9,
+    "protein": 17.6,
+    "carbs": 1.5,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Canela, en polvo",
+    "kcal": 371.6,
+    "protein": 3.9,
+    "carbs": 80.59,
+    "fat": 3.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Canelones",
+    "kcal": 191.0,
+    "protein": 11.2,
+    "carbs": 9.7,
+    "fat": 12.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cangrejo de río crudo",
+    "kcal": 124.3,
+    "protein": 19.5,
+    "carbs": 0.0,
+    "fat": 5.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cangrejo, en conserva",
+    "kcal": 98.4,
+    "protein": 19.7,
+    "carbs": 1.0,
+    "fat": 1.61,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Canonigos",
+    "kcal": 13.7,
+    "protein": 1.8,
+    "carbs": 0.7,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Caqui",
+    "kcal": 66.8,
+    "protein": 0.7,
+    "carbs": 15.3,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Caracol",
+    "kcal": 85.9,
+    "protein": 16.1,
+    "carbs": 2.0,
+    "fat": 1.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Caramelo",
+    "kcal": 387.6,
+    "protein": 0.4,
+    "carbs": 95.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cardo",
+    "kcal": 21.7,
+    "protein": 1.4,
+    "carbs": 3.5,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cardo, tallo, en conserva",
+    "kcal": 13.8,
+    "protein": 0.76,
+    "carbs": 2.4,
+    "fat": 0.11,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carne de cerdo de capa blanca, cabezada, parte magra, cruda",
+    "kcal": 164.1,
+    "protein": 21.9,
+    "carbs": 0.0,
+    "fat": 8.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carne de cerdo de capa blanca, cabezada, partes grasa y magra, crudo",
+    "kcal": 252.8,
+    "protein": 20.0,
+    "carbs": 0.0,
+    "fat": 19.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carne de cerdo de capa blanca, chuleta, parte magra, cruda",
+    "kcal": 137.3,
+    "protein": 22.9,
+    "carbs": 0.0,
+    "fat": 5.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carne de cerdo de capa blanca, chuleta, partes grasa y magra, cruda",
+    "kcal": 159.0,
+    "protein": 22.95,
+    "carbs": 0.0,
+    "fat": 7.43,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carne de cerdo de capa blanca, jamón, parte magra, crudo",
+    "kcal": 126.2,
+    "protein": 24.65,
+    "carbs": 0.0,
+    "fat": 2.95,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carne de cerdo de capa blanca, jamón, partes grasa y magra, crudo",
+    "kcal": 128.2,
+    "protein": 23.07,
+    "carbs": 0.0,
+    "fat": 3.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carne de cerdo de capa blanca, lomo, parte magra, crudo",
+    "kcal": 123.3,
+    "protein": 24.9,
+    "carbs": 0.0,
+    "fat": 2.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carne de cerdo de capa blanca, lomo, partes grasa y magra, crudo",
+    "kcal": 141.1,
+    "protein": 24.77,
+    "carbs": 0.0,
+    "fat": 4.57,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carne picada",
+    "kcal": 243.1,
+    "protein": 15.22,
+    "carbs": 0.0,
+    "fat": 20.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carpa, al horno",
+    "kcal": 148.6,
+    "protein": 20.4,
+    "carbs": 0.0,
+    "fat": 7.43,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Carpa, cruda",
+    "kcal": 115.9,
+    "protein": 17.75,
+    "carbs": 0.0,
+    "fat": 4.95,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Castaña, cruda",
+    "kcal": 178.5,
+    "protein": 2.65,
+    "carbs": 36.5,
+    "fat": 2.52,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Castaña, tostada",
+    "kcal": 224.4,
+    "protein": 4.0,
+    "carbs": 39.7,
+    "fat": 5.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cava",
+    "kcal": 70.0,
+    "protein": 0.2,
+    "carbs": 1.5,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Caviar",
+    "kcal": 274.5,
+    "protein": 24.6,
+    "carbs": 4.0,
+    "fat": 17.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cebada, cruda",
+    "kcal": 321.7,
+    "protein": 10.6,
+    "carbs": 64.0,
+    "fat": 2.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cebolla",
+    "kcal": 26.1,
+    "protein": 1.12,
+    "carbs": 5.3,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cebolla, asada",
+    "kcal": 38.0,
+    "protein": 1.17,
+    "carbs": 7.74,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cebolla, hervida",
+    "kcal": 18.4,
+    "protein": 0.6,
+    "carbs": 3.7,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cebollino, crudo",
+    "kcal": 24.6,
+    "protein": 3.0,
+    "carbs": 1.9,
+    "fat": 0.53,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cecina",
+    "kcal": 242.5,
+    "protein": 39.0,
+    "carbs": 0.0,
+    "fat": 9.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Centeno, crudo",
+    "kcal": 406.5,
+    "protein": 14.8,
+    "carbs": 79.8,
+    "fat": 2.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Centollo, crudo",
+    "kcal": 127.7,
+    "protein": 20.1,
+    "carbs": 0.0,
+    "fat": 5.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerdo, chuleta, crudo",
+    "kcal": 209.8,
+    "protein": 19.0,
+    "carbs": 0.0,
+    "fat": 15.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerdo, costilla, crudo",
+    "kcal": 278.2,
+    "protein": 17.1,
+    "carbs": 0.0,
+    "fat": 23.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerdo, lomo, asado",
+    "kcal": 235.9,
+    "protein": 27.0,
+    "carbs": 0.0,
+    "fat": 14.27,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerdo, lomo, crudo",
+    "kcal": 151.8,
+    "protein": 18.0,
+    "carbs": 0.0,
+    "fat": 8.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerdo, panceta, cruda",
+    "kcal": 464.9,
+    "protein": 12.5,
+    "carbs": 0.5,
+    "fat": 46.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerdo, parte sin especificar",
+    "kcal": 270.8,
+    "protein": 16.6,
+    "carbs": 0.0,
+    "fat": 23.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerdo, pierna, cruda, con grasa separable",
+    "kcal": 211.6,
+    "protein": 19.0,
+    "carbs": 0.0,
+    "fat": 15.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerdo, solomillo, asado",
+    "kcal": 158.6,
+    "protein": 28.8,
+    "carbs": 0.0,
+    "fat": 4.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerdo, solomillo, crudo",
+    "kcal": 130.4,
+    "protein": 21.0,
+    "carbs": 0.0,
+    "fat": 5.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales base trigo y chocolate",
+    "kcal": 383.7,
+    "protein": 8.0,
+    "carbs": 81.0,
+    "fat": 2.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de arroz chocolateado",
+    "kcal": 386.0,
+    "protein": 6.0,
+    "carbs": 86.6,
+    "fat": 1.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de arroz y miel",
+    "kcal": 383.1,
+    "protein": 5.1,
+    "carbs": 87.0,
+    "fat": 1.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de arroz, trigo y fruta",
+    "kcal": 354.3,
+    "protein": 5.8,
+    "carbs": 76.6,
+    "fat": 2.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de maíz y miel",
+    "kcal": 392.6,
+    "protein": 6.0,
+    "carbs": 83.0,
+    "fat": 3.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de maíz y trigo",
+    "kcal": 379.2,
+    "protein": 6.0,
+    "carbs": 80.8,
+    "fat": 3.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de maíz, trigo y avena",
+    "kcal": 414.0,
+    "protein": 6.2,
+    "carbs": 80.9,
+    "fat": 6.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de trigo azucarado",
+    "kcal": 383.0,
+    "protein": 7.0,
+    "carbs": 84.0,
+    "fat": 1.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de trigo y arroz",
+    "kcal": 378.6,
+    "protein": 16.0,
+    "carbs": 75.0,
+    "fat": 1.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de trigo y frutas",
+    "kcal": 365.2,
+    "protein": 8.0,
+    "carbs": 71.0,
+    "fat": 5.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de trigo y miel",
+    "kcal": 394.9,
+    "protein": 5.7,
+    "carbs": 88.0,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de trigo, avena, maiz y miel",
+    "kcal": 396.8,
+    "protein": 8.0,
+    "carbs": 79.0,
+    "fat": 4.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base de trigo, avena, maíz, miel y nueces",
+    "kcal": 391.0,
+    "protein": 11.0,
+    "carbs": 80.0,
+    "fat": 2.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno base muesli",
+    "kcal": 370.2,
+    "protein": 10.3,
+    "carbs": 65.8,
+    "fat": 6.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales desayuno, maíz azucarado",
+    "kcal": 380.3,
+    "protein": 4.5,
+    "carbs": 88.0,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales para el desayuno, ricos en fibra, tipo \"all-bran\"",
+    "kcal": 266.0,
+    "protein": 14.0,
+    "carbs": 45.6,
+    "fat": 2.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereales, en polvo, solubles (eko)",
+    "kcal": 391.3,
+    "protein": 5.7,
+    "carbs": 89.7,
+    "fat": 0.42,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cereza",
+    "kcal": 62.5,
+    "protein": 0.8,
+    "carbs": 13.5,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerveza con alcohol",
+    "kcal": 42.2,
+    "protein": 0.5,
+    "carbs": 3.12,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerveza sin alcohol",
+    "kcal": 25.8,
+    "protein": 0.38,
+    "carbs": 5.4,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerveza, baja en alcohol",
+    "kcal": 33.6,
+    "protein": 0.2,
+    "carbs": 2.1,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cerveza, oscura, 8°- 9°",
+    "kcal": 66.4,
+    "protein": 0.6,
+    "carbs": 5.26,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Champiñon",
+    "kcal": 26.2,
+    "protein": 1.8,
+    "carbs": 4.0,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Champiñones en conserva",
+    "kcal": 13.8,
+    "protein": 2.25,
+    "carbs": 0.07,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chayote, crudo",
+    "kcal": 22.8,
+    "protein": 0.82,
+    "carbs": 4.51,
+    "fat": 0.13,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chicle, sin azúcar",
+    "kcal": 2.7,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chile, rojo",
+    "kcal": 33.6,
+    "protein": 1.0,
+    "carbs": 6.4,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chile, verde",
+    "kcal": 16.5,
+    "protein": 0.8,
+    "carbs": 2.6,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chipiron",
+    "kcal": 81.3,
+    "protein": 16.25,
+    "carbs": 0.7,
+    "fat": 1.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chirimoya",
+    "kcal": 87.1,
+    "protein": 1.0,
+    "carbs": 20.0,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chirla",
+    "kcal": 47.0,
+    "protein": 10.7,
+    "carbs": 0.0,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chistorra",
+    "kcal": 512.4,
+    "protein": 15.3,
+    "carbs": 0.9,
+    "fat": 50.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chocolate blanco",
+    "kcal": 544.7,
+    "protein": 8.0,
+    "carbs": 58.8,
+    "fat": 30.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chocolate con leche",
+    "kcal": 535.7,
+    "protein": 9.19,
+    "carbs": 54.1,
+    "fat": 31.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chocolate con leche y almendras",
+    "kcal": 546.8,
+    "protein": 8.6,
+    "carbs": 49.8,
+    "fat": 35.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chocolate con leche y arroz",
+    "kcal": 514.6,
+    "protein": 6.4,
+    "carbs": 63.0,
+    "fat": 26.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chocolate con nueces de macadamia",
+    "kcal": 587.5,
+    "protein": 7.1,
+    "carbs": 47.6,
+    "fat": 41.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chocolate negro, con almendras",
+    "kcal": 532.7,
+    "protein": 8.2,
+    "carbs": 41.5,
+    "fat": 37.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chocolate negro, con azúcar",
+    "kcal": 529.4,
+    "protein": 2.0,
+    "carbs": 63.0,
+    "fat": 30.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chocolate, negro",
+    "kcal": 540.6,
+    "protein": 4.7,
+    "carbs": 64.8,
+    "fat": 29.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Choped pork",
+    "kcal": 307.8,
+    "protein": 14.0,
+    "carbs": 3.0,
+    "fat": 27.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chorizo",
+    "kcal": 321.7,
+    "protein": 27.0,
+    "carbs": 1.9,
+    "fat": 23.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Chufa, cruda",
+    "kcal": 407.7,
+    "protein": 6.13,
+    "carbs": 42.54,
+    "fat": 23.74,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Churro",
+    "kcal": 358.1,
+    "protein": 4.6,
+    "carbs": 40.0,
+    "fat": 20.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ciervo, parte s/e, crudo, con grasa separable",
+    "kcal": 104.4,
+    "protein": 22.2,
+    "carbs": 0.0,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cigala",
+    "kcal": 86.3,
+    "protein": 17.7,
+    "carbs": 0.5,
+    "fat": 1.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ciruela, con piel, cruda",
+    "kcal": 53.6,
+    "protein": 0.75,
+    "carbs": 12.0,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ciruela, sin piel",
+    "kcal": 47.1,
+    "protein": 0.6,
+    "carbs": 11.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Coco, desecado",
+    "kcal": 586.0,
+    "protein": 6.2,
+    "carbs": 11.8,
+    "fat": 58.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Coco, fresco",
+    "kcal": 371.4,
+    "protein": 3.3,
+    "carbs": 15.2,
+    "fat": 33.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Col blanca, cruda",
+    "kcal": 35.8,
+    "protein": 4.3,
+    "carbs": 2.54,
+    "fat": 0.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Col de bruselas, cruda",
+    "kcal": 34.9,
+    "protein": 4.0,
+    "carbs": 3.5,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Col lombarda, hervida",
+    "kcal": 17.9,
+    "protein": 1.0,
+    "carbs": 2.75,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Col rizada, cruda",
+    "kcal": 33.7,
+    "protein": 3.4,
+    "carbs": 1.4,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Coliflor, congelada, cruda",
+    "kcal": 18.2,
+    "protein": 2.0,
+    "carbs": 2.1,
+    "fat": 0.17,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Coliflor, hervida",
+    "kcal": 27.2,
+    "protein": 2.76,
+    "carbs": 2.04,
+    "fat": 0.87,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Comino",
+    "kcal": 417.7,
+    "protein": 17.8,
+    "carbs": 45.4,
+    "fat": 18.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Complejo vitaminico",
+    "kcal": 564.3,
+    "protein": 20.15,
+    "carbs": 18.78,
+    "fat": 45.93,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Conejo de granja, carne, cruda",
+    "kcal": 131.0,
+    "protein": 20.7,
+    "carbs": 0.0,
+    "fat": 5.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Conejo, entero, estofado",
+    "kcal": 194.6,
+    "protein": 29.0,
+    "carbs": 0.0,
+    "fat": 8.68,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Confitura, frutas s/e, baja en calorías",
+    "kcal": 225.5,
+    "protein": 0.5,
+    "carbs": 55.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Congrio",
+    "kcal": 102.0,
+    "protein": 19.0,
+    "carbs": 0.0,
+    "fat": 2.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Corazon de vaca, crudo",
+    "kcal": 104.4,
+    "protein": 17.0,
+    "carbs": 0.0,
+    "fat": 4.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Corazón de cordero, crudo",
+    "kcal": 118.3,
+    "protein": 16.5,
+    "carbs": 0.21,
+    "fat": 5.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Corazón de pollo, crudo",
+    "kcal": 148.5,
+    "protein": 15.6,
+    "carbs": 0.71,
+    "fat": 9.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Corazón, de cerdo, crudo",
+    "kcal": 114.5,
+    "protein": 17.3,
+    "carbs": 1.3,
+    "fat": 4.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Corazón, de vaca/buey, cocido",
+    "kcal": 163.5,
+    "protein": 27.9,
+    "carbs": 0.0,
+    "fat": 5.67,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Corazón, de vaca/buey, crudo",
+    "kcal": 104.0,
+    "protein": 17.0,
+    "carbs": 0.0,
+    "fat": 3.95,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero lechal, costillar, asado",
+    "kcal": 233.7,
+    "protein": 21.63,
+    "carbs": 0.0,
+    "fat": 16.49,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero lechal, costillar, crudo",
+    "kcal": 191.2,
+    "protein": 18.46,
+    "carbs": 0.0,
+    "fat": 13.14,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero lechal, espalda, cruda",
+    "kcal": 188.7,
+    "protein": 19.46,
+    "carbs": 0.0,
+    "fat": 12.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero lechal, pierna, cruda",
+    "kcal": 186.9,
+    "protein": 19.19,
+    "carbs": 0.0,
+    "fat": 12.32,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero ligero, costillar, asado",
+    "kcal": 272.8,
+    "protein": 21.59,
+    "carbs": 0.0,
+    "fat": 20.93,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero ligero, costillar, crudo",
+    "kcal": 233.4,
+    "protein": 17.26,
+    "carbs": 0.0,
+    "fat": 18.46,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero ligero, espalda, cruda",
+    "kcal": 200.2,
+    "protein": 17.61,
+    "carbs": 0.0,
+    "fat": 14.55,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero ligero, pierna, cruda",
+    "kcal": 183.7,
+    "protein": 18.98,
+    "carbs": 0.0,
+    "fat": 12.05,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero, costilla, crudo",
+    "kcal": 241.1,
+    "protein": 15.6,
+    "carbs": 0.0,
+    "fat": 20.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero, parte sin especificar",
+    "kcal": 352.6,
+    "protein": 15.6,
+    "carbs": 0.0,
+    "fat": 32.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cordero, pierna, con grasa, asada",
+    "kcal": 221.7,
+    "protein": 25.0,
+    "carbs": 0.0,
+    "fat": 13.59,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Corteza de trigo",
+    "kcal": 481.9,
+    "protein": 10.26,
+    "carbs": 52.19,
+    "fat": 25.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Coñac",
+    "kcal": 232.2,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Crema catalana",
+    "kcal": 103.6,
+    "protein": 3.7,
+    "carbs": 15.48,
+    "fat": 2.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Crema de almendras",
+    "kcal": 378.0,
+    "protein": 4.6,
+    "carbs": 59.7,
+    "fat": 13.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Crema de cacahuete",
+    "kcal": 599.6,
+    "protein": 25.5,
+    "carbs": 11.2,
+    "fat": 50.94,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Crema de chocolate con avellanas",
+    "kcal": 541.4,
+    "protein": 5.4,
+    "carbs": 56.02,
+    "fat": 33.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Crema de chocolate y nata",
+    "kcal": 86.1,
+    "protein": 3.9,
+    "carbs": 9.9,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Crema de chocolate, baja en calorías",
+    "kcal": 74.9,
+    "protein": 3.6,
+    "carbs": 13.9,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Crema de coco",
+    "kcal": 124.0,
+    "protein": 2.9,
+    "carbs": 19.1,
+    "fat": 3.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Crema de vainilla y mousse de chocolate",
+    "kcal": 130.9,
+    "protein": 4.0,
+    "carbs": 22.5,
+    "fat": 6.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Crema inglesa",
+    "kcal": 123.1,
+    "protein": 5.5,
+    "carbs": 11.9,
+    "fat": 5.93,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Crema pastelera",
+    "kcal": 158.0,
+    "protein": 4.9,
+    "carbs": 22.3,
+    "fat": 5.37,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cremoso san millan",
+    "kcal": 260.5,
+    "protein": 6.7,
+    "carbs": 3.0,
+    "fat": 25.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Croissant",
+    "kcal": 406.0,
+    "protein": 7.5,
+    "carbs": 55.0,
+    "fat": 17.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Croissant de chocolate",
+    "kcal": 478.6,
+    "protein": 5.6,
+    "carbs": 79.1,
+    "fat": 15.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Croquetas de pollo",
+    "kcal": 153.5,
+    "protein": 5.78,
+    "carbs": 20.43,
+    "fat": 5.32,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cuajada",
+    "kcal": 86.7,
+    "protein": 4.5,
+    "carbs": 6.6,
+    "fat": 4.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cubata",
+    "kcal": 108.9,
+    "protein": 0.0,
+    "carbs": 7.35,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Cubito de caldo",
+    "kcal": 249.5,
+    "protein": 15.7,
+    "carbs": 5.0,
+    "fat": 18.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Curry",
+    "kcal": 437.4,
+    "protein": 15.0,
+    "carbs": 60.0,
+    "fat": 15.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Donut",
+    "kcal": 393.5,
+    "protein": 6.1,
+    "carbs": 42.0,
+    "fat": 22.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Donut, de chocolate",
+    "kcal": 452.2,
+    "protein": 4.93,
+    "carbs": 51.33,
+    "fat": 25.25,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Dorada, cruda",
+    "kcal": 77.9,
+    "protein": 17.0,
+    "carbs": 0.0,
+    "fat": 7.22,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Dorada, plancha",
+    "kcal": 92.9,
+    "protein": 17.0,
+    "carbs": 0.0,
+    "fat": 2.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Dátil",
+    "kcal": 286.8,
+    "protein": 2.5,
+    "carbs": 67.0,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Empanada de carne",
+    "kcal": 298.0,
+    "protein": 21.91,
+    "carbs": 12.01,
+    "fat": 18.11,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Empanadilla",
+    "kcal": 246.6,
+    "protein": 4.76,
+    "carbs": 29.74,
+    "fat": 12.03,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Endibia",
+    "kcal": 9.1,
+    "protein": 1.1,
+    "carbs": 0.7,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Eneldo, seco",
+    "kcal": 291.2,
+    "protein": 19.9,
+    "carbs": 42.2,
+    "fat": 4.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ensaimada",
+    "kcal": 456.0,
+    "protein": 5.7,
+    "carbs": 38.4,
+    "fat": 31.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ensalada",
+    "kcal": 19.1,
+    "protein": 1.11,
+    "carbs": 2.99,
+    "fat": 0.28,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ensaladilla rusa",
+    "kcal": 109.7,
+    "protein": 2.7,
+    "carbs": 9.76,
+    "fat": 6.68,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Escarola",
+    "kcal": 12.3,
+    "protein": 1.6,
+    "carbs": 1.0,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Esparragos blancos en conserva",
+    "kcal": 24.2,
+    "protein": 1.9,
+    "carbs": 3.4,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Espinaca, en conserva",
+    "kcal": 14.6,
+    "protein": 2.2,
+    "carbs": 0.52,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Espinaca, hervida",
+    "kcal": 21.9,
+    "protein": 2.39,
+    "carbs": 1.94,
+    "fat": 0.49,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Espinaca, picada, congelada, cruda",
+    "kcal": 22.2,
+    "protein": 2.71,
+    "carbs": 1.0,
+    "fat": 0.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Espárrago, verde",
+    "kcal": 25.2,
+    "protein": 2.9,
+    "carbs": 2.0,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Fabada",
+    "kcal": 157.1,
+    "protein": 6.06,
+    "carbs": 13.42,
+    "fat": 8.82,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Faneca, cruda",
+    "kcal": 75.5,
+    "protein": 15.4,
+    "carbs": 1.0,
+    "fat": 1.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Flamenquín",
+    "kcal": 229.7,
+    "protein": 19.2,
+    "carbs": 4.4,
+    "fat": 15.13,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Flan de huevo",
+    "kcal": 132.5,
+    "protein": 4.8,
+    "carbs": 20.4,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Flan de huevo, bajo en calorías",
+    "kcal": 76.5,
+    "protein": 5.7,
+    "carbs": 7.9,
+    "fat": 2.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Fletan, crudo",
+    "kcal": 84.6,
+    "protein": 17.5,
+    "carbs": 0.5,
+    "fat": 1.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Foie gras",
+    "kcal": 441.9,
+    "protein": 10.0,
+    "carbs": 3.0,
+    "fat": 44.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Frambuesa, cruda",
+    "kcal": 38.0,
+    "protein": 1.2,
+    "carbs": 7.0,
+    "fat": 0.53,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Fresa",
+    "kcal": 35.7,
+    "protein": 0.7,
+    "carbs": 7.0,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Fritos de maíz",
+    "kcal": 564.0,
+    "protein": 6.6,
+    "carbs": 51.0,
+    "fat": 37.31,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Fructosa",
+    "kcal": 406.3,
+    "protein": 0.0,
+    "carbs": 100.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Frutos secos",
+    "kcal": 563.3,
+    "protein": 1.3,
+    "carbs": 25.35,
+    "fat": 51.45,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Fuet",
+    "kcal": 473.0,
+    "protein": 19.5,
+    "carbs": 5.5,
+    "fat": 42.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galleta ,tipo \"digestiva\", con chocolate",
+    "kcal": 510.9,
+    "protein": 6.8,
+    "carbs": 66.5,
+    "fat": 24.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galleta salada",
+    "kcal": 407.8,
+    "protein": 9.4,
+    "carbs": 69.2,
+    "fat": 10.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galleta, barquillo, con jalea de frutas",
+    "kcal": 367.7,
+    "protein": 5.2,
+    "carbs": 73.0,
+    "fat": 5.65,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galleta, cubierta de chocolate",
+    "kcal": 541.1,
+    "protein": 5.7,
+    "carbs": 67.4,
+    "fat": 27.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galleta, genérico",
+    "kcal": 481.3,
+    "protein": 6.76,
+    "carbs": 64.31,
+    "fat": 21.77,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galleta, tipo \"Digestiva\"",
+    "kcal": 466.5,
+    "protein": 6.3,
+    "carbs": 63.2,
+    "fat": 20.82,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galletas integrales",
+    "kcal": 402.4,
+    "protein": 10.0,
+    "carbs": 42.9,
+    "fat": 21.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galletas saladas, con queso",
+    "kcal": 479.6,
+    "protein": 11.8,
+    "carbs": 49.1,
+    "fat": 26.26,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galletas tipo maria",
+    "kcal": 477.1,
+    "protein": 7.08,
+    "carbs": 69.0,
+    "fat": 19.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galletas, con chocolate, tipo \"cookies\"",
+    "kcal": 489.1,
+    "protein": 6.2,
+    "carbs": 64.3,
+    "fat": 22.92,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Galletas, de mantequilla",
+    "kcal": 481.6,
+    "protein": 7.0,
+    "carbs": 68.0,
+    "fat": 20.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gallina, entera, cruda",
+    "kcal": 230.4,
+    "protein": 17.3,
+    "carbs": 0.0,
+    "fat": 18.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gallo",
+    "kcal": 81.0,
+    "protein": 15.8,
+    "carbs": 0.0,
+    "fat": 1.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gamba quisquilla, congelada",
+    "kcal": 74.6,
+    "protein": 16.5,
+    "carbs": 0.0,
+    "fat": 0.86,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gamba roja, cruda",
+    "kcal": 89.2,
+    "protein": 18.0,
+    "carbs": 0.0,
+    "fat": 1.81,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gamba, hervida",
+    "kcal": 95.5,
+    "protein": 19.78,
+    "carbs": 0.0,
+    "fat": 1.71,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Garbanzo, en conserva",
+    "kcal": 132.9,
+    "protein": 7.2,
+    "carbs": 14.12,
+    "fat": 2.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Garbanzo, hervido",
+    "kcal": 358.7,
+    "protein": 8.9,
+    "carbs": 18.7,
+    "fat": 2.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Garbanzo, seco, crudo",
+    "kcal": 334.2,
+    "protein": 19.3,
+    "carbs": 49.25,
+    "fat": 6.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gazpacho",
+    "kcal": 33.7,
+    "protein": 0.6,
+    "carbs": 1.6,
+    "fat": 2.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gelatina",
+    "kcal": 342.9,
+    "protein": 84.4,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Germen de trigo",
+    "kcal": 335.1,
+    "protein": 25.0,
+    "carbs": 33.3,
+    "fat": 11.11,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ginebra",
+    "kcal": 219.0,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gofio",
+    "kcal": 397.2,
+    "protein": 10.8,
+    "carbs": 81.57,
+    "fat": 2.48,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gomasio",
+    "kcal": 88.6,
+    "protein": 2.73,
+    "carbs": 0.14,
+    "fat": 8.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gominola, genérica",
+    "kcal": 266.5,
+    "protein": 4.63,
+    "carbs": 69.95,
+    "fat": 0.02,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Granada",
+    "kcal": 62.4,
+    "protein": 1.0,
+    "carbs": 13.7,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Grasa de pollo",
+    "kcal": 882.6,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 99.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Grelo",
+    "kcal": 11.4,
+    "protein": 2.7,
+    "carbs": 0.1,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Grosella negra, cruda",
+    "kcal": 35.8,
+    "protein": 1.48,
+    "carbs": 7.1,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Grosella, cruda",
+    "kcal": 26.6,
+    "protein": 1.1,
+    "carbs": 5.0,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Guayaba, enlatada en almíbar",
+    "kcal": 65.4,
+    "protein": 0.4,
+    "carbs": 15.7,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Guayaba, sin piel, cruda",
+    "kcal": 57.0,
+    "protein": 0.82,
+    "carbs": 11.9,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Guindilla, en polvo",
+    "kcal": 303.8,
+    "protein": 12.0,
+    "carbs": 31.7,
+    "fat": 14.28,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Guindilla, picante",
+    "kcal": 44.5,
+    "protein": 1.87,
+    "carbs": 6.7,
+    "fat": 1.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Guisante, congelado, crudo",
+    "kcal": 62.1,
+    "protein": 5.4,
+    "carbs": 8.8,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Guisante, congelado, hervido",
+    "kcal": 60.3,
+    "protein": 6.0,
+    "carbs": 6.89,
+    "fat": 0.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Guisante, seco, crudo",
+    "kcal": 335.6,
+    "protein": 21.6,
+    "carbs": 56.0,
+    "fat": 2.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Guisantes en conserva",
+    "kcal": 66.6,
+    "protein": 5.6,
+    "carbs": 9.7,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Gusanito",
+    "kcal": 475.6,
+    "protein": 9.14,
+    "carbs": 50.9,
+    "fat": 26.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Haba, fresca",
+    "kcal": 57.2,
+    "protein": 4.6,
+    "carbs": 8.6,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Haba, frita",
+    "kcal": 57.2,
+    "protein": 4.6,
+    "carbs": 8.6,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Haba, seca",
+    "kcal": 356.2,
+    "protein": 26.1,
+    "carbs": 58.3,
+    "fat": 1.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Haba, seca, remojada, hervida",
+    "kcal": 58.1,
+    "protein": 5.8,
+    "carbs": 7.2,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Harina de avena",
+    "kcal": 352.0,
+    "protein": 15.0,
+    "carbs": 57.7,
+    "fat": 6.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Harina de avena, cocida en agua",
+    "kcal": 46.2,
+    "protein": 1.4,
+    "carbs": 8.0,
+    "fat": 0.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Harina de cebada",
+    "kcal": 359.5,
+    "protein": 10.5,
+    "carbs": 74.5,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Harina de centeno",
+    "kcal": 357.6,
+    "protein": 8.2,
+    "carbs": 75.9,
+    "fat": 1.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Harina de maíz",
+    "kcal": 328.0,
+    "protein": 8.29,
+    "carbs": 66.3,
+    "fat": 2.82,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Harina de soja",
+    "kcal": 410.0,
+    "protein": 37.3,
+    "carbs": 13.0,
+    "fat": 23.25,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Harina de trigo",
+    "kcal": 331.1,
+    "protein": 10.0,
+    "carbs": 71.5,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Harina de trigo, integral",
+    "kcal": 320.4,
+    "protein": 11.5,
+    "carbs": 62.6,
+    "fat": 2.18,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Helado de chocolate",
+    "kcal": 227.3,
+    "protein": 3.8,
+    "carbs": 28.2,
+    "fat": 11.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Helado de fresa",
+    "kcal": 199.4,
+    "protein": 3.2,
+    "carbs": 27.6,
+    "fat": 8.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Helado de nata",
+    "kcal": 210.5,
+    "protein": 3.9,
+    "carbs": 24.4,
+    "fat": 10.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Higado de pollo, crudo",
+    "kcal": 136.3,
+    "protein": 22.12,
+    "carbs": 1.2,
+    "fat": 4.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Higos y brevas",
+    "kcal": 69.9,
+    "protein": 1.2,
+    "carbs": 16.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Hinojo",
+    "kcal": 14.0,
+    "protein": 1.1,
+    "carbs": 2.3,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Hojaldre",
+    "kcal": 550.1,
+    "protein": 7.4,
+    "carbs": 44.2,
+    "fat": 38.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Horchata",
+    "kcal": 97.8,
+    "protein": 1.2,
+    "carbs": 17.0,
+    "fat": 2.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de codorniz, entero, crudo",
+    "kcal": 153.0,
+    "protein": 13.1,
+    "carbs": 0.4,
+    "fat": 11.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de gallina fresco",
+    "kcal": 148.9,
+    "protein": 12.5,
+    "carbs": 0.0,
+    "fat": 11.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de gallina, clara, cruda",
+    "kcal": 44.8,
+    "protein": 10.5,
+    "carbs": 0.3,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de gallina, escalfado",
+    "kcal": 146.2,
+    "protein": 12.6,
+    "carbs": 0.3,
+    "fat": 10.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de gallina, frito",
+    "kcal": 184.6,
+    "protein": 13.4,
+    "carbs": 0.3,
+    "fat": 14.58,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de gallina, hervido, duro",
+    "kcal": 144.9,
+    "protein": 12.5,
+    "carbs": 0.3,
+    "fat": 10.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de gallina, pasado por agua",
+    "kcal": 143.6,
+    "protein": 12.5,
+    "carbs": 0.3,
+    "fat": 10.36,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de gallina, revuelto, con mantequilla",
+    "kcal": 228.0,
+    "protein": 10.2,
+    "carbs": 0.8,
+    "fat": 20.72,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de gallina, yema, cruda",
+    "kcal": 354.9,
+    "protein": 16.5,
+    "carbs": 2.3,
+    "fat": 31.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de gallina, yema, desecada",
+    "kcal": 661.7,
+    "protein": 31.7,
+    "carbs": 2.1,
+    "fat": 59.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de pato, crudo",
+    "kcal": 162.5,
+    "protein": 14.3,
+    "carbs": 0.0,
+    "fat": 11.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Huevo de pavo, entero, crudo",
+    "kcal": 163.1,
+    "protein": 13.7,
+    "carbs": 1.2,
+    "fat": 11.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Hígado, de cerdo, crudo",
+    "kcal": 119.7,
+    "protein": 21.4,
+    "carbs": 0.0,
+    "fat": 3.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Hígado, de vaca/buey, crudo",
+    "kcal": 135.5,
+    "protein": 21.1,
+    "carbs": 3.5,
+    "fat": 4.02,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Infusión",
+    "kcal": 0.0,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Jalea real",
+    "kcal": 264.9,
+    "protein": 0.2,
+    "carbs": 65.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Jamón asado",
+    "kcal": 264.7,
+    "protein": 26.83,
+    "carbs": 0.0,
+    "fat": 17.61,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Jamón cocido, categoría s/e",
+    "kcal": 113.5,
+    "protein": 21.0,
+    "carbs": 0.4,
+    "fat": 3.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Jamón cocido, enlatado",
+    "kcal": 125.1,
+    "protein": 18.4,
+    "carbs": 1.3,
+    "fat": 5.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Jamón ibérico de bellota",
+    "kcal": 333.2,
+    "protein": 33.2,
+    "carbs": 0.5,
+    "fat": 22.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Jamón ibérico de cebo",
+    "kcal": 301.4,
+    "protein": 32.3,
+    "carbs": 0.1,
+    "fat": 19.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Jamón serrano",
+    "kcal": 317.7,
+    "protein": 28.8,
+    "carbs": 0.2,
+    "fat": 22.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Jengibre",
+    "kcal": 51.7,
+    "protein": 1.7,
+    "carbs": 9.5,
+    "fat": 0.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Judia verde, hervida",
+    "kcal": 83.3,
+    "protein": 1.78,
+    "carbs": 3.94,
+    "fat": 6.79,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Judias verdes en conserva",
+    "kcal": 12.3,
+    "protein": 1.19,
+    "carbs": 1.63,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Judía blanca",
+    "kcal": 240.9,
+    "protein": 21.1,
+    "carbs": 34.7,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Judía pinta",
+    "kcal": 245.8,
+    "protein": 23.58,
+    "carbs": 35.11,
+    "fat": 0.83,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Judía verde, congelada, cruda",
+    "kcal": 29.1,
+    "protein": 1.88,
+    "carbs": 4.1,
+    "fat": 0.55,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Judía verde, cruda",
+    "kcal": 27.5,
+    "protein": 2.2,
+    "carbs": 3.7,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Judías blancas, cocidas",
+    "kcal": 322.9,
+    "protein": 21.4,
+    "carbs": 54.8,
+    "fat": 1.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Jurel, crudo",
+    "kcal": 111.8,
+    "protein": 15.4,
+    "carbs": 0.8,
+    "fat": 1.97,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Kebab",
+    "kcal": 303.5,
+    "protein": 8.8,
+    "carbs": 16.7,
+    "fat": 7.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Kefir",
+    "kcal": 63.9,
+    "protein": 3.3,
+    "carbs": 4.8,
+    "fat": 3.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ketchup",
+    "kcal": 103.8,
+    "protein": 3.4,
+    "carbs": 21.7,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Kiwi",
+    "kcal": 52.0,
+    "protein": 1.1,
+    "carbs": 10.6,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lacón",
+    "kcal": 213.4,
+    "protein": 19.12,
+    "carbs": 9.9,
+    "fat": 10.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Langosta",
+    "kcal": 90.8,
+    "protein": 18.0,
+    "carbs": 0.0,
+    "fat": 2.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Langostino",
+    "kcal": 111.9,
+    "protein": 24.3,
+    "carbs": 1.5,
+    "fat": 0.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lasaña",
+    "kcal": 137.3,
+    "protein": 6.3,
+    "carbs": 10.3,
+    "fat": 7.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Laurel, hoja",
+    "kcal": 302.6,
+    "protein": 7.6,
+    "carbs": 48.6,
+    "fat": 8.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche condensada, entera, con azúcar",
+    "kcal": 334.3,
+    "protein": 8.51,
+    "carbs": 53.65,
+    "fat": 9.25,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche de almendra",
+    "kcal": 351.3,
+    "protein": 14.5,
+    "carbs": 60.0,
+    "fat": 5.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche de cabra",
+    "kcal": 64.4,
+    "protein": 3.4,
+    "carbs": 4.4,
+    "fat": 3.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche de coco",
+    "kcal": 207.9,
+    "protein": 2.0,
+    "carbs": 2.8,
+    "fat": 21.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche de oveja",
+    "kcal": 99.2,
+    "protein": 5.6,
+    "carbs": 5.0,
+    "fat": 6.35,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche de vaca, desnatada, condensada, con azúcar",
+    "kcal": 286.2,
+    "protein": 10.0,
+    "carbs": 60.0,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche de vaca, entera",
+    "kcal": 65.1,
+    "protein": 3.06,
+    "carbs": 4.7,
+    "fat": 3.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche en polvo, semidesnatada",
+    "kcal": 443.6,
+    "protein": 29.8,
+    "carbs": 43.9,
+    "fat": 16.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche fermentada, bifidobacterium, entera, natural",
+    "kcal": 62.6,
+    "protein": 3.6,
+    "carbs": 4.4,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche materna",
+    "kcal": 68.8,
+    "protein": 1.15,
+    "carbs": 7.0,
+    "fat": 4.03,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche merengada",
+    "kcal": 84.0,
+    "protein": 3.0,
+    "carbs": 10.7,
+    "fat": 3.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche, desnatada, pasteurizada",
+    "kcal": 33.9,
+    "protein": 3.3,
+    "carbs": 4.6,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Leche, semidesnatada, pasteurizada",
+    "kcal": 45.8,
+    "protein": 3.2,
+    "carbs": 4.6,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lechuga",
+    "kcal": 15.6,
+    "protein": 1.12,
+    "carbs": 1.4,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lecitina de soja",
+    "kcal": 501.2,
+    "protein": 0.0,
+    "carbs": 8.0,
+    "fat": 53.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lengua de cerdo, cruda",
+    "kcal": 156.1,
+    "protein": 16.0,
+    "carbs": 0.0,
+    "fat": 10.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lengua de cordero, cruda",
+    "kcal": 191.3,
+    "protein": 15.3,
+    "carbs": 0.0,
+    "fat": 14.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lengua, de buey, cruda",
+    "kcal": 217.9,
+    "protein": 14.9,
+    "carbs": 3.7,
+    "fat": 16.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lengua, de ternera, cruda",
+    "kcal": 135.1,
+    "protein": 17.8,
+    "carbs": 0.0,
+    "fat": 7.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lenguado",
+    "kcal": 78.5,
+    "protein": 16.5,
+    "carbs": 0.0,
+    "fat": 1.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lenguado, al horno",
+    "kcal": 73.5,
+    "protein": 16.0,
+    "carbs": 0.0,
+    "fat": 0.96,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lenguado, frito",
+    "kcal": 92.2,
+    "protein": 17.9,
+    "carbs": 0.0,
+    "fat": 2.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lenguado, plancha",
+    "kcal": 134.8,
+    "protein": 15.36,
+    "carbs": 0.47,
+    "fat": 7.97,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lenteja, en conserva",
+    "kcal": 73.7,
+    "protein": 6.28,
+    "carbs": 11.4,
+    "fat": 0.21,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lenteja, hervida",
+    "kcal": 331.1,
+    "protein": 23.0,
+    "carbs": 54.8,
+    "fat": 1.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lenteja, seca, cruda",
+    "kcal": 308.9,
+    "protein": 24.77,
+    "carbs": 48.7,
+    "fat": 1.17,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Licor apricot",
+    "kcal": 247.5,
+    "protein": 0.21,
+    "carbs": 30.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Licor benedictine",
+    "kcal": 258.8,
+    "protein": 0.0,
+    "carbs": 33.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Licor curaçao",
+    "kcal": 315.3,
+    "protein": 0.0,
+    "carbs": 30.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Licor de café",
+    "kcal": 343.1,
+    "protein": 0.0,
+    "carbs": 46.8,
+    "fat": 0.29,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Licor de crema 15-17% vol.",
+    "kcal": 322.3,
+    "protein": 0.0,
+    "carbs": 20.9,
+    "fat": 14.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Licores de frutas",
+    "kcal": 225.8,
+    "protein": 0.1,
+    "carbs": 35.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Liebre, entera, cruda",
+    "kcal": 192.2,
+    "protein": 29.9,
+    "carbs": 0.0,
+    "fat": 8.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lija, cruda",
+    "kcal": 135.0,
+    "protein": 18.0,
+    "carbs": 0.0,
+    "fat": 7.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lima, cruda",
+    "kcal": 8.3,
+    "protein": 0.6,
+    "carbs": 1.0,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Limonada",
+    "kcal": 11.5,
+    "protein": 0.5,
+    "carbs": 1.9,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Litchi, crudo",
+    "kcal": 66.9,
+    "protein": 0.9,
+    "carbs": 14.6,
+    "fat": 0.44,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lombarda",
+    "kcal": 22.2,
+    "protein": 1.5,
+    "carbs": 3.5,
+    "fat": 0.18,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lomo embuchado",
+    "kcal": 321.2,
+    "protein": 34.0,
+    "carbs": 0.0,
+    "fat": 20.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Longaniza",
+    "kcal": 344.8,
+    "protein": 25.0,
+    "carbs": 0.0,
+    "fat": 27.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lubina",
+    "kcal": 84.6,
+    "protein": 18.0,
+    "carbs": 0.0,
+    "fat": 1.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Lucio, al horno",
+    "kcal": 95.1,
+    "protein": 21.5,
+    "carbs": 0.0,
+    "fat": 0.87,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Macedonia de frutas, conserva en su jugo",
+    "kcal": 106.1,
+    "protein": 0.9,
+    "carbs": 25.0,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Magdalena",
+    "kcal": 385.0,
+    "protein": 6.1,
+    "carbs": 39.9,
+    "fat": 22.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mandarina",
+    "kcal": 39.8,
+    "protein": 0.8,
+    "carbs": 9.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mandarina, congelada",
+    "kcal": 41.7,
+    "protein": 0.63,
+    "carbs": 9.2,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mango, crudo",
+    "kcal": 58.7,
+    "protein": 0.6,
+    "carbs": 13.4,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Manteca",
+    "kcal": 875.5,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 99.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mantequilla salada",
+    "kcal": 730.0,
+    "protein": 0.7,
+    "carbs": 0.5,
+    "fat": 82.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mantequilla, baja en calorías",
+    "kcal": 500.7,
+    "protein": 3.3,
+    "carbs": 0.0,
+    "fat": 55.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Manzana",
+    "kcal": 50.0,
+    "protein": 0.3,
+    "carbs": 12.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Margarina de maíz",
+    "kcal": 714.8,
+    "protein": 0.9,
+    "carbs": 0.9,
+    "fat": 80.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Margarina, baja en calorías",
+    "kcal": 361.9,
+    "protein": 1.62,
+    "carbs": 0.4,
+    "fat": 40.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Masa de hojaldre, cruda",
+    "kcal": 408.0,
+    "protein": 4.85,
+    "carbs": 31.68,
+    "fat": 29.35,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mayonesa con aceite de girasol",
+    "kcal": 697.4,
+    "protein": 1.3,
+    "carbs": 5.8,
+    "fat": 75.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mayonesa, aceite de oliva",
+    "kcal": 781.7,
+    "protein": 2.1,
+    "carbs": 0.1,
+    "fat": 87.38,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mayonesa, aceite de soja",
+    "kcal": 706.8,
+    "protein": 1.3,
+    "carbs": 0.7,
+    "fat": 79.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mayonesa, baja en calorías",
+    "kcal": 296.4,
+    "protein": 1.0,
+    "carbs": 10.8,
+    "fat": 28.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Maíz, en mazorca, congelado, crudo",
+    "kcal": 94.4,
+    "protein": 3.2,
+    "carbs": 18.3,
+    "fat": 0.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Maíz, en mazorca, crudo",
+    "kcal": 390.1,
+    "protein": 8.4,
+    "carbs": 85.6,
+    "fat": 0.92,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mejillon",
+    "kcal": 60.7,
+    "protein": 10.8,
+    "carbs": 0.0,
+    "fat": 1.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mejillón, en conserva, al natural",
+    "kcal": 82.5,
+    "protein": 12.0,
+    "carbs": 2.0,
+    "fat": 2.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mejillón, en escabeche",
+    "kcal": 167.3,
+    "protein": 10.7,
+    "carbs": 0.0,
+    "fat": 14.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mejillón, hervido",
+    "kcal": 111.8,
+    "protein": 18.45,
+    "carbs": 3.18,
+    "fat": 2.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Melocotón",
+    "kcal": 39.0,
+    "protein": 0.6,
+    "carbs": 9.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Melocotón en almíbar",
+    "kcal": 57.7,
+    "protein": 0.4,
+    "carbs": 13.8,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Melocotón, desecado",
+    "kcal": 270.4,
+    "protein": 3.6,
+    "carbs": 61.3,
+    "fat": 0.76,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Melón",
+    "kcal": 26.8,
+    "protein": 0.6,
+    "carbs": 6.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Membrillo, crudo",
+    "kcal": 28.8,
+    "protein": 0.3,
+    "carbs": 6.3,
+    "fat": 0.23,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Menestra de verduras, congelada",
+    "kcal": 44.6,
+    "protein": 3.3,
+    "carbs": 6.6,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Menta, fresca",
+    "kcal": 43.4,
+    "protein": 3.8,
+    "carbs": 5.3,
+    "fat": 0.73,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Merluza fresca",
+    "kcal": 64.4,
+    "protein": 11.93,
+    "carbs": 0.0,
+    "fat": 1.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Merluza, congelada, cruda",
+    "kcal": 84.5,
+    "protein": 16.7,
+    "carbs": 0.0,
+    "fat": 1.88,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Merluza, rebozada, frita",
+    "kcal": 148.6,
+    "protein": 10.65,
+    "carbs": 3.52,
+    "fat": 10.29,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mermelada de albaricoque",
+    "kcal": 15.0,
+    "protein": 0.3,
+    "carbs": 3.4,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mermelada de albaricoque y melocotón, baja en calorías",
+    "kcal": 220.6,
+    "protein": 0.7,
+    "carbs": 53.6,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mermelada de ciruela",
+    "kcal": 15.0,
+    "protein": 0.3,
+    "carbs": 3.4,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mermelada de frambuesa",
+    "kcal": 251.9,
+    "protein": 0.45,
+    "carbs": 60.9,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mermelada de fresa",
+    "kcal": 249.0,
+    "protein": 0.31,
+    "carbs": 59.6,
+    "fat": 0.63,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mermelada de fresa, baja en calorías",
+    "kcal": 220.6,
+    "protein": 0.7,
+    "carbs": 53.6,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mermelada de grosella roja",
+    "kcal": 240.5,
+    "protein": 0.5,
+    "carbs": 58.7,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mermelada de mora",
+    "kcal": 240.5,
+    "protein": 0.5,
+    "carbs": 58.7,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mermelada de naranja",
+    "kcal": 18.7,
+    "protein": 0.3,
+    "carbs": 4.3,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mero, crudo",
+    "kcal": 87.7,
+    "protein": 19.4,
+    "carbs": 0.0,
+    "fat": 1.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mero, plancha",
+    "kcal": 146.1,
+    "protein": 14.33,
+    "carbs": 0.32,
+    "fat": 9.79,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Miel",
+    "kcal": 314.1,
+    "protein": 0.5,
+    "carbs": 76.8,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mijo",
+    "kcal": 343.5,
+    "protein": 11.01,
+    "carbs": 64.4,
+    "fat": 4.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Miso",
+    "kcal": 208.2,
+    "protein": 11.69,
+    "carbs": 26.47,
+    "fat": 6.01,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mojo picon",
+    "kcal": 708.8,
+    "protein": 0.94,
+    "carbs": 1.78,
+    "fat": 78.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Molleja de cordero",
+    "kcal": 131.1,
+    "protein": 15.3,
+    "carbs": 0.0,
+    "fat": 7.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Morcilla",
+    "kcal": 323.0,
+    "protein": 11.0,
+    "carbs": 3.2,
+    "fat": 30.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Morcilla, frita",
+    "kcal": 305.7,
+    "protein": 12.58,
+    "carbs": 15.0,
+    "fat": 21.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mortadela",
+    "kcal": 293.6,
+    "protein": 14.0,
+    "carbs": 3.0,
+    "fat": 25.39,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mostaza",
+    "kcal": 132.7,
+    "protein": 5.9,
+    "carbs": 5.0,
+    "fat": 10.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mousse de chocolate",
+    "kcal": 245.9,
+    "protein": 5.1,
+    "carbs": 37.8,
+    "fat": 8.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mousse de queso fresco, con frutas",
+    "kcal": 134.7,
+    "protein": 5.4,
+    "carbs": 16.0,
+    "fat": 5.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mousse de queso fresco, desnatado, azucarado",
+    "kcal": 105.6,
+    "protein": 8.5,
+    "carbs": 11.4,
+    "fat": 2.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mousse de queso fresco, desnatado, con frutas",
+    "kcal": 116.7,
+    "protein": 5.6,
+    "carbs": 19.2,
+    "fat": 1.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mousse de yogur, con frutas",
+    "kcal": 144.6,
+    "protein": 3.3,
+    "carbs": 17.7,
+    "fat": 6.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mousse de yogur, natural",
+    "kcal": 165.2,
+    "protein": 4.4,
+    "carbs": 15.8,
+    "fat": 9.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Muesli",
+    "kcal": 381.7,
+    "protein": 9.0,
+    "carbs": 61.0,
+    "fat": 11.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mújol, al horno",
+    "kcal": 147.8,
+    "protein": 24.8,
+    "carbs": 0.0,
+    "fat": 5.31,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Mújol, crudo",
+    "kcal": 127.6,
+    "protein": 15.8,
+    "carbs": 0.8,
+    "fat": 6.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Nabo, pelado, crudo",
+    "kcal": 18.4,
+    "protein": 0.9,
+    "carbs": 3.2,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Napolitana, rellena con crema de cacao",
+    "kcal": 466.3,
+    "protein": 7.0,
+    "carbs": 49.0,
+    "fat": 27.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Naranja",
+    "kcal": 38.2,
+    "protein": 0.8,
+    "carbs": 8.6,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Nata montada",
+    "kcal": 303.2,
+    "protein": 2.36,
+    "carbs": 3.27,
+    "fat": 31.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Nata, líquida, para cocinar, 18% de grasa",
+    "kcal": 200.8,
+    "protein": 2.51,
+    "carbs": 3.4,
+    "fat": 19.99,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Natillas sabor vainilla",
+    "kcal": 103.6,
+    "protein": 3.7,
+    "carbs": 15.48,
+    "fat": 2.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Nectarina",
+    "kcal": 43.1,
+    "protein": 1.4,
+    "carbs": 9.0,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Nispero, sin piel , congelado",
+    "kcal": 39.0,
+    "protein": 0.56,
+    "carbs": 8.6,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Nuez",
+    "kcal": 592.0,
+    "protein": 14.0,
+    "carbs": 3.3,
+    "fat": 63.28,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Nuez moscada",
+    "kcal": 544.8,
+    "protein": 5.8,
+    "carbs": 49.29,
+    "fat": 36.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Nuez, cruda, con cáscara",
+    "kcal": 592.0,
+    "protein": 14.0,
+    "carbs": 3.3,
+    "fat": 59.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Néctar de albaricoque, envasado",
+    "kcal": 57.7,
+    "protein": 0.4,
+    "carbs": 13.8,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Néctar de ciruela",
+    "kcal": 15.0,
+    "protein": 0.3,
+    "carbs": 3.4,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Néctar de frutas exóticas, envasado",
+    "kcal": 55.3,
+    "protein": 0.4,
+    "carbs": 13.2,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Néctar de mango, envasado",
+    "kcal": 56.5,
+    "protein": 0.2,
+    "carbs": 13.7,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Néctar de maracuyá, envasado",
+    "kcal": 52.8,
+    "protein": 0.2,
+    "carbs": 12.8,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Néctar de melocotón",
+    "kcal": 17.1,
+    "protein": 0.2,
+    "carbs": 4.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Néctar de naranja, envasado",
+    "kcal": 42.3,
+    "protein": 0.3,
+    "carbs": 10.1,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Néctar de pera, envasado",
+    "kcal": 64.6,
+    "protein": 0.2,
+    "carbs": 15.7,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Néctar de piña",
+    "kcal": 22.3,
+    "protein": 0.2,
+    "carbs": 5.3,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Néctar de pomelo",
+    "kcal": 14.6,
+    "protein": 0.2,
+    "carbs": 3.4,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Níscalo, crudo",
+    "kcal": 14.0,
+    "protein": 1.89,
+    "carbs": 0.1,
+    "fat": 0.67,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Níspero, con piel, crudo",
+    "kcal": 52.6,
+    "protein": 0.4,
+    "carbs": 12.1,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Oca, sin piel, asada",
+    "kcal": 274.5,
+    "protein": 29.1,
+    "carbs": 0.0,
+    "fat": 17.67,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Orégano, seco",
+    "kcal": 415.8,
+    "protein": 11.0,
+    "carbs": 68.92,
+    "fat": 10.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ostra, cruda",
+    "kcal": 63.9,
+    "protein": 8.14,
+    "carbs": 2.76,
+    "fat": 2.21,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Paella",
+    "kcal": 171.9,
+    "protein": 12.37,
+    "carbs": 17.44,
+    "fat": 5.74,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Paella marinera",
+    "kcal": 122.0,
+    "protein": 3.55,
+    "carbs": 25.13,
+    "fat": 0.62,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Palmera",
+    "kcal": 533.5,
+    "protein": 5.0,
+    "carbs": 61.0,
+    "fat": 30.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Palmito, en conserva",
+    "kcal": 46.5,
+    "protein": 2.8,
+    "carbs": 8.0,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Palometa, cruda",
+    "kcal": 125.5,
+    "protein": 20.0,
+    "carbs": 0.0,
+    "fat": 1.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Palomitas de maíz, sin aceite, sin sal",
+    "kcal": 341.5,
+    "protein": 12.0,
+    "carbs": 62.9,
+    "fat": 4.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan blanco, de barra",
+    "kcal": 238.8,
+    "protein": 8.3,
+    "carbs": 47.0,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan blanco, de barra, sin sal",
+    "kcal": 261.7,
+    "protein": 8.0,
+    "carbs": 53.9,
+    "fat": 1.15,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan blanco, de molde, tostado",
+    "kcal": 248.1,
+    "protein": 7.3,
+    "carbs": 45.7,
+    "fat": 3.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan blanco, frito",
+    "kcal": 259.2,
+    "protein": 8.82,
+    "carbs": 51.5,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan blanco, tipo \"baguette\"",
+    "kcal": 269.8,
+    "protein": 8.0,
+    "carbs": 55.9,
+    "fat": 1.15,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan blanco, tostado",
+    "kcal": 303.7,
+    "protein": 10.1,
+    "carbs": 59.2,
+    "fat": 2.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan blanco, tostado sin sal",
+    "kcal": 303.7,
+    "protein": 10.1,
+    "carbs": 59.2,
+    "fat": 2.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan de avena",
+    "kcal": 270.1,
+    "protein": 8.4,
+    "carbs": 48.5,
+    "fat": 4.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan de cebada",
+    "kcal": 197.8,
+    "protein": 6.4,
+    "carbs": 39.9,
+    "fat": 1.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan de centeno",
+    "kcal": 220.2,
+    "protein": 6.21,
+    "carbs": 45.8,
+    "fat": 1.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan de leche",
+    "kcal": 414.1,
+    "protein": 10.0,
+    "carbs": 52.1,
+    "fat": 18.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan de maíz",
+    "kcal": 313.1,
+    "protein": 7.2,
+    "carbs": 48.1,
+    "fat": 10.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan integral",
+    "kcal": 249.6,
+    "protein": 10.9,
+    "carbs": 44.0,
+    "fat": 3.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan integral, de molde, tostado",
+    "kcal": 249.6,
+    "protein": 10.9,
+    "carbs": 44.0,
+    "fat": 3.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan integral, sin sal",
+    "kcal": 249.6,
+    "protein": 10.9,
+    "carbs": 44.0,
+    "fat": 3.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan integral, tostado",
+    "kcal": 267.4,
+    "protein": 10.8,
+    "carbs": 48.7,
+    "fat": 2.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan rallado",
+    "kcal": 257.8,
+    "protein": 8.47,
+    "carbs": 51.5,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan tostado integral",
+    "kcal": 303.7,
+    "protein": 10.1,
+    "carbs": 59.2,
+    "fat": 2.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pan, tipo hamburguesa",
+    "kcal": 265.2,
+    "protein": 7.54,
+    "carbs": 47.5,
+    "fat": 4.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Panceta, frita",
+    "kcal": 734.4,
+    "protein": 4.68,
+    "carbs": 0.0,
+    "fat": 80.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Panga, cruda",
+    "kcal": 66.3,
+    "protein": 13.4,
+    "carbs": 0.3,
+    "fat": 1.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Papaya, cruda",
+    "kcal": 33.3,
+    "protein": 0.5,
+    "carbs": 7.6,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Paraguaya",
+    "kcal": 46.0,
+    "protein": 0.9,
+    "carbs": 10.2,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pasta alimenticia, con huevo, cruda",
+    "kcal": 373.0,
+    "protein": 13.5,
+    "carbs": 69.2,
+    "fat": 4.18,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pasta alimenticia, con huevo, hervida",
+    "kcal": 125.3,
+    "protein": 4.7,
+    "carbs": 22.9,
+    "fat": 1.49,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pasta alimenticia, con vegetales, cruda",
+    "kcal": 338.7,
+    "protein": 12.0,
+    "carbs": 67.0,
+    "fat": 2.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pasta alimenticia, cruda",
+    "kcal": 351.7,
+    "protein": 12.5,
+    "carbs": 70.9,
+    "fat": 1.45,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pasta alimenticia, integral, cruda",
+    "kcal": 345.5,
+    "protein": 13.4,
+    "carbs": 66.2,
+    "fat": 2.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pasta alimenticia, integral, hervida",
+    "kcal": 121.3,
+    "protein": 4.7,
+    "carbs": 23.2,
+    "fat": 0.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pasta alimenticia, rellena con carne, hervida",
+    "kcal": 100.5,
+    "protein": 4.7,
+    "carbs": 12.7,
+    "fat": 3.37,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pasta de fruta",
+    "kcal": 256.8,
+    "protein": 1.0,
+    "carbs": 62.2,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pasta de sésamo",
+    "kcal": 590.5,
+    "protein": 18.2,
+    "carbs": 0.9,
+    "fat": 58.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pastas de te",
+    "kcal": 346.4,
+    "protein": 8.9,
+    "carbs": 58.3,
+    "fat": 8.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pastel",
+    "kcal": 399.7,
+    "protein": 5.2,
+    "carbs": 49.2,
+    "fat": 20.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pastel con fruta confitada",
+    "kcal": 367.3,
+    "protein": 5.1,
+    "carbs": 57.0,
+    "fat": 13.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pastel de chocolate",
+    "kcal": 437.9,
+    "protein": 5.19,
+    "carbs": 41.77,
+    "fat": 27.94,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pastel de manzana",
+    "kcal": 381.9,
+    "protein": 3.5,
+    "carbs": 57.4,
+    "fat": 15.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Patata, asada",
+    "kcal": 205.5,
+    "protein": 4.29,
+    "carbs": 46.06,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Patata, cruda",
+    "kcal": 72.5,
+    "protein": 2.2,
+    "carbs": 15.2,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Patata, frita con aceite s/e, sin sal",
+    "kcal": 288.8,
+    "protein": 3.8,
+    "carbs": 30.0,
+    "fat": 17.12,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Patata, hervida",
+    "kcal": 74.9,
+    "protein": 2.38,
+    "carbs": 15.62,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Patata, prefrita, congelada",
+    "kcal": 269.3,
+    "protein": 4.1,
+    "carbs": 32.79,
+    "fat": 13.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Patata, salteada con aceite girasol",
+    "kcal": 134.1,
+    "protein": 1.95,
+    "carbs": 13.99,
+    "fat": 7.84,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Patatas chips, \"lights\"",
+    "kcal": 457.4,
+    "protein": 7.05,
+    "carbs": 57.1,
+    "fat": 22.25,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Patatas, fritas, chips",
+    "kcal": 536.2,
+    "protein": 6.5,
+    "carbs": 49.5,
+    "fat": 34.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pate de higado de cerdo, 30% de grasa",
+    "kcal": 338.1,
+    "protein": 14.0,
+    "carbs": 5.0,
+    "fat": 29.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pato, entero, asado",
+    "kcal": 188.6,
+    "protein": 25.0,
+    "carbs": 0.0,
+    "fat": 9.84,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pato, entero, crudo",
+    "kcal": 137.5,
+    "protein": 19.7,
+    "carbs": 0.0,
+    "fat": 6.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Paté de pimienta",
+    "kcal": 288.8,
+    "protein": 11.9,
+    "carbs": 11.3,
+    "fat": 28.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pavo, crudo",
+    "kcal": 157.2,
+    "protein": 20.18,
+    "carbs": 0.0,
+    "fat": 8.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pavo, fiambre",
+    "kcal": 146.9,
+    "protein": 15.3,
+    "carbs": 0.4,
+    "fat": 9.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pavo, fiambre, bajo en grasa",
+    "kcal": 100.1,
+    "protein": 19.3,
+    "carbs": 3.6,
+    "fat": 0.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pavo, muslo, con piel, crudo",
+    "kcal": 150.7,
+    "protein": 18.9,
+    "carbs": 0.0,
+    "fat": 8.36,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pavo, pechuga, con piel, crudo",
+    "kcal": 106.8,
+    "protein": 24.12,
+    "carbs": 0.0,
+    "fat": 0.99,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pavo, pechuga, sin piel, a la plancha",
+    "kcal": 144.9,
+    "protein": 29.9,
+    "carbs": 0.0,
+    "fat": 2.65,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pepinillos en vinagre",
+    "kcal": 15.7,
+    "protein": 1.04,
+    "carbs": 2.6,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pepino",
+    "kcal": 11.9,
+    "protein": 0.7,
+    "carbs": 2.0,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pera",
+    "kcal": 44.7,
+    "protein": 0.4,
+    "carbs": 10.6,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pera, enlatada en almíbar",
+    "kcal": 61.5,
+    "protein": 0.2,
+    "carbs": 14.5,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Perca, al horno",
+    "kcal": 97.5,
+    "protein": 21.6,
+    "carbs": 0.0,
+    "fat": 1.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Perca, cruda",
+    "kcal": 89.7,
+    "protein": 18.6,
+    "carbs": 0.0,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Percebe",
+    "kcal": 59.7,
+    "protein": 13.6,
+    "carbs": 0.0,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Perdiz, cruda",
+    "kcal": 111.4,
+    "protein": 22.37,
+    "carbs": 0.0,
+    "fat": 2.32,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Perejil, fresco",
+    "kcal": 34.7,
+    "protein": 3.0,
+    "carbs": 2.7,
+    "fat": 1.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pescadilla, congelada, cruda",
+    "kcal": 55.1,
+    "protein": 11.75,
+    "carbs": 0.0,
+    "fat": 0.84,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pescadilla, rebozada en harina, frita",
+    "kcal": 176.7,
+    "protein": 18.1,
+    "carbs": 3.0,
+    "fat": 10.29,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pescado, genérico",
+    "kcal": 95.8,
+    "protein": 20.1,
+    "carbs": 0.0,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Petit líquido, sabor fresa",
+    "kcal": 79.1,
+    "protein": 2.8,
+    "carbs": 14.5,
+    "fat": 1.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Petit suisse, chocolate",
+    "kcal": 174.4,
+    "protein": 4.3,
+    "carbs": 24.7,
+    "fat": 6.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Petit suisse, fresa",
+    "kcal": 127.2,
+    "protein": 7.0,
+    "carbs": 16.7,
+    "fat": 3.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Petit Suisse, natural azucarado",
+    "kcal": 121.3,
+    "protein": 7.33,
+    "carbs": 14.37,
+    "fat": 3.75,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Petit suïsse, cereales y fruta",
+    "kcal": 165.3,
+    "protein": 7.2,
+    "carbs": 16.5,
+    "fat": 7.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pez espada, crudo",
+    "kcal": 110.3,
+    "protein": 18.0,
+    "carbs": 0.0,
+    "fat": 4.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pez espada, emperador, plancha",
+    "kcal": 147.3,
+    "protein": 16.01,
+    "carbs": 1.28,
+    "fat": 8.71,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pichón, sin piel, asado",
+    "kcal": 176.9,
+    "protein": 37.0,
+    "carbs": 0.0,
+    "fat": 3.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pijota, cruda",
+    "kcal": 64.4,
+    "protein": 11.93,
+    "carbs": 0.0,
+    "fat": 1.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pimentón, en polvo",
+    "kcal": 329.5,
+    "protein": 14.8,
+    "carbs": 38.0,
+    "fat": 13.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pimienta, blanca",
+    "kcal": 232.0,
+    "protein": 10.4,
+    "carbs": 42.4,
+    "fat": 2.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pimienta, negra",
+    "kcal": 230.0,
+    "protein": 11.0,
+    "carbs": 38.3,
+    "fat": 3.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pimiento morrón, en conserva",
+    "kcal": 29.5,
+    "protein": 1.19,
+    "carbs": 5.2,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pimiento rojo, crudo",
+    "kcal": 28.9,
+    "protein": 1.3,
+    "carbs": 4.5,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pimiento, frito",
+    "kcal": 20.1,
+    "protein": 0.88,
+    "carbs": 3.63,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pipa de calabaza",
+    "kcal": 600.1,
+    "protein": 30.23,
+    "carbs": 10.71,
+    "fat": 47.33,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pipa de girasol",
+    "kcal": 571.2,
+    "protein": 27.0,
+    "carbs": 20.0,
+    "fat": 43.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pipas de girasol, peladas, con sal",
+    "kcal": 624.4,
+    "protein": 17.25,
+    "carbs": 12.8,
+    "fat": 56.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pistacho",
+    "kcal": 591.6,
+    "protein": 17.6,
+    "carbs": 15.7,
+    "fat": 49.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pizza, precocinada",
+    "kcal": 210.2,
+    "protein": 8.2,
+    "carbs": 22.2,
+    "fat": 9.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Piña",
+    "kcal": 48.8,
+    "protein": 0.5,
+    "carbs": 11.5,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Piña en almíbar",
+    "kcal": 65.1,
+    "protein": 0.38,
+    "carbs": 15.4,
+    "fat": 0.11,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Piña, enlatada en su jugo",
+    "kcal": 49.3,
+    "protein": 0.3,
+    "carbs": 11.84,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Piñon",
+    "kcal": 679.8,
+    "protein": 14.0,
+    "carbs": 4.0,
+    "fat": 62.61,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Piñón, crudo, con cáscara",
+    "kcal": 679.4,
+    "protein": 14.0,
+    "carbs": 3.9,
+    "fat": 68.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Platija, al vapor",
+    "kcal": 101.5,
+    "protein": 19.0,
+    "carbs": 0.0,
+    "fat": 2.75,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Platija, cruda",
+    "kcal": 82.4,
+    "protein": 17.61,
+    "carbs": 0.0,
+    "fat": 1.23,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Plátano",
+    "kcal": 88.8,
+    "protein": 1.2,
+    "carbs": 20.0,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo empanado, frito",
+    "kcal": 226.8,
+    "protein": 17.57,
+    "carbs": 5.34,
+    "fat": 15.12,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, ala, con piel, cruda",
+    "kcal": 215.7,
+    "protein": 18.33,
+    "carbs": 0.0,
+    "fat": 15.97,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, entero, con piel, asado",
+    "kcal": 176.7,
+    "protein": 32.6,
+    "carbs": 0.0,
+    "fat": 5.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, entero, con piel, crudo",
+    "kcal": 166.5,
+    "protein": 20.85,
+    "carbs": 0.0,
+    "fat": 9.25,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, fiambre",
+    "kcal": 139.5,
+    "protein": 19.85,
+    "carbs": 2.3,
+    "fat": 5.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, fiambre, bajo en grasa",
+    "kcal": 86.6,
+    "protein": 18.3,
+    "carbs": 1.7,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, frito",
+    "kcal": 201.6,
+    "protein": 17.08,
+    "carbs": 0.74,
+    "fat": 14.61,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, muslo, con piel, asado",
+    "kcal": 226.2,
+    "protein": 26.3,
+    "carbs": 0.0,
+    "fat": 13.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, muslo, con piel, crudo",
+    "kcal": 109.3,
+    "protein": 19.5,
+    "carbs": 0.0,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, parte sin especificar",
+    "kcal": 165.8,
+    "protein": 19.9,
+    "carbs": 0.0,
+    "fat": 9.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, pechuga, con piel, crudo",
+    "kcal": 104.5,
+    "protein": 23.1,
+    "carbs": 0.0,
+    "fat": 1.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pollo, pechuga, plancha",
+    "kcal": 145.0,
+    "protein": 22.2,
+    "carbs": 0.0,
+    "fat": 6.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pomelo",
+    "kcal": 25.7,
+    "protein": 0.7,
+    "carbs": 5.4,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Preparado lácteo con omega 3",
+    "kcal": 52.6,
+    "protein": 3.5,
+    "carbs": 5.2,
+    "fat": 1.95,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pudding de pasas",
+    "kcal": 296.2,
+    "protein": 4.6,
+    "carbs": 47.2,
+    "fat": 9.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Puerro, crudo y congelado",
+    "kcal": 24.2,
+    "protein": 1.6,
+    "carbs": 3.7,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pulmón, de cerdo, crudo",
+    "kcal": 81.3,
+    "protein": 14.08,
+    "carbs": 0.0,
+    "fat": 2.72,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pulmón, de cordero, crudo",
+    "kcal": 90.8,
+    "protein": 16.7,
+    "carbs": 0.0,
+    "fat": 2.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pulmón, de ternera, crudo",
+    "kcal": 87.9,
+    "protein": 16.2,
+    "carbs": 0.0,
+    "fat": 2.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pulpo",
+    "kcal": 90.8,
+    "protein": 17.9,
+    "carbs": 1.4,
+    "fat": 1.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Pulpo, hervido",
+    "kcal": 68.6,
+    "protein": 13.39,
+    "carbs": 1.43,
+    "fat": 0.95,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Puré de patata y queso, en copos",
+    "kcal": 460.1,
+    "protein": 10.9,
+    "carbs": 70.5,
+    "fat": 1.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Puré de patata, con verduras, en copos",
+    "kcal": 360.0,
+    "protein": 4.0,
+    "carbs": 74.8,
+    "fat": 4.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Puré de patata, en copos",
+    "kcal": 360.0,
+    "protein": 8.2,
+    "carbs": 78.65,
+    "fat": 0.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Puré de patatas y champiñones, en copos",
+    "kcal": 387.2,
+    "protein": 10.3,
+    "carbs": 75.2,
+    "fat": 4.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Puré, de patata, con leche",
+    "kcal": 94.4,
+    "protein": 2.2,
+    "carbs": 13.7,
+    "fat": 3.38,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso afuega'l pitu",
+    "kcal": 467.5,
+    "protein": 26.78,
+    "carbs": 0.0,
+    "fat": 40.56,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso ahumado de aliva",
+    "kcal": 406.1,
+    "protein": 25.67,
+    "carbs": 0.0,
+    "fat": 34.13,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso azul",
+    "kcal": 349.4,
+    "protein": 21.13,
+    "carbs": 0.0,
+    "fat": 29.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso brie",
+    "kcal": 341.4,
+    "protein": 17.2,
+    "carbs": 0.0,
+    "fat": 30.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso cabra, curado",
+    "kcal": 462.3,
+    "protein": 27.6,
+    "carbs": 0.0,
+    "fat": 39.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso cabrales",
+    "kcal": 375.6,
+    "protein": 21.5,
+    "carbs": 0.0,
+    "fat": 32.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso Camembert 20-30% MG/ES",
+    "kcal": 199.7,
+    "protein": 24.7,
+    "carbs": 0.0,
+    "fat": 11.24,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso camembert 60% mg/es",
+    "kcal": 348.5,
+    "protein": 13.8,
+    "carbs": 0.0,
+    "fat": 33.07,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso cantabria",
+    "kcal": 354.5,
+    "protein": 21.53,
+    "carbs": 0.0,
+    "fat": 30.19,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso Castellano",
+    "kcal": 457.3,
+    "protein": 26.04,
+    "carbs": 0.0,
+    "fat": 39.75,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso casín",
+    "kcal": 366.2,
+    "protein": 23.06,
+    "carbs": 0.0,
+    "fat": 30.81,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso cebreiro",
+    "kcal": 257.1,
+    "protein": 14.86,
+    "carbs": 0.0,
+    "fat": 22.25,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso Cheddar",
+    "kcal": 403.2,
+    "protein": 26.0,
+    "carbs": 0.1,
+    "fat": 33.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso curado, genérico",
+    "kcal": 448.1,
+    "protein": 35.77,
+    "carbs": 0.51,
+    "fat": 34.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso de aracena",
+    "kcal": 388.4,
+    "protein": 21.86,
+    "carbs": 0.0,
+    "fat": 33.88,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso de arzúa",
+    "kcal": 395.3,
+    "protein": 22.21,
+    "carbs": 2.0,
+    "fat": 34.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso de bola",
+    "kcal": 334.4,
+    "protein": 20.7,
+    "carbs": 0.0,
+    "fat": 28.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso de Castilla-La Mancha, oveja y cabra",
+    "kcal": 404.8,
+    "protein": 21.77,
+    "carbs": 0.0,
+    "fat": 35.77,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso de Castilla-La Mancha, oveja, vaca y cabra",
+    "kcal": 411.3,
+    "protein": 23.5,
+    "carbs": 0.0,
+    "fat": 35.71,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso de castilla-león, oveja y vaca",
+    "kcal": 408.3,
+    "protein": 22.6,
+    "carbs": 0.0,
+    "fat": 35.79,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso de cádiz",
+    "kcal": 306.5,
+    "protein": 16.93,
+    "carbs": 0.0,
+    "fat": 26.88,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso de murcia, al vino",
+    "kcal": 438.0,
+    "protein": 23.17,
+    "carbs": 0.0,
+    "fat": 38.88,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso de tenerife",
+    "kcal": 341.0,
+    "protein": 19.3,
+    "carbs": 0.0,
+    "fat": 29.69,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso de tiétar",
+    "kcal": 396.8,
+    "protein": 21.48,
+    "carbs": 0.0,
+    "fat": 35.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso edam",
+    "kcal": 334.4,
+    "protein": 20.7,
+    "carbs": 0.0,
+    "fat": 28.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso emmental",
+    "kcal": 365.6,
+    "protein": 27.3,
+    "carbs": 0.0,
+    "fat": 28.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso en porciones",
+    "kcal": 308.8,
+    "protein": 18.0,
+    "carbs": 2.5,
+    "fat": 25.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso flor de guía",
+    "kcal": 385.2,
+    "protein": 27.21,
+    "carbs": 0.0,
+    "fat": 31.06,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso fresco de burgos",
+    "kcal": 196.7,
+    "protein": 12.4,
+    "carbs": 2.5,
+    "fat": 15.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso fresco, cabra",
+    "kcal": 296.6,
+    "protein": 19.8,
+    "carbs": 1.1,
+    "fat": 23.93,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso fresco, desnatado, con frutas",
+    "kcal": 96.0,
+    "protein": 8.1,
+    "carbs": 15.3,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso fundido, extragraso (>60% MG/ES)",
+    "kcal": 323.4,
+    "protein": 9.3,
+    "carbs": 2.4,
+    "fat": 31.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso gata-hurdes",
+    "kcal": 383.4,
+    "protein": 21.16,
+    "carbs": 0.0,
+    "fat": 33.63,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso gaztazarra",
+    "kcal": 327.0,
+    "protein": 18.44,
+    "carbs": 0.0,
+    "fat": 28.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso Gouda",
+    "kcal": 325.0,
+    "protein": 20.36,
+    "carbs": 0.0,
+    "fat": 27.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso grazalema",
+    "kcal": 374.7,
+    "protein": 21.89,
+    "carbs": 0.0,
+    "fat": 32.31,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso Gruyer",
+    "kcal": 373.4,
+    "protein": 23.42,
+    "carbs": 0.36,
+    "fat": 31.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso herreño",
+    "kcal": 365.3,
+    "protein": 24.08,
+    "carbs": 0.0,
+    "fat": 30.25,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso Ibores",
+    "kcal": 400.7,
+    "protein": 23.95,
+    "carbs": 0.0,
+    "fat": 34.31,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso Mahón",
+    "kcal": 404.6,
+    "protein": 24.9,
+    "carbs": 0.0,
+    "fat": 34.31,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso majorero",
+    "kcal": 358.5,
+    "protein": 25.66,
+    "carbs": 0.0,
+    "fat": 28.75,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso manchego",
+    "kcal": 387.8,
+    "protein": 28.77,
+    "carbs": 0.5,
+    "fat": 30.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso manchego, en aceite",
+    "kcal": 465.4,
+    "protein": 26.5,
+    "carbs": 0.0,
+    "fat": 40.45,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso mozzarella",
+    "kcal": 221.6,
+    "protein": 19.5,
+    "carbs": 0.0,
+    "fat": 16.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso munster",
+    "kcal": 331.5,
+    "protein": 19.1,
+    "carbs": 0.0,
+    "fat": 28.71,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso para untar",
+    "kcal": 359.4,
+    "protein": 15.63,
+    "carbs": 2.3,
+    "fat": 32.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso para untar, con finas hierbas",
+    "kcal": 250.4,
+    "protein": 6.5,
+    "carbs": 3.1,
+    "fat": 23.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso para untar, con salmón",
+    "kcal": 257.1,
+    "protein": 7.3,
+    "carbs": 3.1,
+    "fat": 24.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso para untar, natural, bajo en calorías",
+    "kcal": 141.1,
+    "protein": 14.2,
+    "carbs": 4.2,
+    "fat": 13.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso parmesano",
+    "kcal": 365.6,
+    "protein": 32.3,
+    "carbs": 0.0,
+    "fat": 26.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso pasiego",
+    "kcal": 294.5,
+    "protein": 14.93,
+    "carbs": 0.0,
+    "fat": 26.44,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso pedroches",
+    "kcal": 337.3,
+    "protein": 24.24,
+    "carbs": 0.0,
+    "fat": 27.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso peñamellera",
+    "kcal": 363.2,
+    "protein": 23.26,
+    "carbs": 0.0,
+    "fat": 30.38,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso picón",
+    "kcal": 384.1,
+    "protein": 22.71,
+    "carbs": 0.0,
+    "fat": 33.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso porrúa",
+    "kcal": 379.6,
+    "protein": 23.79,
+    "carbs": 0.0,
+    "fat": 32.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso Raclette",
+    "kcal": 354.8,
+    "protein": 25.6,
+    "carbs": 0.0,
+    "fat": 28.36,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso rallado, genérico",
+    "kcal": 393.2,
+    "protein": 26.92,
+    "carbs": 0.0,
+    "fat": 32.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso roquefort",
+    "kcal": 352.6,
+    "protein": 15.4,
+    "carbs": 0.0,
+    "fat": 32.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso San Simón",
+    "kcal": 441.2,
+    "protein": 26.15,
+    "carbs": 0.0,
+    "fat": 37.88,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso semicurado, genérico",
+    "kcal": 388.7,
+    "protein": 29.0,
+    "carbs": 0.5,
+    "fat": 30.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso serrat",
+    "kcal": 409.1,
+    "protein": 23.13,
+    "carbs": 0.0,
+    "fat": 35.63,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso servilleta",
+    "kcal": 322.7,
+    "protein": 22.17,
+    "carbs": 0.0,
+    "fat": 26.31,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso Tetilla",
+    "kcal": 372.5,
+    "protein": 21.62,
+    "carbs": 0.0,
+    "fat": 32.19,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso tierno, genérico",
+    "kcal": 330.3,
+    "protein": 26.0,
+    "carbs": 0.0,
+    "fat": 25.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso torta del casar",
+    "kcal": 360.5,
+    "protein": 18.25,
+    "carbs": 0.0,
+    "fat": 32.38,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso tupí",
+    "kcal": 606.9,
+    "protein": 19.2,
+    "carbs": 0.0,
+    "fat": 59.81,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Queso Zamorano",
+    "kcal": 481.9,
+    "protein": 26.78,
+    "carbs": 0.0,
+    "fat": 42.19,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Quinoa, cruda",
+    "kcal": 305.1,
+    "protein": 13.8,
+    "carbs": 49.2,
+    "fat": 5.56,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Rabo de toro",
+    "kcal": 199.4,
+    "protein": 18.6,
+    "carbs": 0.0,
+    "fat": 14.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Rape, a la parrilla",
+    "kcal": 94.7,
+    "protein": 22.0,
+    "carbs": 0.0,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Rape, crudo",
+    "kcal": 69.9,
+    "protein": 15.9,
+    "carbs": 0.0,
+    "fat": 0.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Rape, plancha",
+    "kcal": 86.8,
+    "protein": 17.0,
+    "carbs": 0.0,
+    "fat": 2.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Raya, cruda",
+    "kcal": 97.9,
+    "protein": 20.56,
+    "carbs": 0.8,
+    "fat": 1.26,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco \"tipo gaseosa\"",
+    "kcal": 0.0,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco con gas, sabor cola, sin cafeina",
+    "kcal": 43.7,
+    "protein": 0.0,
+    "carbs": 10.75,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco con gas, sabor cola, sin cafeina, bajo en calorías",
+    "kcal": 0.8,
+    "protein": 0.1,
+    "carbs": 0.1,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco de té",
+    "kcal": 37.3,
+    "protein": 0.1,
+    "carbs": 9.09,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco de té, bajo en calorías",
+    "kcal": 0.4,
+    "protein": 0.1,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco tipo \"tónica\"",
+    "kcal": 37.4,
+    "protein": 0.0,
+    "carbs": 9.2,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco, con gas, sabor naranja",
+    "kcal": 43.9,
+    "protein": 0.0,
+    "carbs": 10.8,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco, sabor cola",
+    "kcal": 44.1,
+    "protein": 0.0,
+    "carbs": 10.85,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco, sabor cola, bajo en calorías",
+    "kcal": 0.4,
+    "protein": 0.0,
+    "carbs": 0.1,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco, sabor limón, con gas",
+    "kcal": 46.1,
+    "protein": 0.0,
+    "carbs": 11.34,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Refresco, sabor naranja, sin gas",
+    "kcal": 38.5,
+    "protein": 0.1,
+    "carbs": 9.37,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Regaliz",
+    "kcal": 323.2,
+    "protein": 3.9,
+    "carbs": 71.5,
+    "fat": 1.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Remolacha, en conserva",
+    "kcal": 29.4,
+    "protein": 1.2,
+    "carbs": 5.6,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Repollo",
+    "kcal": 25.9,
+    "protein": 1.8,
+    "carbs": 3.7,
+    "fat": 0.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Requesón",
+    "kcal": 101.5,
+    "protein": 12.31,
+    "carbs": 3.3,
+    "fat": 4.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Riñón, de cordero, crudo",
+    "kcal": 94.8,
+    "protein": 16.8,
+    "carbs": 0.0,
+    "fat": 3.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Riñón, de ternera, crudo",
+    "kcal": 106.5,
+    "protein": 16.8,
+    "carbs": 0.0,
+    "fat": 4.32,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Rodaballo",
+    "kcal": 97.3,
+    "protein": 16.1,
+    "carbs": 0.0,
+    "fat": 3.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Rollito de primavera",
+    "kcal": 250.1,
+    "protein": 8.28,
+    "carbs": 27.29,
+    "fat": 11.94,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Romero",
+    "kcal": 343.3,
+    "protein": 5.0,
+    "carbs": 46.4,
+    "fat": 15.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ron",
+    "kcal": 231.5,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Rosquilla",
+    "kcal": 348.7,
+    "protein": 7.8,
+    "carbs": 49.3,
+    "fat": 13.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Rábano",
+    "kcal": 15.7,
+    "protein": 0.6,
+    "carbs": 2.6,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Rúcula",
+    "kcal": 31.1,
+    "protein": 2.58,
+    "carbs": 3.65,
+    "fat": 0.66,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sal de mar",
+    "kcal": 0.0,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sal yodada",
+    "kcal": 0.0,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salami",
+    "kcal": 433.1,
+    "protein": 17.8,
+    "carbs": 1.3,
+    "fat": 40.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salchicha de pollo fresca",
+    "kcal": 305.5,
+    "protein": 13.12,
+    "carbs": 0.9,
+    "fat": 28.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salchicha, fresca",
+    "kcal": 305.5,
+    "protein": 13.12,
+    "carbs": 0.9,
+    "fat": 28.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salchicha, tipo \"frankfurt\"",
+    "kcal": 286.8,
+    "protein": 12.7,
+    "carbs": 1.3,
+    "fat": 26.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salchicha, tipo país, a la plancha",
+    "kcal": 384.0,
+    "protein": 18.57,
+    "carbs": 0.86,
+    "fat": 34.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salchicha, tipo viena",
+    "kcal": 272.8,
+    "protein": 10.3,
+    "carbs": 2.0,
+    "fat": 25.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salchichón",
+    "kcal": 419.8,
+    "protein": 25.8,
+    "carbs": 2.0,
+    "fat": 34.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salema, cruda",
+    "kcal": 103.2,
+    "protein": 12.7,
+    "carbs": 7.9,
+    "fat": 0.95,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salmonete",
+    "kcal": 90.0,
+    "protein": 14.1,
+    "carbs": 0.0,
+    "fat": 3.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salmón",
+    "kcal": 180.9,
+    "protein": 18.4,
+    "carbs": 0.0,
+    "fat": 12.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salmón ahumado",
+    "kcal": 180.1,
+    "protein": 25.4,
+    "carbs": 0.0,
+    "fat": 8.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salmón, plancha",
+    "kcal": 179.4,
+    "protein": 20.2,
+    "carbs": 0.0,
+    "fat": 11.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa agridulce",
+    "kcal": 120.5,
+    "protein": 0.48,
+    "carbs": 23.99,
+    "fat": 2.38,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa al curry",
+    "kcal": 77.9,
+    "protein": 0.7,
+    "carbs": 9.1,
+    "fat": 2.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa al roquefort",
+    "kcal": 450.1,
+    "protein": 7.23,
+    "carbs": 0.19,
+    "fat": 47.49,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa barbacoa",
+    "kcal": 176.9,
+    "protein": 1.8,
+    "carbs": 37.81,
+    "fat": 1.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa bechamel",
+    "kcal": 151.6,
+    "protein": 4.1,
+    "carbs": 10.8,
+    "fat": 10.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa boloñesa",
+    "kcal": 144.5,
+    "protein": 8.0,
+    "carbs": 3.4,
+    "fat": 11.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa carbonara",
+    "kcal": 303.3,
+    "protein": 7.48,
+    "carbs": 2.01,
+    "fat": 29.94,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa de queso",
+    "kcal": 109.6,
+    "protein": 5.3,
+    "carbs": 8.4,
+    "fat": 6.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa de soja",
+    "kcal": 63.5,
+    "protein": 8.7,
+    "carbs": 6.7,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa napolitana",
+    "kcal": 75.7,
+    "protein": 1.9,
+    "carbs": 6.5,
+    "fat": 4.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa siciliana, picante",
+    "kcal": 67.1,
+    "protein": 1.3,
+    "carbs": 5.2,
+    "fat": 4.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salsa vinagreta, con aceite de oliva",
+    "kcal": 636.2,
+    "protein": 0.2,
+    "carbs": 0.2,
+    "fat": 71.76,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Salvado de trigo",
+    "kcal": 189.0,
+    "protein": 15.55,
+    "carbs": 21.72,
+    "fat": 4.25,
+    "source": "BEDCA"
+  },
+  {
+    "name": "San jacobo, congelado",
+    "kcal": 237.0,
+    "protein": 4.14,
+    "carbs": 25.16,
+    "fat": 13.34,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sandía",
+    "kcal": 19.9,
+    "protein": 0.4,
+    "carbs": 4.5,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sangría",
+    "kcal": 71.0,
+    "protein": 0.2,
+    "carbs": 3.8,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sardina",
+    "kcal": 139.9,
+    "protein": 18.1,
+    "carbs": 0.0,
+    "fat": 7.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sardina, asada",
+    "kcal": 255.2,
+    "protein": 16.67,
+    "carbs": 0.0,
+    "fat": 21.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sardina, enlatada, en aceite, escurrida",
+    "kcal": 236.5,
+    "protein": 23.93,
+    "carbs": 0.0,
+    "fat": 15.75,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sardina, enlatada, en escabeche",
+    "kcal": 130.5,
+    "protein": 15.0,
+    "carbs": 0.8,
+    "fat": 7.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sargo, crudo",
+    "kcal": 99.9,
+    "protein": 15.0,
+    "carbs": 0.0,
+    "fat": 4.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Seitán",
+    "kcal": 123.3,
+    "protein": 24.0,
+    "carbs": 2.0,
+    "fat": 2.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Semilla de lino",
+    "kcal": 564.5,
+    "protein": 18.29,
+    "carbs": 28.88,
+    "fat": 42.16,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sepia",
+    "kcal": 80.4,
+    "protein": 17.6,
+    "carbs": 0.0,
+    "fat": 1.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sesos, de cerdo, crudos",
+    "kcal": 122.7,
+    "protein": 10.6,
+    "carbs": 0.0,
+    "fat": 9.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sesos, de cordero, crudos",
+    "kcal": 135.3,
+    "protein": 10.0,
+    "carbs": 0.0,
+    "fat": 10.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sesos, de ternera, crudos",
+    "kcal": 118.3,
+    "protein": 10.4,
+    "carbs": 0.0,
+    "fat": 8.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Seta",
+    "kcal": 26.2,
+    "protein": 1.8,
+    "carbs": 4.0,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Seta, plancha",
+    "kcal": 13.1,
+    "protein": 1.76,
+    "carbs": 0.39,
+    "fat": 0.49,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sidra",
+    "kcal": 50.0,
+    "protein": 0.0,
+    "carbs": 6.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sobao",
+    "kcal": 436.6,
+    "protein": 5.9,
+    "carbs": 46.7,
+    "fat": 25.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sobrasada",
+    "kcal": 595.4,
+    "protein": 12.9,
+    "carbs": 0.0,
+    "fat": 61.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Soda",
+    "kcal": 0.0,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sofrito",
+    "kcal": 209.1,
+    "protein": 1.11,
+    "carbs": 4.71,
+    "fat": 20.97,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Soja, fresca",
+    "kcal": 158.1,
+    "protein": 13.0,
+    "carbs": 11.1,
+    "fat": 6.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Soja, frita",
+    "kcal": 140.0,
+    "protein": 13.7,
+    "carbs": 10.3,
+    "fat": 4.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Soja, germinada, en conserva",
+    "kcal": 13.1,
+    "protein": 2.0,
+    "carbs": 1.0,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Soja, seca, cruda",
+    "kcal": 350.0,
+    "protein": 35.9,
+    "carbs": 9.7,
+    "fat": 18.62,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Soja, seca, remojada, hervida",
+    "kcal": 136.3,
+    "protein": 14.0,
+    "carbs": 3.77,
+    "fat": 7.25,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sopa de sobre maravilla",
+    "kcal": 331.8,
+    "protein": 12.59,
+    "carbs": 62.03,
+    "fat": 3.24,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sopa de sobre, sin reconstituir",
+    "kcal": 319.7,
+    "protein": 10.99,
+    "carbs": 58.24,
+    "fat": 4.34,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Suplemento proteico",
+    "kcal": 391.9,
+    "protein": 87.75,
+    "carbs": 0.0,
+    "fat": 4.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Surimi",
+    "kcal": 90.7,
+    "protein": 14.7,
+    "carbs": 6.1,
+    "fat": 0.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sémola de trigo, cruda",
+    "kcal": 348.2,
+    "protein": 12.6,
+    "carbs": 70.4,
+    "fat": 1.24,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sémola de trigo, hervida",
+    "kcal": 54.6,
+    "protein": 2.0,
+    "carbs": 11.0,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Sésamo, semilla",
+    "kcal": 560.0,
+    "protein": 19.0,
+    "carbs": 10.0,
+    "fat": 50.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tabasco",
+    "kcal": 15.2,
+    "protein": 1.29,
+    "carbs": 0.8,
+    "fat": 0.76,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tapioca, hervida",
+    "kcal": 126.8,
+    "protein": 0.2,
+    "carbs": 31.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tenca, cruda",
+    "kcal": 91.9,
+    "protein": 17.7,
+    "carbs": 3.3,
+    "fat": 4.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tequila",
+    "kcal": 263.4,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ternera, costilla, cruda",
+    "kcal": 139.7,
+    "protein": 20.0,
+    "carbs": 0.0,
+    "fat": 6.61,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ternera, lomo, crudo, con grasa separable",
+    "kcal": 111.3,
+    "protein": 20.2,
+    "carbs": 0.0,
+    "fat": 3.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ternera, parte s/e, asada",
+    "kcal": 221.0,
+    "protein": 29.5,
+    "carbs": 0.0,
+    "fat": 11.44,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ternera, parte sin especificar, cruda, con grasa separable",
+    "kcal": 253.6,
+    "protein": 16.7,
+    "carbs": 0.0,
+    "fat": 21.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ternera, solomillo, asado",
+    "kcal": 156.4,
+    "protein": 28.4,
+    "carbs": 0.0,
+    "fat": 4.64,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Ternera, solomillo, sin grasa, crudo",
+    "kcal": 109.1,
+    "protein": 20.19,
+    "carbs": 0.0,
+    "fat": 3.06,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tocino",
+    "kcal": 662.0,
+    "protein": 8.4,
+    "carbs": 0.0,
+    "fat": 71.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tofu",
+    "kcal": 118.7,
+    "protein": 11.5,
+    "carbs": 3.3,
+    "fat": 6.62,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tomate",
+    "kcal": 18.8,
+    "protein": 0.9,
+    "carbs": 3.5,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tomate frito",
+    "kcal": 83.8,
+    "protein": 1.5,
+    "carbs": 5.2,
+    "fat": 6.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tomate, asado",
+    "kcal": 18.9,
+    "protein": 0.98,
+    "carbs": 3.43,
+    "fat": 0.11,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tomate, maduro, pelado y triturado, enlatado",
+    "kcal": 36.3,
+    "protein": 2.3,
+    "carbs": 5.55,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tomate, maduro, puré",
+    "kcal": 72.5,
+    "protein": 4.5,
+    "carbs": 12.9,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tomillo, seco",
+    "kcal": 334.4,
+    "protein": 9.1,
+    "carbs": 57.1,
+    "fat": 7.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Torta de aceite",
+    "kcal": 151.4,
+    "protein": 1.9,
+    "carbs": 21.0,
+    "fat": 6.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Tortilla, a la francesa",
+    "kcal": 169.6,
+    "protein": 14.6,
+    "carbs": 0.4,
+    "fat": 12.29,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Trigo, entero, crudo",
+    "kcal": 313.1,
+    "protein": 11.7,
+    "carbs": 61.0,
+    "fat": 2.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Trucha",
+    "kcal": 90.3,
+    "protein": 15.7,
+    "carbs": 0.0,
+    "fat": 3.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Trucha, ahumada",
+    "kcal": 197.5,
+    "protein": 21.9,
+    "carbs": 0.0,
+    "fat": 6.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Trufa, cruda",
+    "kcal": 93.8,
+    "protein": 9.0,
+    "carbs": 13.0,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Turrón, tipo Alicante",
+    "kcal": 483.7,
+    "protein": 13.05,
+    "carbs": 44.9,
+    "fat": 28.07,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Té, infusión, con leche",
+    "kcal": 37.8,
+    "protein": 1.7,
+    "carbs": 2.45,
+    "fat": 2.37,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Uva blanca",
+    "kcal": 67.9,
+    "protein": 0.6,
+    "carbs": 16.1,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Uva blanca, congelada",
+    "kcal": 69.8,
+    "protein": 0.72,
+    "carbs": 16.1,
+    "fat": 0.16,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Uva negra, cruda",
+    "kcal": 71.6,
+    "protein": 0.6,
+    "carbs": 15.5,
+    "fat": 0.7,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Uva pasa",
+    "kcal": 296.0,
+    "protein": 2.46,
+    "carbs": 69.3,
+    "fat": 0.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vaca/buey, parte s/e, asado",
+    "kcal": 229.7,
+    "protein": 31.0,
+    "carbs": 0.0,
+    "fat": 11.73,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vaca/buey, parte s/e, estofado",
+    "kcal": 195.6,
+    "protein": 30.0,
+    "carbs": 0.0,
+    "fat": 8.33,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vaca/buey, solomillo, a la plancha",
+    "kcal": 165.9,
+    "protein": 28.1,
+    "carbs": 0.0,
+    "fat": 5.84,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vaca/buey, solomillo, crudo",
+    "kcal": 135.3,
+    "protein": 23.5,
+    "carbs": 0.0,
+    "fat": 4.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vainilla",
+    "kcal": 52.4,
+    "protein": 0.06,
+    "carbs": 12.7,
+    "fat": 0.06,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vermut, s/e",
+    "kcal": 139.1,
+    "protein": 0.1,
+    "carbs": 13.5,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vieira",
+    "kcal": 85.2,
+    "protein": 19.0,
+    "carbs": 0.0,
+    "fat": 0.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vieja, cruda",
+    "kcal": 83.2,
+    "protein": 12.1,
+    "carbs": 4.9,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vinagre balsámico",
+    "kcal": 71.2,
+    "protein": 0.49,
+    "carbs": 17.03,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vinagre de manzana",
+    "kcal": 4.1,
+    "protein": 0.4,
+    "carbs": 0.6,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vinagre de vino",
+    "kcal": 4.1,
+    "protein": 0.4,
+    "carbs": 0.6,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vino blanco",
+    "kcal": 60.3,
+    "protein": 0.1,
+    "carbs": 0.1,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vino dulce, tipo oporto",
+    "kcal": 131.5,
+    "protein": 0.3,
+    "carbs": 14.0,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vino rosado",
+    "kcal": 66.4,
+    "protein": 0.1,
+    "carbs": 1.4,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vino tinto",
+    "kcal": 70.2,
+    "protein": 0.23,
+    "carbs": 0.3,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Vodka",
+    "kcal": 232.2,
+    "protein": 0.0,
+    "carbs": 0.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Volador, crudo",
+    "kcal": 88.0,
+    "protein": 21.0,
+    "carbs": 0.0,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Whisky",
+    "kcal": 244.4,
+    "protein": 0.0,
+    "carbs": 0.11,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur griego",
+    "kcal": 138.1,
+    "protein": 6.4,
+    "carbs": 5.4,
+    "fat": 10.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur líquido, \"tipo actimel\"",
+    "kcal": 62.6,
+    "protein": 3.6,
+    "carbs": 4.4,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur líquido, aromatizado sabor s/e",
+    "kcal": 76.0,
+    "protein": 2.9,
+    "carbs": 12.8,
+    "fat": 1.38,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur líquido, con frutas s/e",
+    "kcal": 87.2,
+    "protein": 2.8,
+    "carbs": 14.3,
+    "fat": 1.53,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur líquido, entero, con cereales",
+    "kcal": 114.0,
+    "protein": 2.9,
+    "carbs": 20.8,
+    "fat": 2.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur líquido, natural, azucarado",
+    "kcal": 69.6,
+    "protein": 3.0,
+    "carbs": 11.6,
+    "fat": 1.16,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, búlgaro",
+    "kcal": 73.9,
+    "protein": 5.0,
+    "carbs": 5.8,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, aromatizado sabor s/e",
+    "kcal": 64.1,
+    "protein": 5.3,
+    "carbs": 7.0,
+    "fat": 1.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con cereales",
+    "kcal": 51.3,
+    "protein": 4.2,
+    "carbs": 8.2,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con cereales, manzana y ciruela",
+    "kcal": 70.4,
+    "protein": 3.8,
+    "carbs": 13.1,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con cereza y frambuesa",
+    "kcal": 40.2,
+    "protein": 3.96,
+    "carbs": 5.65,
+    "fat": 0.13,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con ciruela, albaricoque y fibra",
+    "kcal": 57.8,
+    "protein": 4.1,
+    "carbs": 9.9,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con fresa, grosella y fibra",
+    "kcal": 57.8,
+    "protein": 4.1,
+    "carbs": 9.9,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con frutas",
+    "kcal": 70.6,
+    "protein": 3.83,
+    "carbs": 13.1,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con frutas del bosque",
+    "kcal": 40.2,
+    "protein": 3.96,
+    "carbs": 5.65,
+    "fat": 0.13,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con frutas tropicales",
+    "kcal": 40.2,
+    "protein": 3.96,
+    "carbs": 5.65,
+    "fat": 0.13,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con manzana",
+    "kcal": 40.2,
+    "protein": 3.96,
+    "carbs": 5.65,
+    "fat": 0.13,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con melocotón y maracuyá",
+    "kcal": 40.2,
+    "protein": 3.96,
+    "carbs": 5.65,
+    "fat": 0.13,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con melocotón, frambuesa y fibra",
+    "kcal": 57.8,
+    "protein": 4.1,
+    "carbs": 9.9,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, con piña y pomelo",
+    "kcal": 40.2,
+    "protein": 3.96,
+    "carbs": 5.65,
+    "fat": 0.13,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, sabor natural",
+    "kcal": 45.9,
+    "protein": 4.3,
+    "carbs": 6.3,
+    "fat": 0.32,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, sabor natural, azucarado",
+    "kcal": 77.0,
+    "protein": 4.5,
+    "carbs": 13.8,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, desnatado, sabor vainilla",
+    "kcal": 106.9,
+    "protein": 5.3,
+    "carbs": 17.1,
+    "fat": 1.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, enriquecido, con frutas",
+    "kcal": 121.5,
+    "protein": 2.6,
+    "carbs": 21.0,
+    "fat": 2.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, enriquecido, natural",
+    "kcal": 63.3,
+    "protein": 3.2,
+    "carbs": 3.9,
+    "fat": 3.9,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, enriquecido, natural, azucarado",
+    "kcal": 99.3,
+    "protein": 3.1,
+    "carbs": 13.5,
+    "fat": 3.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, enriquecido, natural, con nata",
+    "kcal": 66.1,
+    "protein": 3.1,
+    "carbs": 4.9,
+    "fat": 3.8,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, enriquecido, sabor, s/e",
+    "kcal": 197.2,
+    "protein": 3.7,
+    "carbs": 37.0,
+    "fat": 3.6,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, entero, con cereales y fresas",
+    "kcal": 91.3,
+    "protein": 3.5,
+    "carbs": 11.8,
+    "fat": 3.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, entero, con fresas",
+    "kcal": 120.0,
+    "protein": 2.7,
+    "carbs": 21.4,
+    "fat": 2.5,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, entero, con frutas del bosque",
+    "kcal": 90.1,
+    "protein": 3.3,
+    "carbs": 11.9,
+    "fat": 3.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, líquido, desnatado, natural",
+    "kcal": 64.8,
+    "protein": 3.0,
+    "carbs": 12.3,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, líquido, entero, con fresas",
+    "kcal": 90.4,
+    "protein": 3.3,
+    "carbs": 12.2,
+    "fat": 3.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, líquido, entero, con frutas",
+    "kcal": 90.1,
+    "protein": 3.3,
+    "carbs": 11.9,
+    "fat": 3.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, líquido, entero, sabor fresa",
+    "kcal": 115.4,
+    "protein": 5.4,
+    "carbs": 15.6,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, líquido, entero, sabor fresa y plátano",
+    "kcal": 115.4,
+    "protein": 5.4,
+    "carbs": 15.6,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, líquido, entero, sabor frutas del bosque",
+    "kcal": 115.4,
+    "protein": 5.4,
+    "carbs": 15.6,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Yogur, líquido, entero, sabor piña y coco",
+    "kcal": 115.4,
+    "protein": 5.4,
+    "carbs": 15.6,
+    "fat": 3.4,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zamburiñas",
+    "kcal": 77.5,
+    "protein": 15.4,
+    "carbs": 1.5,
+    "fat": 1.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zanahoria, cruda",
+    "kcal": 34.3,
+    "protein": 0.8,
+    "carbs": 7.0,
+    "fat": 0.3,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de grosella negra",
+    "kcal": 34.1,
+    "protein": 0.8,
+    "carbs": 7.6,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de grosella roja",
+    "kcal": 55.3,
+    "protein": 0.4,
+    "carbs": 13.2,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de lima, envasado",
+    "kcal": 15.3,
+    "protein": 0.3,
+    "carbs": 3.2,
+    "fat": 0.12,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de limón, fresco",
+    "kcal": 17.1,
+    "protein": 0.4,
+    "carbs": 3.6,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de mango",
+    "kcal": 42.0,
+    "protein": 0.1,
+    "carbs": 9.8,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de manzana",
+    "kcal": 45.1,
+    "protein": 0.1,
+    "carbs": 11.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de naranja",
+    "kcal": 41.2,
+    "protein": 0.7,
+    "carbs": 9.0,
+    "fat": 0.2,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de piña",
+    "kcal": 46.0,
+    "protein": 0.4,
+    "carbs": 10.7,
+    "fat": 0.1,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de piña y uva",
+    "kcal": 55.3,
+    "protein": 0.6,
+    "carbs": 13.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de pomelo, envasado",
+    "kcal": 37.8,
+    "protein": 0.5,
+    "carbs": 8.8,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de tomate, fresco",
+    "kcal": 15.6,
+    "protein": 0.76,
+    "carbs": 2.96,
+    "fat": 0.05,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de uva y melocotón",
+    "kcal": 51.2,
+    "protein": 0.6,
+    "carbs": 12.0,
+    "fat": 0.0,
+    "source": "BEDCA"
+  },
+  {
+    "name": "Zumo de zanahoria, fresco",
+    "kcal": 23.2,
+    "protein": 0.63,
+    "carbs": 4.75,
+    "fat": 0.15,
+    "source": "BEDCA"
+  }
+]

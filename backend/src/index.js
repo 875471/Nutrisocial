@@ -5,8 +5,10 @@ app.use(express.json());
 
 const authRoutes = require('./routes/auth');
 const recipeRoutes = require('./routes/recipes');
+const foodRoutes = require('./routes/foods');
 app.use('/auth', authRoutes);
 app.use('/recipes', recipeRoutes);
+app.use('/foods', foodRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 

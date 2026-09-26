@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -29,16 +30,20 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.nutrisocial.data.User
+import com.example.nutrisocial.ui.recipes.IngredientActions
 import com.example.nutrisocial.ui.recipes.RecipeDetailScreen
 import com.example.nutrisocial.ui.recipes.RecipeFormScreen
 import com.example.nutrisocial.ui.recipes.RecipeListScreen
 import com.example.nutrisocial.ui.recipes.RecipeViewModel
+import com.example.nutrisocial.ui.scan.ScanRecipeScreen
+import com.example.nutrisocial.ui.scan.ScanRecipeViewModel
 
 private object HomeRoutes {
     const val INICIO = "inicio"
     const val RECETAS = "recetas"
     const val PERFIL = "perfil"
     const val NUEVA_RECETA = "recetas/nueva"
+    const val ESCANEAR_RECETA = "recetas/escanear"
     const val DETALLE_RECETA = "recetas/detalle/{id}"
     fun detalleReceta(id: Int) = "recetas/detalle/$id"
 }
@@ -113,7 +118,28 @@ fun HomeScreen(
                         recipeViewModel.resetForm()
                         navController.navigate(HomeRoutes.NUEVA_RECETA)
                     },
-                    onRetry = recipeViewModel::loadMyRecipes
+                    onRetry = recipeViewModel::loadMyRecipes,
+                    onScanRecipe = { navController.navigate(HomeRoutes.ESCANEAR_RECETA) }
+                )
+            }
+
+            composable(HomeRoutes.ESCANEAR_RECETA) {
+                // Con ámbito en esta pantalla: el reconocedor de ML Kit se libera al salir de ella.
+                val scanViewModel: ScanRecipeViewModel = viewModel()
+                val scanState by scanViewModel.state.collectAsStateWithLifecycle()
+                ScanRecipeScreen(
+                    state = scanState,
+                    onImageSelected = scanViewModel::processImage,
+                    onRetry = scanViewModel::retry,
+                    onProposalReady = { proposal ->
+                        recipeViewModel.loadOcrProposal(proposal)
+                        scanViewModel.onProposalConsumed()
+                        // El escáner se sustituye por el formulario: al volver se regresa a la lista.
+                        navController.navigate(HomeRoutes.NUEVA_RECETA) {
+                            popUpTo(HomeRoutes.ESCANEAR_RECETA) { inclusive = true }
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
                 )
             }
 
@@ -128,9 +154,20 @@ fun HomeScreen(
                     onTitleChange = recipeViewModel::onTitleChange,
                     onServingsChange = recipeViewModel::onServingsChange,
                     onPrepMinutesChange = recipeViewModel::onPrepMinutesChange,
-                    onItemChange = recipeViewModel::onItemChange,
-                    onAddItem = recipeViewModel::addItem,
-                    onRemoveItem = recipeViewModel::removeItem,
+                    ingredientActions = remember(recipeViewModel) {
+                        IngredientActions(
+                            onNameChange = recipeViewModel::onIngredientNameChange,
+                            onQuantityChange = recipeViewModel::onIngredientQuantityChange,
+                            onUnitChange = recipeViewModel::onIngredientUnitChange,
+                            onSuggestionSelected = recipeViewModel::onSuggestionSelected,
+                            onNameFocusLost = recipeViewModel::onIngredientFocusLost,
+                            onAdd = recipeViewModel::addIngredient,
+                            onRemove = recipeViewModel::removeIngredient
+                        )
+                    },
+                    onStepChange = recipeViewModel::onStepChange,
+                    onAddStep = recipeViewModel::addStep,
+                    onRemoveStep = recipeViewModel::removeStep,
                     onSave = recipeViewModel::saveRecipe,
                     onSaved = {
                         // Tras guardar se vuelve a "Mis recetas", que ya incluye la nueva receta.
@@ -141,7 +178,8 @@ fun HomeScreen(
                             navController.navigateToTab(HomeRoutes.RECETAS)
                         }
                     },
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onDismissOcrNotice = recipeViewModel::dismissOcrNotice
                 )
             }
 
