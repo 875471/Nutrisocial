@@ -1,58 +1,85 @@
 package com.example.nutrisocial.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = GreenPrimary,
+    onPrimary = OnGreenPrimary,
+    primaryContainer = GreenContainer,
+    onPrimaryContainer = OnGreenContainer,
+    secondary = AmberSecondary,
+    onSecondary = OnAmberSecondary,
+    secondaryContainer = AmberContainer,
+    onSecondaryContainer = OnAmberContainer,
+    tertiary = EarthTertiary,
+    onTertiary = OnEarthTertiary,
+    tertiaryContainer = EarthContainer,
+    onTertiaryContainer = OnEarthContainer,
+    background = CreamBackground,
+    onBackground = OnCreamBackground,
+    surface = CreamBackground,
+    onSurface = OnCreamBackground,
+    surfaceVariant = CreamSurfaceVariant,
+    onSurfaceVariant = OnCreamSurfaceVariant,
+    surfaceContainerLowest = CreamContainerLowest,
+    surfaceContainerLow = CreamContainerLow,
+    surfaceContainer = CreamContainer,
+    surfaceContainerHigh = CreamContainerHigh,
+    surfaceContainerHighest = CreamContainerHighest,
+    outline = CreamOutline,
+    outlineVariant = CreamOutlineVariant,
+    error = ErrorLight,
+    onError = OnErrorLight,
+    errorContainer = ErrorContainerLight,
+    onErrorContainer = OnErrorContainerLight
 )
 
+private val DarkColorScheme = darkColorScheme(
+    primary = GreenPrimaryDark,
+    onPrimary = OnGreenPrimaryDark,
+    primaryContainer = GreenContainerDark,
+    onPrimaryContainer = OnGreenContainerDark,
+    secondary = AmberSecondaryDark,
+    onSecondary = OnAmberSecondaryDark,
+    secondaryContainer = AmberContainerDark,
+    onSecondaryContainer = OnAmberContainerDark,
+    tertiary = EarthTertiaryDark,
+    onTertiary = OnEarthTertiaryDark,
+    tertiaryContainer = EarthContainerDark,
+    onTertiaryContainer = OnEarthContainerDark,
+    background = SoilBackground,
+    onBackground = OnSoilBackground,
+    surface = SoilBackground,
+    onSurface = OnSoilBackground,
+    surfaceVariant = SoilSurfaceVariant,
+    onSurfaceVariant = OnSoilSurfaceVariant,
+    surfaceContainerLowest = SoilContainerLowest,
+    surfaceContainerLow = SoilContainerLow,
+    surfaceContainer = SoilContainer,
+    surfaceContainerHigh = SoilContainerHigh,
+    surfaceContainerHighest = SoilContainerHighest,
+    outline = SoilOutline,
+    outlineVariant = SoilOutlineVariant,
+    error = ErrorDark,
+    onError = OnErrorDark,
+    errorContainer = ErrorContainerDark,
+    onErrorContainer = OnErrorContainerDark
+)
+
+// Sin color dinámico (Material You): la app mantiene siempre su propia identidad visual.
 @Composable
 fun NutriSocialTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
         typography = Typography,
+        shapes = AppShapes,
         content = content
     )
 }
