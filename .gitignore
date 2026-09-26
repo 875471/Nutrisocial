@@ -13,3 +13,15 @@
 .externalNativeBuild
 .cxx
 local.properties
+# Node
+backend/node_modules/
+backend/.env
+
+# Android (proyecto en la raíz)
+.gradle/
+.idea/
+local.properties
+build/
+*/build/
+captures/
+*.iml
