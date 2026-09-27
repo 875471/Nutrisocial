@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,6 +45,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -71,13 +73,23 @@ fun RecipeDetailScreen(
     onRetry: () -> Unit,
     quickAddState: QuickAddState = QuickAddState(),
     onAddToDiary: (recipeId: Int, servings: Double) -> Unit = { _, _ -> },
-    onQuickAddMessageShown: () -> Unit = {}
+    onQuickAddMessageShown: () -> Unit = {},
+    // Para saber si la receta es propia (solo el autor puede cambiar la foto).
+    currentUserId: Int? = null,
+    actions: RecipeDetailActions = RecipeDetailActions.Noop,
+    actionState: RecipeDetailActionState = RecipeDetailActionState()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(quickAddState.message) {
         quickAddState.message?.let {
             snackbarHostState.showSnackbar(it)
             onQuickAddMessageShown()
+        }
+    }
+    LaunchedEffect(actionState.message) {
+        actionState.message?.let {
+            snackbarHostState.showSnackbar(it)
+            actions.onMessageShown()
         }
     }
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
@@ -130,7 +142,13 @@ fun RecipeDetailScreen(
                 onAction = onRetry,
                 modifier = contentModifier
             )
-            is RecipeDetailUiState.Success -> RecipeDetailContent(state.recipe, contentModifier)
+            is RecipeDetailUiState.Success -> RecipeDetailContent(
+                recipe = state.recipe,
+                isOwner = currentUserId != null && state.recipe.authorId == currentUserId,
+                actions = actions,
+                actionState = actionState,
+                modifier = contentModifier
+            )
         }
     }
 
@@ -186,8 +204,26 @@ private fun AddToDiaryDialog(recipe: Recipe, onConfirm: (Double) -> Unit, onDism
     )
 }
 
+/** Acciones sociales del detalle: "me gusta" y foto (solo el autor). */
+data class RecipeDetailActions(
+    val onToggleLike: () -> Unit,
+    val onUpdatePhoto: (String?) -> Unit,
+    val onMessage: (String) -> Unit,
+    val onMessageShown: () -> Unit
+) {
+    companion object {
+        val Noop = RecipeDetailActions({}, {}, {}, {})
+    }
+}
+
 @Composable
-private fun RecipeDetailContent(recipe: Recipe, modifier: Modifier = Modifier) {
+private fun RecipeDetailContent(
+    recipe: Recipe,
+    isOwner: Boolean,
+    actions: RecipeDetailActions,
+    actionState: RecipeDetailActionState,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -197,9 +233,37 @@ private fun RecipeDetailContent(recipe: Recipe, modifier: Modifier = Modifier) {
             .padding(bottom = 72.dp),
         verticalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
+        // Sin foto no se reserva hueco: la receta empieza por el título, como antes.
+        recipe.imageBase64?.let { photo ->
+            Base64Image(
+                base64 = photo,
+                contentDescription = "Foto de ${recipe.title}",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(4f / 3f)
+                    .clip(CardShape)
+            )
+        }
+
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
             Text(text = recipe.title, style = MaterialTheme.typography.headlineMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = if (isOwner) "Receta tuya" else "Por ${recipe.authorName.ifBlank { "otro usuario" }}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                LikeButton(liked = recipe.likedByMe, count = recipe.likesCount, onToggle = actions.onToggleLike)
+            }
             RecipeInfoRow(servings = recipe.servings, prepMinutes = recipe.prepMinutes)
+            if (isOwner) {
+                OwnerPhotoActions(
+                    hasPhoto = recipe.imageBase64 != null,
+                    isUpdating = actionState.isUpdatingPhoto,
+                    actions = actions
+                )
+            }
         }
 
         NutritionSection(recipe)
@@ -248,6 +312,47 @@ private fun RecipeDetailContent(recipe: Recipe, modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+}
+
+/** "Añadir foto" / "Cambiar foto" y "Quitar foto", solo para el autor de la receta. */
+@Composable
+private fun OwnerPhotoActions(hasPhoto: Boolean, isUpdating: Boolean, actions: RecipeDetailActions) {
+    var confirmRemove by rememberSaveable { mutableStateOf(false) }
+    val picker = rememberRecipePhotoPicker(onPhotoReady = actions.onUpdatePhoto, onMessage = actions.onMessage)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        PhotoSourceButton(
+            label = if (hasPhoto) "Cambiar foto" else "Añadir foto",
+            picker = picker,
+            enabled = !isUpdating
+        )
+        if (hasPhoto) {
+            TextButton(onClick = { confirmRemove = true }, enabled = !isUpdating && !picker.isProcessing) {
+                Text("Quitar foto")
+            }
+        }
+        if (isUpdating) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .padding(start = Spacing.sm)
+                    .size(20.dp),
+                strokeWidth = 2.dp
+            )
+        }
+    }
+    if (confirmRemove) {
+        AlertDialog(
+            onDismissRequest = { confirmRemove = false },
+            title = { Text("¿Quitar la foto?") },
+            text = { Text("La receta se seguirá viendo en el inicio, pero sin foto.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRemove = false
+                    actions.onUpdatePhoto(null)
+                }) { Text("Quitar") }
+            },
+            dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text("Cancelar") } }
+        )
     }
 }
 
@@ -447,6 +552,9 @@ private fun RecipeDetailScreenPreview() {
                     servings = 4,
                     prepMinutes = 35,
                     authorId = 1,
+                    authorName = "Ana",
+                    likesCount = 12,
+                    likedByMe = true,
                     createdAt = "",
                     nutrition = Nutrition(
                         total = Macros(560.0, 12.4, 58.0, 31.2),
@@ -458,7 +566,8 @@ private fun RecipeDetailScreenPreview() {
                 )
             ),
             onBack = {},
-            onRetry = {}
+            onRetry = {},
+            currentUserId = 1
         )
     }
 }

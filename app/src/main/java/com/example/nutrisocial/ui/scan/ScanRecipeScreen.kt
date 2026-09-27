@@ -1,13 +1,6 @@
 package com.example.nutrisocial.ui.scan
 
-import android.Manifest
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,20 +37,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import com.example.nutrisocial.R
 import com.example.nutrisocial.data.OcrRecipeProposal
+import com.example.nutrisocial.ui.rememberPhotoPicker
 import com.example.nutrisocial.ui.recipes.RecipeCardElevation
 import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
-import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,39 +58,12 @@ fun ScanRecipeScreen(
     onProposalReady: (OcrRecipeProposal) -> Unit,
     onBack: () -> Unit
 ) {
-    val context = LocalContext.current
-    // Uri de la foto en curso: se guarda para sobrevivir a que el sistema recree la actividad
-    // mientras la app de cámara está en primer plano.
-    var pendingPhoto by rememberSaveable { mutableStateOf<Uri?>(null) }
     var notice by rememberSaveable { mutableStateOf<String?>(null) }
-
-    val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
-        val uri = pendingPhoto
-        if (saved && uri != null) onImageSelected(uri)
-    }
-
-    fun launchCamera() {
-        val uri = createPhotoUri(context)
-        pendingPhoto = uri
-        try {
-            takePicture.launch(uri)
-        } catch (e: ActivityNotFoundException) {
-            notice = "No hay ninguna app de cámara disponible. Elige una foto de la galería."
-        }
-    }
-
-    val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) {
-            launchCamera()
-        } else {
-            notice = "Sin permiso de cámara no se pueden hacer fotos. Puedes concederlo en los ajustes " +
-                "de Android o elegir una foto de la galería."
-        }
-    }
-
-    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) onImageSelected(uri)
-    }
+    val photoPicker = rememberPhotoPicker(
+        cacheSubdir = "ocr",
+        onImageSelected = onImageSelected,
+        onNotice = { notice = it }
+    )
 
     LaunchedEffect(state) {
         if (state is ScanUiState.Ready) onProposalReady(state.proposal)
@@ -140,9 +103,7 @@ fun ScanRecipeScreen(
             Button(
                 onClick = {
                     notice = null
-                    val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-                        PackageManager.PERMISSION_GRANTED
-                    if (granted) launchCamera() else cameraPermission.launch(Manifest.permission.CAMERA)
+                    photoPicker.takePhoto()
                 },
                 enabled = !busy,
                 shape = ButtonShape,
@@ -156,7 +117,7 @@ fun ScanRecipeScreen(
             OutlinedButton(
                 onClick = {
                     notice = null
-                    pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    photoPicker.pickFromGallery()
                 },
                 enabled = !busy,
                 shape = ButtonShape,
@@ -189,15 +150,6 @@ fun ScanRecipeScreen(
             }
         }
     }
-}
-
-/** Crea un archivo vacío en la caché y devuelve su Uri de FileProvider para la app de cámara. */
-private fun createPhotoUri(context: Context): Uri {
-    val dir = File(context.cacheDir, "ocr").apply { mkdirs() }
-    // Las fotos solo se necesitan mientras se procesan: se borran las de escaneos anteriores.
-    dir.listFiles()?.forEach { it.delete() }
-    val file = File.createTempFile("receta_", ".jpg", dir)
-    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
 }
 
 @Composable

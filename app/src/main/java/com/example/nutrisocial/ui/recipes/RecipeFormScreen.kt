@@ -1,9 +1,9 @@
 package com.example.nutrisocial.ui.recipes
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +35,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -45,12 +46,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.data.FoodRef
 import com.example.nutrisocial.data.FoodSuggestion
@@ -74,7 +75,8 @@ fun RecipeFormScreen(
     onSave: () -> Unit,
     onSaved: () -> Unit,
     onBack: () -> Unit,
-    onDismissOcrNotice: () -> Unit = {}
+    onDismissOcrNotice: () -> Unit = {},
+    onPhotoChange: (String?) -> Unit = {}
 ) {
     LaunchedEffect(state.saved) {
         if (state.saved) onSaved()
@@ -142,6 +144,8 @@ fun RecipeFormScreen(
                 )
             }
 
+            PhotoSection(photoBase64 = state.photoBase64, enabled = enabled, onPhotoChange = onPhotoChange)
+
             IngredientsSection(state = state, enabled = enabled, actions = ingredientActions)
 
             EditableListSection(
@@ -204,6 +208,48 @@ private fun OcrNotice(onDismiss: () -> Unit) {
             IconButton(onClick = onDismiss) {
                 Icon(Icons.Filled.Close, contentDescription = "Ocultar aviso")
             }
+        }
+    }
+}
+
+/** Foto opcional: se comprime en el móvil al elegirla y se envía al guardar la receta. */
+@Composable
+private fun PhotoSection(photoBase64: String?, enabled: Boolean, onPhotoChange: (String?) -> Unit) {
+    var notice by remember { mutableStateOf<String?>(null) }
+    val picker = rememberRecipePhotoPicker(
+        onPhotoReady = {
+            notice = null
+            onPhotoChange(it)
+        },
+        onMessage = { notice = it }
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        Text(text = "Foto (opcional)", style = MaterialTheme.typography.titleMedium)
+        if (photoBase64 != null) {
+            Base64Image(
+                base64 = photoBase64,
+                contentDescription = "Foto de la receta",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(4f / 3f)
+                    .clip(CardShape)
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                PhotoSourceButton(label = "Cambiar foto", picker = picker, enabled = enabled)
+                TextButton(onClick = { onPhotoChange(null) }, enabled = enabled && !picker.isProcessing) {
+                    Text("Quitar")
+                }
+            }
+        } else {
+            Text(
+                text = "Las recetas con foto destacan más en el inicio de la comunidad.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            PhotoSourceButton(label = "Añadir foto", picker = picker, enabled = enabled)
+        }
+        notice?.let {
+            Text(text = it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
         }
     }
 }
@@ -289,7 +335,7 @@ private fun IngredientRow(
         }
 
         if (suggestions.isNotEmpty()) {
-            SuggestionList(suggestions = suggestions, onSelect = { actions.onSuggestionSelected(index, it) })
+            FoodSuggestionList(suggestions = suggestions, onSelect = { actions.onSuggestionSelected(index, it) })
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
@@ -308,42 +354,6 @@ private fun IngredientRow(
                 onUnitChange = { actions.onUnitChange(index, it) },
                 modifier = Modifier.weight(1f)
             )
-        }
-    }
-}
-
-/** Sugerencias del autocompletado, dibujadas en línea bajo el campo para no quitarle el foco. */
-@Composable
-private fun SuggestionList(suggestions: List<FoodSuggestion>, onSelect: (FoodSuggestion) -> Unit) {
-    Surface(
-        shape = CardShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(vertical = Spacing.xs)) {
-            suggestions.take(6).forEach { food ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSelect(food) }
-                        .padding(horizontal = Spacing.md, vertical = Spacing.sm),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = food.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = suggestionDetail(food),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = Spacing.sm)
-                    )
-                }
-            }
         }
     }
 }

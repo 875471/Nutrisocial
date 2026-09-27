@@ -1,20 +1,26 @@
 package com.example.nutrisocial
 
+import com.example.nutrisocial.data.AddPantryItemRequest
 import com.example.nutrisocial.data.CreateLogEntryRequest
 import com.example.nutrisocial.data.CreateRecipeRequest
 import com.example.nutrisocial.data.DailyLog
 import com.example.nutrisocial.data.DailyRecommendations
+import com.example.nutrisocial.data.FeedPage
 import com.example.nutrisocial.data.FoodSuggestion
+import com.example.nutrisocial.data.LikeState
 import com.example.nutrisocial.data.LogEntry
 import com.example.nutrisocial.data.LoginRequest
 import com.example.nutrisocial.data.LoginResponse
 import com.example.nutrisocial.data.OcrRecipeProposal
+import com.example.nutrisocial.data.PantryItem
+import com.example.nutrisocial.data.PantrySearchResult
 import com.example.nutrisocial.data.ParseOcrRequest
 import com.example.nutrisocial.data.Profile
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RegisterRequest
 import com.example.nutrisocial.data.UpdateProfileRequest
 import com.example.nutrisocial.data.User
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -41,8 +47,27 @@ interface ApiService {
     @GET("recipes/mine")
     suspend fun getMyRecipes(): Response<List<Recipe>>
 
+    // Recetas de cualquier autor que se pueden cocinar con la despensa del usuario.
+    @GET("recipes/by-pantry")
+    suspend fun getRecipesByPantry(): Response<PantrySearchResult>
+
     @GET("recipes/{id}")
     suspend fun getRecipe(@Path("id") id: Int): Response<Recipe>
+
+    // Recetas de todos los usuarios, de 20 en 20. Sin cursor, la primera página.
+    @GET("recipes/feed")
+    suspend fun getFeed(@Query("cursor") cursor: Int?, @Query("limit") limit: Int): Response<FeedPage>
+
+    // Cuerpo JSON escrito a mano: Gson omite los null y para quitar la foto hay que mandar
+    // {"imageBase64": null} explícitamente (ver RecipeRepository.updateImage).
+    @PUT("recipes/{id}/image")
+    suspend fun updateRecipeImage(@Path("id") id: Int, @Body body: RequestBody): Response<Recipe>
+
+    @POST("recipes/{id}/like")
+    suspend fun likeRecipe(@Path("id") id: Int): Response<LikeState>
+
+    @DELETE("recipes/{id}/like")
+    suspend fun unlikeRecipe(@Path("id") id: Int): Response<LikeState>
 
     @GET("foods/search")
     suspend fun searchFoods(@Query("q") query: String): Response<List<FoodSuggestion>>
@@ -68,4 +93,14 @@ interface ApiService {
     // 204 sin cuerpo: el repositorio usa safeApiCallNoContent.
     @DELETE("log/{id}")
     suspend fun deleteLogEntry(@Path("id") id: Int): Response<Unit>
+
+    @GET("pantry")
+    suspend fun getPantry(): Response<List<PantryItem>>
+
+    // 409 si el ingrediente ya está en la despensa.
+    @POST("pantry")
+    suspend fun addPantryItem(@Body request: AddPantryItemRequest): Response<PantryItem>
+
+    @DELETE("pantry/{id}")
+    suspend fun deletePantryItem(@Path("id") id: Int): Response<Unit>
 }

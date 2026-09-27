@@ -2,6 +2,9 @@ package com.example.nutrisocial.data
 
 import com.example.nutrisocial.ApiService
 import com.example.nutrisocial.RetrofitClient
+import com.google.gson.JsonObject
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class RecipeRepository(
     private val api: ApiService = RetrofitClient.api
@@ -22,4 +25,21 @@ class RecipeRepository(
 
     suspend fun parseOcr(rawText: String): ApiResult<OcrRecipeProposal> =
         safeApiCall { api.parseOcr(ParseOcrRequest(rawText)) }
+
+    /** Pone o cambia la foto ([imageBase64] ya comprimida) o, con null, la quita. Solo el autor. */
+    suspend fun updateImage(id: Int, imageBase64: String?): ApiResult<Recipe> {
+        // Se escribe el JSON a mano porque Gson omitiría el campo si es null.
+        val json = if (imageBase64 == null) {
+            """{"imageBase64":null}"""
+        } else {
+            JsonObject().apply { addProperty("imageBase64", imageBase64) }.toString()
+        }
+        return safeApiCall(defaultErrorMessage = { code -> if (code == 403) "Solo el autor puede cambiar la foto" else null }) {
+            api.updateRecipeImage(id, json.toRequestBody("application/json".toMediaType()))
+        }
+    }
+
+    /** Da ([liked] = true) o quita el "me gusta" y devuelve el recuento actualizado. */
+    suspend fun setLiked(id: Int, liked: Boolean): ApiResult<LikeState> =
+        safeApiCall { if (liked) api.likeRecipe(id) else api.unlikeRecipe(id) }
 }

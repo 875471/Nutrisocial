@@ -31,6 +31,12 @@ sealed interface RecipeDetailUiState {
     data class Error(val message: String) : RecipeDetailUiState
 }
 
+/** Acciones del detalle que no cambian de pantalla: cambiar la foto y sus avisos. */
+data class RecipeDetailActionState(
+    val isUpdatingPhoto: Boolean = false,
+    val message: String? = null
+)
+
 /**
  * Fila de ingrediente del formulario. [food] es el alimento elegido en el autocompletado;
  * se descarta en cuanto el usuario vuelve a editar el nombre.
@@ -49,6 +55,8 @@ data class RecipeFormState(
     val steps: List<String> = listOf(""),
     val servings: String = "",
     val prepMinutes: String = "",
+    // Foto ya comprimida en Base64 (ver ui/ImageUtils.kt), o null si no se ha elegido.
+    val photoBase64: String? = null,
     // Sugerencias de alimentos para el ingrediente que se está escribiendo.
     val suggestionsFor: Int? = null,
     val suggestions: List<FoodSuggestion> = emptyList(),
@@ -71,6 +79,9 @@ class RecipeViewModel(
 
     private val _formState = MutableStateFlow(RecipeFormState())
     val formState: StateFlow<RecipeFormState> = _formState.asStateFlow()
+
+    private val _detailActionState = MutableStateFlow(RecipeDetailActionState())
+    val detailActionState: StateFlow<RecipeDetailActionState> = _detailActionState.asStateFlow()
 
     init {
         loadMyRecipes()
@@ -97,6 +108,7 @@ class RecipeViewModel(
         // Se muestra al instante la copia de la lista (si existe) y se actualiza con el servidor.
         val cached = (_listState.value as? RecipeListUiState.Success)?.recipes?.find { it.id == id }
         _detailState.value = cached?.let { RecipeDetailUiState.Success(it) } ?: RecipeDetailUiState.Loading
+        _detailActionState.value = RecipeDetailActionState()
 
         viewModelScope.launch {
             when (val result = repository.getRecipe(id)) {
@@ -108,7 +120,71 @@ class RecipeViewModel(
         }
     }
 
+    /** Da o quita el "me gusta" al momento y lo confirma con el servidor; si falla, lo deshace. */
+    private val pendingLikes = mutableSetOf<Int>()
+
+    fun toggleLike() {
+        val recipe = (_detailState.value as? RecipeDetailUiState.Success)?.recipe ?: return
+        // Mientras una petición está en curso se ignoran más toques: así el orden de las
+        // respuestas no puede dejar el corazón en un estado distinto al del servidor.
+        if (!pendingLikes.add(recipe.id)) return
+        val liked = !recipe.likedByMe
+        replaceRecipe(recipe.copy(likedByMe = liked, likesCount = (recipe.likesCount + if (liked) 1 else -1).coerceAtLeast(0)))
+
+        viewModelScope.launch {
+            val result = repository.setLiked(recipe.id, liked)
+            pendingLikes.remove(recipe.id)
+            val current = currentRecipe(recipe.id) ?: return@launch
+            when (result) {
+                is ApiResult.Success -> replaceRecipe(current.copy(likedByMe = result.data.likedByMe, likesCount = result.data.likesCount))
+                is ApiResult.Error -> {
+                    replaceRecipe(current.copy(likedByMe = recipe.likedByMe, likesCount = recipe.likesCount))
+                    _detailActionState.update { it.copy(message = "No se pudo guardar el me gusta: ${result.message}") }
+                }
+            }
+        }
+    }
+
+    /** Pone, cambia o (con null) quita la foto de una receta propia. */
+    fun updatePhoto(imageBase64: String?) {
+        val recipe = (_detailState.value as? RecipeDetailUiState.Success)?.recipe ?: return
+        if (_detailActionState.value.isUpdatingPhoto) return
+        _detailActionState.value = RecipeDetailActionState(isUpdatingPhoto = true)
+        viewModelScope.launch {
+            when (val result = repository.updateImage(recipe.id, imageBase64)) {
+                is ApiResult.Success -> {
+                    replaceRecipe(result.data)
+                    val message = if (imageBase64 == null) "Foto quitada" else "Foto guardada"
+                    _detailActionState.value = RecipeDetailActionState(message = message)
+                }
+                is ApiResult.Error -> _detailActionState.value =
+                    RecipeDetailActionState(message = "No se pudo guardar la foto: ${result.message}")
+            }
+        }
+    }
+
+    fun showDetailMessage(message: String) = _detailActionState.update { it.copy(message = message) }
+
+    fun onDetailMessageShown() = _detailActionState.update { it.copy(message = null) }
+
+    private fun currentRecipe(id: Int): Recipe? =
+        (_detailState.value as? RecipeDetailUiState.Success)?.recipe?.takeIf { it.id == id }
+
+    /** Sustituye la receta en el detalle (si es la que se ve) y en "Mis recetas" (si está). */
+    private fun replaceRecipe(recipe: Recipe) {
+        if (currentRecipe(recipe.id) != null) _detailState.value = RecipeDetailUiState.Success(recipe)
+        _listState.update { state ->
+            if (state is RecipeListUiState.Success && state.recipes.any { it.id == recipe.id }) {
+                RecipeListUiState.Success(state.recipes.map { if (it.id == recipe.id) recipe else it })
+            } else {
+                state
+            }
+        }
+    }
+
     // ---- Formulario ----
+
+    fun onPhotoChange(photoBase64: String?) = _formState.update { it.copy(photoBase64 = photoBase64, error = null) }
 
     fun onTitleChange(value: String) = _formState.update { it.copy(title = value, error = null) }
 
@@ -241,7 +317,7 @@ class RecipeViewModel(
         searchJob?.cancel()
         _formState.update { it.copy(isSaving = true, error = null, suggestionsFor = null, suggestions = emptyList()) }
         viewModelScope.launch {
-            val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes)
+            val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes, form.photoBase64)
             when (val result = repository.createRecipe(request)) {
                 is ApiResult.Success -> {
                     // Se inserta al principio para que la lista esté actualizada al volver,

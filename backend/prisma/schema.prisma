@@ -12,11 +12,11 @@ datasource db {
 }
 
 model User {
-  id            Int        @id @default(autoincrement())
-  email         String     @unique
+  id            Int          @id @default(autoincrement())
+  email         String       @unique
   password      String
   name          String
-  createdAt     DateTime   @default(now())
+  createdAt     DateTime     @default(now())
   // Datos de perfil para el objetivo calórico (ver src/nutrition/calorieGoal.js). Opcionales:
   // un usuario recién registrado todavía no los ha rellenado.
   birthDate     DateTime?
@@ -30,6 +30,8 @@ model User {
   goal          String?
   recipes       Recipe[]
   logEntries    LogEntry[]
+  pantryItems   PantryItem[]
+  recipeLikes   RecipeLike[]
 }
 
 model Recipe {
@@ -46,10 +48,14 @@ model Recipe {
   fat              Float              @default(0)
   // Peso en crudo de los ingredientes con peso conocido; null si no se pudo estimar ninguno
   totalWeightGrams Float?
+  // Foto de la receta: JPEG comprimido en el móvil y guardado en Base64, sin el prefijo
+  // "data:". Render (plan gratuito) no tiene disco persistente para guardarla como archivo.
+  imageBase64      String?            @db.Text
   authorId         Int
   author           User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
   ingredients      RecipeIngredient[]
   logEntries       LogEntry[]
+  likes            RecipeLike[]
   createdAt        DateTime           @default(now())
 
   @@index([authorId])
@@ -67,6 +73,7 @@ model Food {
   source      String             @default("BEDCA")
   ingredients RecipeIngredient[]
   logEntries  LogEntry[]
+  pantryItems PantryItem[]
 }
 
 model RecipeIngredient {
@@ -113,4 +120,33 @@ model LogEntry {
   createdAt DateTime @default(now())
 
   @@index([userId, date])
+}
+
+// Ingrediente que el usuario tiene en casa, para buscar recetas que puede cocinar
+// (ver src/nutrition/pantryMatch.js).
+model PantryItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Nombre tal como lo escribió el usuario
+  name      String
+  // Alimento de la tabla Food asociado, si se encontró uno (igual que en RecipeIngredient)
+  foodId    Int?
+  food      Food?    @relation(fields: [foodId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, name])
+}
+
+// "Me gusta" de un usuario a una receta del feed. Como mucho uno por usuario y receta.
+model RecipeLike {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipeId  Int
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, recipeId])
+  @@index([recipeId])
 }

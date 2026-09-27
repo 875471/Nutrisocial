@@ -9,7 +9,12 @@ data class Recipe(
     val prepMinutes: Int?,
     val authorId: Int,
     val createdAt: String,
-    val nutrition: Nutrition = Nutrition()
+    val nutrition: Nutrition = Nutrition(),
+    // Foto en Base64 (JPEG sin el prefijo "data:"), o null si la receta no tiene.
+    val imageBase64: String? = null,
+    val authorName: String = "",
+    val likesCount: Int = 0,
+    val likedByMe: Boolean = false
 )
 
 /** Ingrediente guardado: cantidad tal como se escribió, peso estimado y alimento asociado (BEDCA u Open Food Facts). */
@@ -52,7 +57,9 @@ data class CreateRecipeRequest(
     val steps: List<String>,
     val servings: Int,
     // Gson omite los null, así que si no se indica no se envía el campo.
-    val prepMinutes: Int?
+    val prepMinutes: Int?,
+    // Foto ya comprimida en el móvil (ver ui/ImageUtils.kt); null si no hay.
+    val imageBase64: String? = null
 )
 
 /** Ingrediente enviado al crear una receta. Sin cantidad ("sal al gusto") no suma en el cálculo. */
@@ -101,3 +108,27 @@ data class OcrIngredient(
     val foodName: String? = null,
     val foodSource: String? = null
 )
+
+/** Receta en el feed social (GET /recipes/feed): lo justo para la tarjeta. */
+data class FeedRecipe(
+    val id: Int,
+    val title: String,
+    val imageBase64: String? = null,
+    val authorId: Int,
+    val authorName: String = "",
+    val servings: Int = 1,
+    val prepMinutes: Int? = null,
+    val kcalPerServing: Double = 0.0,
+    val likesCount: Int = 0,
+    val likedByMe: Boolean = false,
+    val createdAt: String = ""
+)
+
+/** Página del feed. [nextCursor] es el id que hay que pedir después, o null si no hay más. */
+data class FeedPage(
+    val recipes: List<FeedRecipe> = emptyList(),
+    val nextCursor: Int? = null
+)
+
+/** Respuesta de POST/DELETE /recipes/{id}/like. */
+data class LikeState(val likesCount: Int, val likedByMe: Boolean)

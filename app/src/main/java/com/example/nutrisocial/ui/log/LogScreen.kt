@@ -47,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -89,7 +90,9 @@ data class LogActions(
     val onOpenProfile: () -> Unit,
     val onAddRecommendation: (RecipeRecommendation) -> Unit,
     val onRetryRecommendations: () -> Unit,
-    val add: AddEntryActions
+    val add: AddEntryActions,
+    // Abre el detalle de una receta (recomendada o ya registrada), como en el resto de listas.
+    val onOpenRecipe: (Int) -> Unit = {}
 )
 
 /** Pestaña "Diario": registro de lo que se ha comido cada día frente al objetivo calórico. */
@@ -255,7 +258,12 @@ private fun DayContent(
             }
         }
         items(log.entries, key = { it.id }) { entry ->
-            EntryRow(entry = entry, onDelete = { onDelete(entry) })
+            EntryRow(
+                entry = entry,
+                onDelete = { onDelete(entry) },
+                // Los alimentos sueltos no tienen detalle; las recetas borradas tampoco (recipeId null).
+                onOpen = entry.recipeId?.let { id -> { actions.onOpenRecipe(id) } }
+            )
         }
     }
 }
@@ -381,7 +389,8 @@ private fun LazyListScope.recommendationsSection(
                         recommendation = recommendation,
                         isAdding = addingRecipeId == recommendation.id,
                         enabled = addingRecipeId == null,
-                        onAdd = { actions.onAddRecommendation(recommendation) }
+                        onAdd = { actions.onAddRecommendation(recommendation) },
+                        onOpen = { actions.onOpenRecipe(recommendation.id) }
                     )
                 }
             }
@@ -439,9 +448,11 @@ private fun RecommendationCard(
     recommendation: RecipeRecommendation,
     isAdding: Boolean,
     enabled: Boolean,
-    onAdd: () -> Unit
+    onAdd: () -> Unit,
+    onOpen: () -> Unit
 ) {
     ElevatedCard(
+        onClick = onOpen,
         shape = CardShape,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
@@ -508,12 +519,14 @@ fun entryQuantityLabel(entry: LogEntry): String = when {
 }
 
 @Composable
-private fun EntryRow(entry: LogEntry, onDelete: () -> Unit) {
+private fun EntryRow(entry: LogEntry, onDelete: () -> Unit, onOpen: (() -> Unit)?) {
     ElevatedCard(
         shape = CardShape,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onOpen != null) Modifier.clip(CardShape).clickable(onClick = onOpen) else Modifier)
     ) {
         Row(
             modifier = Modifier.padding(start = Spacing.md, top = Spacing.sm, bottom = Spacing.sm),

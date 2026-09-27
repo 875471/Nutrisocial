@@ -1,5 +1,6 @@
 package com.example.nutrisocial.ui.recipes
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,45 @@ val RecipeCardElevation = 3.dp
 fun suggestionDetail(food: FoodSuggestion): String =
     "${food.kcal.roundToInt()} kcal/100 g" + if (isOpenFoodFacts(food.source)) " · Open Food Facts" else ""
 
+/**
+ * Sugerencias del autocompletado de alimentos, dibujadas en línea bajo el campo para no quitarle
+ * el foco. La usan el formulario de recetas y la despensa.
+ */
+@Composable
+fun FoodSuggestionList(suggestions: List<FoodSuggestion>, onSelect: (FoodSuggestion) -> Unit) {
+    Surface(
+        shape = CardShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(vertical = Spacing.xs)) {
+            suggestions.take(6).forEach { food ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelect(food) }
+                        .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = food.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = suggestionDetail(food),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = Spacing.sm)
+                    )
+                }
+            }
+        }
+    }
+}
+
 fun servingsLabel(servings: Int): String = if (servings == 1) "1 ración" else "$servings raciones"
 
 /** Número sin decimales si es entero y con uno (y coma decimal) si no: 800, 2,5. */
@@ -72,7 +112,7 @@ fun RecipeCard(
             modifier = Modifier.padding(Spacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            InitialBadge(text = recipe.title)
+            RecipeThumbnail(title = recipe.title, imageBase64 = recipe.imageBase64)
             Column(
                 modifier = Modifier
                     .weight(1f)

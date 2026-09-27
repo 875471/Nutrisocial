@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -35,8 +36,13 @@ import com.example.nutrisocial.ui.log.AddEntryActions
 import com.example.nutrisocial.ui.log.LogActions
 import com.example.nutrisocial.ui.log.LogScreen
 import com.example.nutrisocial.ui.log.LogViewModel
+import com.example.nutrisocial.ui.pantry.PantryActions
+import com.example.nutrisocial.ui.pantry.PantryScreen
+import com.example.nutrisocial.ui.pantry.PantryViewModel
 import com.example.nutrisocial.ui.recipes.IngredientActions
+import com.example.nutrisocial.ui.recipes.RecipeDetailActions
 import com.example.nutrisocial.ui.recipes.RecipeDetailScreen
+import com.example.nutrisocial.ui.recipes.RecipeDetailUiState
 import com.example.nutrisocial.ui.recipes.RecipeFormScreen
 import com.example.nutrisocial.ui.recipes.RecipeListScreen
 import com.example.nutrisocial.ui.recipes.RecipeViewModel
@@ -47,6 +53,7 @@ private object HomeRoutes {
     const val INICIO = "inicio"
     const val RECETAS = "recetas"
     const val DIARIO = "diario"
+    const val DESPENSA = "despensa"
     const val PERFIL = "perfil"
     const val NUEVA_RECETA = "recetas/nueva"
     const val ESCANEAR_RECETA = "recetas/escanear"
@@ -56,8 +63,10 @@ private object HomeRoutes {
 
 private enum class HomeTab(val route: String, val label: String, val icon: ImageVector) {
     INICIO(HomeRoutes.INICIO, "Inicio", Icons.Filled.Home),
-    RECETAS(HomeRoutes.RECETAS, "Mis recetas", Icons.AutoMirrored.Filled.List),
+    // Etiquetas de una palabra: con cinco pestañas, "Mis recetas" se cortaba en pantallas estrechas.
+    RECETAS(HomeRoutes.RECETAS, "Recetas", Icons.AutoMirrored.Filled.List),
     DIARIO(HomeRoutes.DIARIO, "Diario", Icons.Filled.DateRange),
+    DESPENSA(HomeRoutes.DESPENSA, "Despensa", Icons.Filled.ShoppingCart),
     PERFIL(HomeRoutes.PERFIL, "Perfil", Icons.Filled.Person)
 }
 
@@ -75,6 +84,9 @@ fun HomeScreen(
     // Mismo ámbito: el día elegido en el diario y el perfil se conservan al cambiar de pestaña.
     logViewModel: LogViewModel = viewModel(),
     profileViewModel: ProfileViewModel = viewModel(),
+    // Mismo ámbito: la despensa y los últimos resultados se conservan al volver del detalle.
+    pantryViewModel: PantryViewModel = viewModel(),
+    feedViewModel: FeedViewModel = viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -107,14 +119,23 @@ fun HomeScreen(
                 .consumeWindowInsets(padding)
         ) {
             composable(HomeRoutes.INICIO) {
-                val listState by recipeViewModel.listState.collectAsStateWithLifecycle()
+                val feedState by feedViewModel.state.collectAsStateWithLifecycle()
                 HomeTabScreen(
                     userName = user?.name.orEmpty(),
-                    recipesState = listState,
-                    onOpenRecipes = { navController.navigateToTab(HomeRoutes.RECETAS) },
-                    onCreateRecipe = {
-                        recipeViewModel.resetForm()
-                        navController.navigate(HomeRoutes.NUEVA_RECETA)
+                    currentUserId = user?.id,
+                    state = feedState,
+                    actions = remember(feedViewModel) {
+                        FeedActions(
+                            onRefresh = feedViewModel::refresh,
+                            onLoadMore = feedViewModel::loadMore,
+                            onToggleLike = feedViewModel::toggleLike,
+                            onRecipeClick = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) },
+                            onCreateRecipe = {
+                                recipeViewModel.resetForm()
+                                navController.navigate(HomeRoutes.NUEVA_RECETA)
+                            },
+                            onMessageShown = feedViewModel::onMessageShown
+                        )
                     }
                 )
             }
@@ -197,7 +218,35 @@ fun HomeScreen(
                                 onFoodSelected = logViewModel::onFoodSelected,
                                 onGramsChange = logViewModel::onGramsChange,
                                 onSave = logViewModel::saveEntry
-                            )
+                            ),
+                            onOpenRecipe = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) }
+                        )
+                    }
+                )
+            }
+
+            composable(HomeRoutes.DESPENSA) {
+                val itemsState by pantryViewModel.itemsState.collectAsStateWithLifecycle()
+                val input by pantryViewModel.input.collectAsStateWithLifecycle()
+                val searchState by pantryViewModel.searchState.collectAsStateWithLifecycle()
+                val message by pantryViewModel.message.collectAsStateWithLifecycle()
+                PantryScreen(
+                    itemsState = itemsState,
+                    input = input,
+                    searchState = searchState,
+                    message = message,
+                    actions = remember(pantryViewModel) {
+                        PantryActions(
+                            onQueryChange = pantryViewModel::onQueryChange,
+                            onSuggestionSelected = pantryViewModel::onSuggestionSelected,
+                            onDismissSuggestions = pantryViewModel::dismissSuggestions,
+                            onAdd = pantryViewModel::addItem,
+                            onDelete = pantryViewModel::deleteItem,
+                            onRetryPantry = pantryViewModel::loadPantry,
+                            onSearchRecipes = pantryViewModel::searchRecipes,
+                            // Las recetas pueden ser de otros usuarios: el detalle las carga por id.
+                            onRecipeClick = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) },
+                            onMessageShown = pantryViewModel::onMessageShown
                         )
                     }
                 )
@@ -251,6 +300,8 @@ fun HomeScreen(
                     onSaved = {
                         // Tras guardar se vuelve a "Mis recetas", que ya incluye la nueva receta.
                         recipeViewModel.resetForm()
+                        // La nueva receta también es lo primero del feed.
+                        feedViewModel.refresh()
                         if (!navController.popBackStack(HomeRoutes.RECETAS, inclusive = false)) {
                             // Se abrió desde Inicio: se quita el formulario y se cambia de pestaña.
                             navController.popBackStack()
@@ -258,7 +309,8 @@ fun HomeScreen(
                         }
                     },
                     onBack = { navController.popBackStack() },
-                    onDismissOcrNotice = recipeViewModel::dismissOcrNotice
+                    onDismissOcrNotice = recipeViewModel::dismissOcrNotice,
+                    onPhotoChange = recipeViewModel::onPhotoChange
                 )
             }
 
@@ -269,6 +321,11 @@ fun HomeScreen(
                 val id = entry.arguments?.getInt("id") ?: return@composable
                 LaunchedEffect(id) { recipeViewModel.loadRecipe(id) }
                 val detailState by recipeViewModel.detailState.collectAsStateWithLifecycle()
+                val detailActionState by recipeViewModel.detailActionState.collectAsStateWithLifecycle()
+                // Lo que cambie aquí (likes, foto) se copia a la tarjeta del feed.
+                LaunchedEffect(detailState) {
+                    (detailState as? RecipeDetailUiState.Success)?.let { feedViewModel.syncRecipe(it.recipe) }
+                }
                 // El LogViewModel compartido: al añadir la receta hoy, el diario se actualiza.
                 val quickAddState by logViewModel.quickAddState.collectAsStateWithLifecycle()
                 RecipeDetailScreen(
@@ -277,7 +334,17 @@ fun HomeScreen(
                     onRetry = { recipeViewModel.loadRecipe(id) },
                     quickAddState = quickAddState,
                     onAddToDiary = logViewModel::addRecipeFromDetail,
-                    onQuickAddMessageShown = logViewModel::onQuickAddMessageShown
+                    onQuickAddMessageShown = logViewModel::onQuickAddMessageShown,
+                    currentUserId = user?.id,
+                    actions = remember(recipeViewModel) {
+                        RecipeDetailActions(
+                            onToggleLike = recipeViewModel::toggleLike,
+                            onUpdatePhoto = recipeViewModel::updatePhoto,
+                            onMessage = recipeViewModel::showDetailMessage,
+                            onMessageShown = recipeViewModel::onDetailMessageShown
+                        )
+                    },
+                    actionState = detailActionState
                 )
             }
         }
