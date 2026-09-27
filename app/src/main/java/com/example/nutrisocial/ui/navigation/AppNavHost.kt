@@ -15,15 +15,20 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.nutrisocial.ui.auth.AuthUiState
 import com.example.nutrisocial.ui.auth.AuthViewModel
+import com.example.nutrisocial.ui.auth.ForgotPasswordScreen
 import com.example.nutrisocial.ui.auth.LoginScreen
 import com.example.nutrisocial.ui.auth.RegisterScreen
 import com.example.nutrisocial.ui.auth.SessionState
+import com.example.nutrisocial.ui.auth.VerifyEmailScreen
 import com.example.nutrisocial.ui.home.HomeScreen
 
 object Routes {
     const val LOGIN = "login"
     const val REGISTER = "register"
+    const val VERIFY_EMAIL = "verify-email"
+    const val FORGOT_PASSWORD = "forgot-password"
     const val HOME = "home"
 }
 
@@ -49,17 +54,34 @@ fun AppNavHost(
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.LOGIN) {
             val loginState by authViewModel.loginState.collectAsStateWithLifecycle()
+            val loginNotice by authViewModel.loginNotice.collectAsStateWithLifecycle()
+            val resendState by authViewModel.resendState.collectAsStateWithLifecycle()
             LoginScreen(
                 state = loginState,
                 onLogin = authViewModel::login,
                 onGoToRegister = {
                     authViewModel.resetStates()
                     navController.navigate(Routes.REGISTER) { launchSingleTop = true }
-                }
+                },
+                onForgotPassword = { email ->
+                    authViewModel.startPasswordReset(email)
+                    navController.navigate(Routes.FORGOT_PASSWORD) { launchSingleTop = true }
+                },
+                notice = loginNotice,
+                resendState = resendState,
+                onResendVerification = authViewModel::resendVerification
             )
         }
         composable(Routes.REGISTER) {
             val registerState by authViewModel.registerState.collectAsStateWithLifecycle()
+            // Registro hecho y pendiente de confirmar: se pasa a la pantalla "Confirma tu correo".
+            LaunchedEffect(registerState) {
+                if (registerState is AuthUiState.AwaitingVerification) {
+                    navController.navigate(Routes.VERIFY_EMAIL) {
+                        popUpTo(Routes.REGISTER) { inclusive = true }
+                    }
+                }
+            }
             RegisterScreen(
                 state = registerState,
                 onRegister = authViewModel::register,
@@ -69,6 +91,37 @@ fun AppNavHost(
                         navController.navigate(Routes.LOGIN) { launchSingleTop = true }
                     }
                 }
+            )
+        }
+        composable(Routes.VERIFY_EMAIL) {
+            val registerState by authViewModel.registerState.collectAsStateWithLifecycle()
+            val resendState by authViewModel.resendState.collectAsStateWithLifecycle()
+            val pending = registerState as? AuthUiState.AwaitingVerification
+            VerifyEmailScreen(
+                email = pending?.email.orEmpty(),
+                emailSent = pending?.emailSent ?: true,
+                resendState = resendState,
+                onResend = { pending?.let { authViewModel.resendVerification(it.email) } },
+                onGoToLogin = {
+                    authViewModel.resetStates()
+                    if (!navController.popBackStack(Routes.LOGIN, inclusive = false)) {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(navController.graph.id) { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
+        composable(Routes.FORGOT_PASSWORD) {
+            val resetState by authViewModel.passwordResetState.collectAsStateWithLifecycle()
+            ForgotPasswordScreen(
+                state = resetState,
+                onRequestCode = authViewModel::requestResetCode,
+                onReset = authViewModel::resetPassword,
+                onRequestAnotherCode = authViewModel::restartPasswordReset,
+                onBack = { navController.popBackStack() },
+                // El login muestra el aviso "Contraseña cambiada".
+                onDone = { navController.popBackStack(Routes.LOGIN, inclusive = false) }
             )
         }
         composable(Routes.HOME) {

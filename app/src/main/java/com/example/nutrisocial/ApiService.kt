@@ -7,18 +7,22 @@ import com.example.nutrisocial.data.DailyLog
 import com.example.nutrisocial.data.DailyRecommendations
 import com.example.nutrisocial.data.DeleteAccountRequest
 import com.example.nutrisocial.data.DeleteRecipeResponse
+import com.example.nutrisocial.data.EmailRequest
 import com.example.nutrisocial.data.FeedPage
 import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.LikeState
 import com.example.nutrisocial.data.LogEntry
 import com.example.nutrisocial.data.LoginRequest
 import com.example.nutrisocial.data.LoginResponse
+import com.example.nutrisocial.data.MessageResponse
 import com.example.nutrisocial.data.OcrRecipeProposal
 import com.example.nutrisocial.data.PantryItem
 import com.example.nutrisocial.data.PantrySearchResult
 import com.example.nutrisocial.data.ParseOcrRequest
 import com.example.nutrisocial.data.Profile
 import com.example.nutrisocial.data.Recipe
+import com.example.nutrisocial.data.RegisterResponse
+import com.example.nutrisocial.data.ResetPasswordRequest
 import com.example.nutrisocial.data.RegisterRequest
 import com.example.nutrisocial.data.UpdateProfileRequest
 import com.example.nutrisocial.data.User
@@ -38,7 +42,16 @@ interface ApiService {
     suspend fun getHealth(): Response<Map<String, String>>
 
     @POST("auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<User>
+    suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
+
+    @POST("auth/resend-verification")
+    suspend fun resendVerification(@Body request: EmailRequest): Response<MessageResponse>
+
+    @POST("auth/forgot-password")
+    suspend fun forgotPassword(@Body request: EmailRequest): Response<MessageResponse>
+
+    @POST("auth/reset-password")
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<MessageResponse>
 
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>

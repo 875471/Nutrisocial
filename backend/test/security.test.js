@@ -29,8 +29,8 @@ function pick(row, select) {
 function fakePrisma() {
   const db = {
     users: [
-      { id: 1, email: 'ana@example.com', name: 'Ana', password: PASSWORD_HASH },
-      { id: 2, email: 'luis@example.com', name: 'Luis', password: PASSWORD_HASH },
+      { id: 1, email: 'ana@example.com', name: 'Ana', password: PASSWORD_HASH, emailVerified: true },
+      { id: 2, email: 'luis@example.com', name: 'Luis', password: PASSWORD_HASH, emailVerified: true },
     ],
     recipes: [
       { id: 10, title: 'Crema de calabaza', authorId: 1, servings: 2, prepMinutes: 30, kcal: 300, protein: 5, carbs: 40, fat: 10, totalWeightGrams: 500, steps: '["Cocer"]', imageBase64: null, createdAt: new Date('2026-09-01') },

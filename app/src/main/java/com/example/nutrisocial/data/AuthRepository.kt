@@ -6,13 +6,24 @@ import com.example.nutrisocial.RetrofitClient
 class AuthRepository(
     private val api: ApiService = RetrofitClient.api
 ) {
-    suspend fun register(name: String, email: String, password: String): ApiResult<User> =
+    suspend fun register(name: String, email: String, password: String): ApiResult<RegisterResponse> =
         safeApiCall(::authErrorMessage) {
             api.register(RegisterRequest(email = email, password = password, name = name))
         }
 
     suspend fun login(email: String, password: String): ApiResult<LoginResponse> =
         safeApiCall(::authErrorMessage) { api.login(LoginRequest(email = email, password = password)) }
+
+    /** Reenvía el correo de verificación. La respuesta es la misma exista o no la cuenta. */
+    suspend fun resendVerification(email: String): ApiResult<MessageResponse> =
+        safeApiCall(::authErrorMessage) { api.resendVerification(EmailRequest(email)) }
+
+    /** Pide el código de un solo uso para cambiar la contraseña. */
+    suspend fun forgotPassword(email: String): ApiResult<MessageResponse> =
+        safeApiCall(::authErrorMessage) { api.forgotPassword(EmailRequest(email)) }
+
+    suspend fun resetPassword(email: String, code: String, password: String): ApiResult<MessageResponse> =
+        safeApiCall(::authErrorMessage) { api.resetPassword(ResetPasswordRequest(email, code, password)) }
 
     /** Borra la cuenta tras comprobar [password] en el servidor. */
     suspend fun deleteAccount(password: String): ApiResult<Unit> =

@@ -18,16 +18,19 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.ui.theme.ButtonShape
+import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.Spacing
 
 /** Contenedor común de los formularios: centrado, con scroll y respetando teclado y barras del sistema. */
@@ -70,7 +73,8 @@ internal fun AuthTextField(
     enabled: Boolean,
     keyboardType: KeyboardType = KeyboardType.Text,
     isPassword: Boolean = false,
-    imeAction: ImeAction = ImeAction.Next
+    imeAction: ImeAction = ImeAction.Next,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.None
 ) {
     OutlinedTextField(
         value = value,
@@ -79,7 +83,7 @@ internal fun AuthTextField(
         singleLine = true,
         enabled = enabled,
         visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+        keyboardOptions = KeyboardOptions(capitalization = capitalization, keyboardType = keyboardType, imeAction = imeAction),
         modifier = Modifier.fillMaxWidth()
     )
 }
@@ -118,5 +122,28 @@ internal fun AuthErrorText(state: AuthUiState) {
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.fillMaxWidth()
         )
+    }
+}
+
+/**
+ * Aviso destacado en los formularios de acceso (email sin confirmar, código enviado...), con
+ * espacio debajo para acciones como "Reenviar correo". [isError] lo pinta con el color de error.
+ */
+@Composable
+internal fun AuthNotice(
+    message: String,
+    isError: Boolean = false,
+    actions: @Composable ColumnScope.() -> Unit = {}
+) {
+    Surface(
+        shape = CardShape,
+        color = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = if (isError) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Text(text = message, style = MaterialTheme.typography.bodyMedium)
+            actions()
+        }
     }
 }

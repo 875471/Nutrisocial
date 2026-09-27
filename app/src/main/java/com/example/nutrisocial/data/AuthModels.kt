@@ -31,3 +31,28 @@ data class ApiErrorBody(
 data class DeleteAccountRequest(
     val password: String
 )
+
+/**
+ * Respuesta de POST /auth/register. Con [emailVerificationRequired] hay que confirmar el correo
+ * antes de iniciar sesión; [emailSent] es false si el servidor no pudo enviarlo.
+ */
+data class RegisterResponse(
+    val id: Int,
+    val email: String,
+    val name: String,
+    val emailVerificationRequired: Boolean = false,
+    val emailSent: Boolean = false
+)
+
+/** Cuerpo de las rutas que solo necesitan el email (reenviar verificación, olvidé la contraseña). */
+data class EmailRequest(val email: String)
+
+/** Cuerpo de POST /auth/reset-password: el código recibido por correo y la contraseña nueva. */
+data class ResetPasswordRequest(
+    val email: String,
+    val code: String,
+    val password: String
+)
+
+/** Respuesta con un mensaje para el usuario (p. ej. "Si hay una cuenta con ese email..."). */
+data class MessageResponse(val message: String = "")

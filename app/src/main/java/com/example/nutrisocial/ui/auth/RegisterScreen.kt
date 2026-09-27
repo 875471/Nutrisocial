@@ -40,7 +40,7 @@ fun RegisterScreen(
         AuthTextField(
             value = password,
             onValueChange = { password = it },
-            label = "Contraseña (mín. 4 caracteres)",
+            label = "Contraseña (mín. 8 caracteres)",
             enabled = !isLoading,
             keyboardType = KeyboardType.Password,
             isPassword = true,
