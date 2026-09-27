@@ -94,6 +94,10 @@ class RecipeViewModel(
     private val _detailActionState = MutableStateFlow(RecipeDetailActionState())
     val detailActionState: StateFlow<RecipeDetailActionState> = _detailActionState.asStateFlow()
 
+    // "Tirar para refrescar" en Mis recetas.
+    private val _isRefreshingList = MutableStateFlow(false)
+    val isRefreshingList: StateFlow<Boolean> = _isRefreshingList.asStateFlow()
+
     // Aviso para la lista de "Mis recetas" (p. ej. tras borrar una receta).
     private val _listMessage = MutableStateFlow<String?>(null)
     val listMessage: StateFlow<String?> = _listMessage.asStateFlow()
@@ -114,6 +118,26 @@ class RecipeViewModel(
                 is ApiResult.Success -> RecipeListUiState.Success(result.data)
                 is ApiResult.Error -> RecipeListUiState.Error(result.message)
             }
+        }
+    }
+
+    /**
+     * Recarga pedida al tirar hacia abajo. Si falla con recetas ya en pantalla, se conservan
+     * y se avisa, en vez de cambiar la lista por la pantalla de error.
+     */
+    fun refreshMyRecipes() {
+        if (_isRefreshingList.value) return
+        _isRefreshingList.value = true
+        viewModelScope.launch {
+            when (val result = repository.getMyRecipes()) {
+                is ApiResult.Success -> _listState.value = RecipeListUiState.Success(result.data)
+                is ApiResult.Error -> if (_listState.value is RecipeListUiState.Success) {
+                    _listMessage.value = "No se pudo actualizar: ${result.message}"
+                } else {
+                    _listState.value = RecipeListUiState.Error(result.message)
+                }
+            }
+            _isRefreshingList.value = false
         }
     }
 

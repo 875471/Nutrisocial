@@ -376,10 +376,13 @@ private fun OwnerPhotoActions(hasPhoto: Boolean, isUpdating: Boolean, actions: R
             title = { Text("¿Quitar la foto?") },
             text = { Text("La receta se seguirá viendo en el inicio, pero sin foto.") },
             confirmButton = {
-                TextButton(onClick = {
-                    confirmRemove = false
-                    actions.onUpdatePhoto(null)
-                }) { Text("Quitar") }
+                TextButton(
+                    onClick = {
+                        confirmRemove = false
+                        actions.onUpdatePhoto(null)
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("Quitar") }
             },
             dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text("Cancelar") } }
         )

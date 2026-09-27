@@ -50,6 +50,10 @@ class PantryViewModel(
     private val _searchState = MutableStateFlow<PantrySearchState>(PantrySearchState.Idle)
     val searchState: StateFlow<PantrySearchState> = _searchState.asStateFlow()
 
+    // "Tirar para refrescar".
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     // Avisos puntuales (p. ej. un borrado que ha fallado), para un snackbar.
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
@@ -67,6 +71,30 @@ class PantryViewModel(
                 is ApiResult.Success -> PantryItemsState.Success(result.data)
                 is ApiResult.Error -> PantryItemsState.Error(result.message)
             }
+        }
+    }
+
+    /**
+     * Recarga pedida al tirar hacia abajo: la despensa y, si había resultados en pantalla, la
+     * búsqueda (otros usuarios pueden haber publicado recetas nuevas). Si falla con la despensa
+     * ya cargada, se conserva y se avisa.
+     */
+    fun refresh() {
+        if (_isRefreshing.value) return
+        _isRefreshing.value = true
+        viewModelScope.launch {
+            when (val result = repository.getPantry()) {
+                is ApiResult.Success -> {
+                    _itemsState.value = PantryItemsState.Success(result.data)
+                    if (_searchState.value is PantrySearchState.Success) searchRecipes()
+                }
+                is ApiResult.Error -> if (_itemsState.value is PantryItemsState.Success) {
+                    _message.value = "No se pudo actualizar: ${result.message}"
+                } else {
+                    _itemsState.value = PantryItemsState.Error(result.message)
+                }
+            }
+            _isRefreshing.value = false
         }
     }
 

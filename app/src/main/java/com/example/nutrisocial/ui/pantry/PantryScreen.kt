@@ -1,5 +1,7 @@
 package com.example.nutrisocial.ui.pantry
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material.icons.filled.ShoppingCart
 import com.example.nutrisocial.ui.recipes.InlineEmptyState
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -75,7 +77,8 @@ data class PantryActions(
     val onRetryPantry: () -> Unit,
     val onSearchRecipes: () -> Unit,
     val onRecipeClick: (Int) -> Unit,
-    val onMessageShown: () -> Unit
+    val onMessageShown: () -> Unit,
+    val onRefresh: () -> Unit = {}
 ) {
     companion object {
         val Noop = PantryActions({}, {}, {}, {}, {}, {}, {}, {}, {})
@@ -89,7 +92,8 @@ fun PantryScreen(
     input: PantryInputState,
     searchState: PantrySearchState,
     message: String?,
-    actions: PantryActions
+    actions: PantryActions,
+    isRefreshing: Boolean = false
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(message) {
@@ -110,41 +114,49 @@ fun PantryScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        LazyColumn(
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = actions.onRefresh,
             modifier = Modifier
+                .fillMaxSize()
                 .padding(padding)
-                .imePadding(),
-            contentPadding = PaddingValues(Spacing.md),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
-            item(key = "input") { AddIngredientField(input = input, actions = actions) }
-            item(key = "items") { PantryItemsCard(state = itemsState, actions = actions) }
-            item(key = "search") {
-                val hasItems = (itemsState as? PantryItemsState.Success)?.items?.isNotEmpty() == true
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                    Button(
-                        onClick = actions.onSearchRecipes,
-                        enabled = hasItems && searchState != PantrySearchState.Loading,
-                        shape = ButtonShape,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    ) {
-                        Icon(Icons.Filled.Search, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Text("Buscar recetas", modifier = Modifier.padding(start = Spacing.sm))
-                    }
-                    // Un botón desactivado sin explicación parece un fallo: se dice qué falta.
-                    if (!hasItems && itemsState is PantryItemsState.Success) {
-                        Text(
-                            text = "Añade al menos un ingrediente para poder buscar recetas.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding(),
+                contentPadding = PaddingValues(Spacing.md),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                item(key = "input") { AddIngredientField(input = input, actions = actions) }
+                item(key = "items") { PantryItemsCard(state = itemsState, actions = actions) }
+                item(key = "search") {
+                    val hasItems = (itemsState as? PantryItemsState.Success)?.items?.isNotEmpty() == true
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        Button(
+                            onClick = actions.onSearchRecipes,
+                            enabled = hasItems && searchState != PantrySearchState.Loading,
+                            shape = ButtonShape,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                        ) {
+                            Icon(Icons.Filled.Search, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Text("Buscar recetas", modifier = Modifier.padding(start = Spacing.sm))
+                        }
+                        // Un botón desactivado sin explicación parece un fallo: se dice qué falta.
+                        if (!hasItems && itemsState is PantryItemsState.Success) {
+                            Text(
+                                text = "Añade al menos un ingrediente para poder buscar recetas.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
                     }
                 }
+                searchResults(state = searchState, actions = actions)
             }
-            searchResults(state = searchState, actions = actions)
         }
     }
 }

@@ -144,7 +144,10 @@ fun HomeScreen(
             composable(HomeRoutes.RECETAS) {
                 val listState by recipeViewModel.listState.collectAsStateWithLifecycle()
                 val listMessage by recipeViewModel.listMessage.collectAsStateWithLifecycle()
+                val listRefreshing by recipeViewModel.isRefreshingList.collectAsStateWithLifecycle()
                 RecipeListScreen(
+                    isRefreshing = listRefreshing,
+                    onRefresh = recipeViewModel::refreshMyRecipes,
                     message = listMessage,
                     onMessageShown = recipeViewModel::onListMessageShown,
                     state = listState,
@@ -236,7 +239,9 @@ fun HomeScreen(
                 val input by pantryViewModel.input.collectAsStateWithLifecycle()
                 val searchState by pantryViewModel.searchState.collectAsStateWithLifecycle()
                 val message by pantryViewModel.message.collectAsStateWithLifecycle()
+                val pantryRefreshing by pantryViewModel.isRefreshing.collectAsStateWithLifecycle()
                 PantryScreen(
+                    isRefreshing = pantryRefreshing,
                     itemsState = itemsState,
                     input = input,
                     searchState = searchState,
@@ -252,7 +257,8 @@ fun HomeScreen(
                             onSearchRecipes = pantryViewModel::searchRecipes,
                             // Las recetas pueden ser de otros usuarios: el detalle las carga por id.
                             onRecipeClick = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) },
-                            onMessageShown = pantryViewModel::onMessageShown
+                            onMessageShown = pantryViewModel::onMessageShown,
+                            onRefresh = pantryViewModel::refresh
                         )
                     }
                 )

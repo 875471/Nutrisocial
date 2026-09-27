@@ -1,5 +1,7 @@
 package com.example.nutrisocial.ui.recipes
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +46,9 @@ fun RecipeListScreen(
     onScanRecipe: () -> Unit = {},
     // Aviso puntual, p. ej. tras eliminar una receta; se muestra en un snackbar.
     message: String? = null,
-    onMessageShown: () -> Unit = {}
+    onMessageShown: () -> Unit = {},
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(message) {
@@ -84,46 +88,74 @@ fun RecipeListScreen(
             )
         }
     ) { padding ->
-        val contentModifier = Modifier.padding(padding)
-        when (state) {
-            RecipeListUiState.Loading -> LoadingBox(contentModifier)
+        // Como en el inicio: tirar hacia abajo recarga la lista, también desde un error o vacía.
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            RecipeListContent(state = state, onRecipeClick = onRecipeClick, onRetry = onRetry)
+        }
+    }
+}
 
-            is RecipeListUiState.Error -> CenteredMessage(
+@Composable
+private fun RecipeListContent(state: RecipeListUiState, onRecipeClick: (Int) -> Unit, onRetry: () -> Unit) {
+    when (state) {
+        RecipeListUiState.Loading -> PullableFullScreen { LoadingBox(it) }
+
+        is RecipeListUiState.Error -> PullableFullScreen {
+            CenteredMessage(
                 icon = rememberVectorPainter(Icons.Filled.Warning),
                 isError = true,
                 title = "No se pudieron cargar tus recetas",
                 message = state.message,
                 actionLabel = "Reintentar",
                 onAction = onRetry,
-                modifier = contentModifier
+                modifier = it
             )
+        }
 
-            is RecipeListUiState.Success -> if (state.recipes.isEmpty()) {
+        is RecipeListUiState.Success -> if (state.recipes.isEmpty()) {
+            PullableFullScreen {
                 CenteredMessage(
                     icon = painterResource(R.drawable.ic_brand_plate),
                     title = "Todavía no tienes recetas",
                     message = "Pulsa «Nueva receta» para guardar la primera, o «Escanear» para " +
                         "pasar una receta en papel con la cámara.",
-                    modifier = contentModifier
+                    modifier = it
                 )
-            } else {
-                LazyColumn(
-                    modifier = contentModifier,
-                    // Hueco inferior extra para que el FAB no tape la última tarjeta.
-                    contentPadding = PaddingValues(
-                        start = Spacing.md,
-                        end = Spacing.md,
-                        top = Spacing.sm,
-                        bottom = Spacing.xl * 3
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
-                ) {
-                    items(state.recipes, key = { it.id }) { recipe ->
-                        RecipeCard(recipe = recipe, onClick = { onRecipeClick(recipe.id) })
-                    }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                // Hueco inferior extra para que el FAB no tape la última tarjeta.
+                contentPadding = PaddingValues(
+                    start = Spacing.md,
+                    end = Spacing.md,
+                    top = Spacing.sm,
+                    bottom = Spacing.xl * 3
+                ),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                items(state.recipes, key = { it.id }) { recipe ->
+                    RecipeCard(recipe = recipe, onClick = { onRecipeClick(recipe.id) })
                 }
             }
         }
+    }
+}
+
+/**
+ * Estado a pantalla completa (carga, error, vacío) dentro de una lista de un solo elemento:
+ * PullToRefreshBox solo reacciona a contenido desplazable, y así se puede tirar también de ellos.
+ */
+@Composable
+private fun PullableFullScreen(content: @Composable (Modifier) -> Unit) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        item { content(Modifier.fillParentMaxSize()) }
     }
 }
 

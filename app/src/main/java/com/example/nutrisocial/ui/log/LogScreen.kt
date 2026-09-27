@@ -1,5 +1,6 @@
 package com.example.nutrisocial.ui.log
 
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
 import com.example.nutrisocial.ui.recipes.InlineEmptyState
@@ -178,10 +179,14 @@ fun LogScreen(
             title = { Text("¿Quitar del diario?") },
             text = { Text("Se quitará «${entry.name}» (${formatKcal(entry.kcal.roundToInt())} kcal) de este día.") },
             confirmButton = {
-                TextButton(onClick = {
-                    actions.onDelete(entry.id)
-                    entryToDelete = null
-                }) { Text("Quitar") }
+                // Mismo color de peligro que el resto de confirmaciones destructivas de la app.
+                TextButton(
+                    onClick = {
+                        actions.onDelete(entry.id)
+                        entryToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("Quitar") }
             },
             dismissButton = { TextButton(onClick = { entryToDelete = null }) { Text("Cancelar") } }
         )

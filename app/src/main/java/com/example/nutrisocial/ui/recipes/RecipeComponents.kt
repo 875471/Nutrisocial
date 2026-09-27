@@ -1,5 +1,6 @@
 package com.example.nutrisocial.ui.recipes
 
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -181,7 +182,10 @@ fun InitialBadge(text: String, modifier: Modifier = Modifier) {
         shape = CardShape,
         color = MaterialTheme.colorScheme.tertiaryContainer,
         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-        modifier = modifier.size(48.dp)
+        // Decorativa: el título de la receta ya se lee al lado; la inicial suelta solo estorba.
+        modifier = modifier
+            .size(48.dp)
+            .clearAndSetSemantics { }
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
