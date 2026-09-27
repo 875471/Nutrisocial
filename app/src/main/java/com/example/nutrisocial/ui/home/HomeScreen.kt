@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
@@ -30,6 +31,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.nutrisocial.data.User
+import com.example.nutrisocial.ui.log.AddEntryActions
+import com.example.nutrisocial.ui.log.LogActions
+import com.example.nutrisocial.ui.log.LogScreen
+import com.example.nutrisocial.ui.log.LogViewModel
 import com.example.nutrisocial.ui.recipes.IngredientActions
 import com.example.nutrisocial.ui.recipes.RecipeDetailScreen
 import com.example.nutrisocial.ui.recipes.RecipeFormScreen
@@ -41,6 +46,7 @@ import com.example.nutrisocial.ui.scan.ScanRecipeViewModel
 private object HomeRoutes {
     const val INICIO = "inicio"
     const val RECETAS = "recetas"
+    const val DIARIO = "diario"
     const val PERFIL = "perfil"
     const val NUEVA_RECETA = "recetas/nueva"
     const val ESCANEAR_RECETA = "recetas/escanear"
@@ -51,6 +57,7 @@ private object HomeRoutes {
 private enum class HomeTab(val route: String, val label: String, val icon: ImageVector) {
     INICIO(HomeRoutes.INICIO, "Inicio", Icons.Filled.Home),
     RECETAS(HomeRoutes.RECETAS, "Mis recetas", Icons.AutoMirrored.Filled.List),
+    DIARIO(HomeRoutes.DIARIO, "Diario", Icons.Filled.DateRange),
     PERFIL(HomeRoutes.PERFIL, "Perfil", Icons.Filled.Person)
 }
 
@@ -65,6 +72,9 @@ fun HomeScreen(
     // Con ámbito en la entrada "home" del grafo principal: lo comparten lista, formulario y detalle,
     // y se destruye al cerrar sesión.
     recipeViewModel: RecipeViewModel = viewModel(),
+    // Mismo ámbito: el día elegido en el diario y el perfil se conservan al cambiar de pestaña.
+    logViewModel: LogViewModel = viewModel(),
+    profileViewModel: ProfileViewModel = viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -143,8 +153,76 @@ fun HomeScreen(
                 )
             }
 
+            composable(HomeRoutes.DIARIO) {
+                // Al entrar se recarga el día: el objetivo puede haber cambiado en el perfil.
+                LaunchedEffect(Unit) { logViewModel.loadDay() }
+                val date by logViewModel.date.collectAsStateWithLifecycle()
+                val dayState by logViewModel.dayState.collectAsStateWithLifecycle()
+                val recommendationsState by logViewModel.recommendationsState.collectAsStateWithLifecycle()
+                val addingRecommendationId by logViewModel.addingRecommendationId.collectAsStateWithLifecycle()
+                val addState by logViewModel.addState.collectAsStateWithLifecycle()
+                val message by logViewModel.message.collectAsStateWithLifecycle()
+                val recipesState by recipeViewModel.listState.collectAsStateWithLifecycle()
+                LogScreen(
+                    date = date,
+                    dayState = dayState,
+                    recommendationsState = recommendationsState,
+                    addingRecommendationId = addingRecommendationId,
+                    addState = addState,
+                    recipesState = recipesState,
+                    message = message,
+                    actions = remember(logViewModel) {
+                        LogActions(
+                            onPreviousDay = logViewModel::previousDay,
+                            onNextDay = logViewModel::nextDay,
+                            onToday = logViewModel::goToToday,
+                            onSelectDate = logViewModel::selectDate,
+                            onRetry = logViewModel::loadDay,
+                            onDelete = logViewModel::deleteEntry,
+                            onMessageShown = logViewModel::onMessageShown,
+                            onOpenProfile = { navController.navigateToTab(HomeRoutes.PERFIL) },
+                            onAddRecommendation = logViewModel::addRecommendation,
+                            onRetryRecommendations = logViewModel::loadRecommendations,
+                            add = AddEntryActions(
+                                onOpen = {
+                                    // La lista de recetas puede haber fallado o estar desfasada.
+                                    recipeViewModel.loadMyRecipes()
+                                    logViewModel.openAddSheet()
+                                },
+                                onDismiss = logViewModel::closeAddSheet,
+                                onSourceChange = logViewModel::onSourceChange,
+                                onRecipeSelected = logViewModel::onRecipeSelected,
+                                onServingsChange = logViewModel::onServingsChange,
+                                onFoodQueryChange = logViewModel::onFoodQueryChange,
+                                onFoodSelected = logViewModel::onFoodSelected,
+                                onGramsChange = logViewModel::onGramsChange,
+                                onSave = logViewModel::saveEntry
+                            )
+                        )
+                    }
+                )
+            }
+
             composable(HomeRoutes.PERFIL) {
-                ProfileScreen(user = user, onLogout = onLogout)
+                val profileState by profileViewModel.state.collectAsStateWithLifecycle()
+                ProfileScreen(
+                    user = user,
+                    state = profileState,
+                    actions = remember(profileViewModel) {
+                        ProfileActions(
+                            onBirthDateChange = profileViewModel::onBirthDateChange,
+                            onHeightChange = profileViewModel::onHeightChange,
+                            onWeightChange = profileViewModel::onWeightChange,
+                            onSexChange = profileViewModel::onSexChange,
+                            onActivityChange = profileViewModel::onActivityChange,
+                            onGoalChange = profileViewModel::onGoalChange,
+                            onSave = profileViewModel::save,
+                            onRetry = profileViewModel::loadProfile,
+                            onSavedMessageShown = profileViewModel::onSavedMessageShown
+                        )
+                    },
+                    onLogout = onLogout
+                )
             }
 
             composable(HomeRoutes.NUEVA_RECETA) {

@@ -136,3 +136,98 @@ test('salida real de ML Kit con errores de lectura', () => {
   assert.equal(r.steps.length, 4);
   assert.equal(r.steps[0], 'Picar la cebolla, el ajo y el pimiento y pocharlos en el aceite.');
 });
+
+test('cantidades de más de dos cifras y decimales', () => {
+  const cases = [
+    ['115 g de mantequilla blanda', { rawName: 'mantequilla blanda', quantity: 115, unit: 'g' }],
+    ['1500 ml de agua', { rawName: 'agua', quantity: 1500, unit: 'ml' }],
+    ['0,5 kg de harina', { rawName: 'harina', quantity: 0.5, unit: 'kg' }],
+    ['1.5 l de leche', { rawName: 'leche', quantity: 1.5, unit: 'l' }],
+    ['3 lonchas de queso', { rawName: 'lonchas de queso', quantity: 3, unit: 'unidad' }],
+  ];
+  for (const [line, expected] of cases) {
+    assert.deepEqual(parseQuantityLine(line), expected, line);
+  }
+});
+
+test('un "1" leído como "I" o "l" pegado al número o al nombre', () => {
+  const r = parseRecipeText('Ingredientes\n- Ihuevo\n- l2 huevos\nI15 g de mantequilla\n1 15 g de harina\nlhuevos\nleche\nlentejas\n1 15 gambas');
+  assert.deepEqual(r.ingredients.map((i) => [i.rawName, i.quantity, i.unit]), [
+    ['huevo', 1, 'unidad'],
+    ['huevos', 12, 'unidad'],
+    ['mantequilla', 115, 'g'],
+    ['harina', 115, 'g'],
+    ['huevos', 1, 'unidad'],
+    ['leche', null, null],
+    ['lentejas', null, null],
+    ['15 gambas', 1, 'unidad'],
+  ]);
+});
+
+test('título en dos líneas antes del encabezado de ingredientes', () => {
+  const r = parseRecipeText('Bizcocho\nde yogur y limón\nIngredientes\n3 huevos\nPreparación\nBatir los huevos.');
+  assert.equal(r.title, 'Bizcocho de yogur y limón');
+  assert.deepEqual(r.ingredients.map((i) => i.rawName), ['huevos']);
+  // Sin encabezados, la segunda línea solo se une al título si empieza por un conector.
+  assert.equal(parseRecipeText('Ensalada\nde pasta\nTomate\nMezclar todo.').title, 'Ensalada de pasta');
+  assert.equal(parseRecipeText('Ensalada\nTomate\nMezclar todo.').ingredients[0].rawName, 'Tomate');
+});
+
+test('en "Preparación", solo "cantidad + unidad + de + alimento" sin verbos es ingrediente', () => {
+  const r = parseRecipeText([
+    'Preparación',
+    '200 g de harina',
+    'Añadir 200 g de harina.',
+    '2 cucharadas de aceite y remover.',
+    '20 minutos de horno.',
+    '3 huevos',
+  ].join('\n'));
+  assert.deepEqual(r.ingredients.map((i) => [i.rawName, i.quantity, i.unit]), [['harina', 200, 'g']]);
+  assert.equal(r.steps.length, 4);
+});
+
+// Receta de repostería impresa con el título en dos líneas y los ingredientes a dos
+// columnas. ML Kit lee por bloques, así que un ingrediente de la columna derecha puede
+// llegar detrás de "Preparación", con la viñeta convertida en un punto suelto.
+test('receta a dos columnas con el orden de lectura de ML Kit alterado', () => {
+  const text = [
+    'Galletas con chips',
+    '',
+    'de chocolate',
+    '',
+    'Ingredientes',
+    '- 115 g de mantequilla blanda',
+    '- 100 g de azúcar rubia',
+    '- 100 g de azúcar blanca',
+    '- 190 g de harina',
+    '',
+    '- Ihuevo',
+    '- 3 g de bicarbonato',
+    '- 170 g de chips de chocolate',
+    '',
+    'Preparación',
+    '. 5 ml de esencia de vainilla',
+    'Batir mantequilla con los azúcares, añadir huevo y vainilla.',
+    'Incorporar harina y bicarbonato, luego los chips.',
+    'Formar bolitas y aplanar ligeramente.',
+    'Cocinar en freidora sobre papel mantequilla a 160 °C por 6-8 min.',
+  ].join('\n');
+  const r = parseRecipeText(text);
+  assert.equal(r.title, 'Galletas con chips de chocolate');
+  assert.deepEqual(r.ingredients.map((i) => [i.rawName, i.quantity, i.unit]), [
+    ['mantequilla blanda', 115, 'g'],
+    ['azúcar rubia', 100, 'g'],
+    ['azúcar blanca', 100, 'g'],
+    ['harina', 190, 'g'],
+    ['huevo', 1, 'unidad'],
+    ['bicarbonato', 3, 'g'],
+    ['chips de chocolate', 170, 'g'],
+    ['esencia de vainilla', 5, 'ml'],
+  ]);
+  assert.deepEqual(r.steps, [
+    'Batir mantequilla con los azúcares, añadir huevo y vainilla.',
+    'Incorporar harina y bicarbonato, luego los chips.',
+    'Formar bolitas y aplanar ligeramente.',
+    'Cocinar en freidora sobre papel mantequilla a 160 °C por 6-8 min.',
+  ]);
+});

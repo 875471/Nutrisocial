@@ -1,0 +1,255 @@
+package com.example.nutrisocial.ui.log
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.nutrisocial.data.ApiResult
+import com.example.nutrisocial.data.DailyLog
+import com.example.nutrisocial.data.DailyRecommendations
+import com.example.nutrisocial.data.FoodSuggestion
+import com.example.nutrisocial.data.LogRepository
+import com.example.nutrisocial.data.Recipe
+import com.example.nutrisocial.data.RecipeRecommendation
+import com.example.nutrisocial.data.RecipeRepository
+import com.example.nutrisocial.ui.home.decimalInput
+import com.example.nutrisocial.ui.home.parseDecimal
+import com.example.nutrisocial.ui.shiftDay
+import com.example.nutrisocial.ui.todayIso
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+sealed interface DayUiState {
+    data object Loading : DayUiState
+    data class Success(val log: DailyLog) : DayUiState
+    data class Error(val message: String) : DayUiState
+}
+
+sealed interface RecommendationsUiState {
+    data object Loading : RecommendationsUiState
+    data class Success(val data: DailyRecommendations) : RecommendationsUiState
+    data class Error(val message: String) : RecommendationsUiState
+}
+
+enum class AddSource { RECIPE, FOOD }
+
+/**
+ * Hoja "Añadir al diario". Se elige primero la receta o el alimento y después la cantidad
+ * (raciones o gramos), escrita como texto tal cual.
+ */
+data class AddEntryState(
+    val source: AddSource = AddSource.RECIPE,
+    val selectedRecipe: Recipe? = null,
+    val servings: String = "1",
+    val foodQuery: String = "",
+    val suggestions: List<FoodSuggestion> = emptyList(),
+    val isSearching: Boolean = false,
+    val selectedFood: FoodSuggestion? = null,
+    val grams: String = "100",
+    val isSaving: Boolean = false,
+    val error: String? = null
+) {
+    val servingsValue: Double? get() = parseDecimal(servings)?.takeIf { it in 0.1..20.0 }
+    val gramsValue: Double? get() = parseDecimal(grams)?.takeIf { it in 1.0..5000.0 }
+
+    /** Kcal aproximadas de lo que se va a añadir, para mostrarlas antes de confirmar. */
+    val previewKcal: Double?
+        get() = when (source) {
+            AddSource.RECIPE -> selectedRecipe?.let { r -> servingsValue?.let { r.nutrition.perServing.kcal * it } }
+            AddSource.FOOD -> selectedFood?.let { f -> gramsValue?.let { f.kcal * it / 100 } }
+        }
+
+    val canSave: Boolean
+        get() = !isSaving && when (source) {
+            AddSource.RECIPE -> selectedRecipe != null && servingsValue != null
+            AddSource.FOOD -> selectedFood != null && gramsValue != null
+        }
+}
+
+class LogViewModel(
+    private val logRepository: LogRepository = LogRepository(),
+    private val recipeRepository: RecipeRepository = RecipeRepository()
+) : ViewModel() {
+
+    // Día seleccionado ("AAAA-MM-DD"). Por defecto hoy.
+    private val _date = MutableStateFlow(todayIso())
+    val date: StateFlow<String> = _date.asStateFlow()
+
+    private val _dayState = MutableStateFlow<DayUiState>(DayUiState.Loading)
+    val dayState: StateFlow<DayUiState> = _dayState.asStateFlow()
+
+    // null: la hoja de añadir está cerrada.
+    private val _addState = MutableStateFlow<AddEntryState?>(null)
+    val addState: StateFlow<AddEntryState?> = _addState.asStateFlow()
+
+    private val _recommendationsState = MutableStateFlow<RecommendationsUiState>(RecommendationsUiState.Loading)
+    val recommendationsState: StateFlow<RecommendationsUiState> = _recommendationsState.asStateFlow()
+
+    // Id de la receta recomendada que se está añadiendo, para desactivar su botón.
+    private val _addingRecommendationId = MutableStateFlow<Int?>(null)
+    val addingRecommendationId: StateFlow<Int?> = _addingRecommendationId.asStateFlow()
+
+    // Mensajes puntuales (entrada añadida, error al borrar...) para un Snackbar.
+    private val _message = MutableStateFlow<String?>(null)
+    val message: StateFlow<String?> = _message.asStateFlow()
+
+    private var loadJob: Job? = null
+    private var searchJob: Job? = null
+    private var recommendationsJob: Job? = null
+
+    init {
+        loadDay()
+    }
+
+    // ---- Día ----
+
+    fun previousDay() = selectDate(shiftDay(_date.value, -1))
+    fun nextDay() = selectDate(shiftDay(_date.value, 1))
+    fun goToToday() = selectDate(todayIso())
+
+    fun selectDate(date: String) {
+        if (date == _date.value) return
+        _date.value = date
+        _dayState.value = DayUiState.Loading
+        _recommendationsState.value = RecommendationsUiState.Loading
+        loadDay()
+    }
+
+    /** Recarga el día actual; los datos visibles se mantienen mientras llega la respuesta. */
+    fun loadDay() {
+        val date = _date.value
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            when (val result = logRepository.getDailyLog(date)) {
+                is ApiResult.Success -> _dayState.value = DayUiState.Success(result.data)
+                is ApiResult.Error -> if (_dayState.value !is DayUiState.Success) {
+                    _dayState.value = DayUiState.Error(result.message)
+                } else {
+                    _message.value = result.message
+                }
+            }
+        }
+        loadRecommendations()
+    }
+
+    /** Las recomendaciones dependen de lo registrado: se recargan siempre junto con el día. */
+    fun loadRecommendations() {
+        val date = _date.value
+        recommendationsJob?.cancel()
+        recommendationsJob = viewModelScope.launch {
+            _recommendationsState.value = when (val result = logRepository.getRecommendations(date)) {
+                is ApiResult.Success -> RecommendationsUiState.Success(result.data)
+                is ApiResult.Error -> RecommendationsUiState.Error(result.message)
+            }
+        }
+    }
+
+    /** Registra una ración de la receta recomendada en el día seleccionado. */
+    fun addRecommendation(recommendation: RecipeRecommendation) {
+        if (_addingRecommendationId.value != null) return
+        _addingRecommendationId.value = recommendation.id
+        viewModelScope.launch {
+            when (val result = logRepository.addRecipe(_date.value, recommendation.id, 1.0)) {
+                is ApiResult.Success -> {
+                    _message.value = "Añadido: ${result.data.name}"
+                    loadDay()
+                }
+                is ApiResult.Error -> _message.value = result.message
+            }
+            _addingRecommendationId.value = null
+        }
+    }
+
+    fun deleteEntry(id: Int) {
+        // Se quita de la lista al momento; los totales se recalculan al recargar el día.
+        val current = _dayState.value
+        if (current is DayUiState.Success) {
+            _dayState.value = DayUiState.Success(current.log.copy(entries = current.log.entries.filterNot { it.id == id }))
+        }
+        viewModelScope.launch {
+            val result = logRepository.deleteEntry(id)
+            if (result is ApiResult.Error) _message.value = result.message
+            loadDay()
+        }
+    }
+
+    fun onMessageShown() {
+        _message.value = null
+    }
+
+    // ---- Añadir ----
+
+    fun openAddSheet() {
+        _addState.value = AddEntryState()
+    }
+
+    fun closeAddSheet() {
+        searchJob?.cancel()
+        _addState.value = null
+    }
+
+    fun onSourceChange(source: AddSource) = updateAdd { it.copy(source = source, error = null) }
+
+    fun onRecipeSelected(recipe: Recipe?) = updateAdd { it.copy(selectedRecipe = recipe, error = null) }
+
+    fun onServingsChange(value: String) = updateAdd { it.copy(servings = decimalInput(value, 4), error = null) }
+
+    fun onGramsChange(value: String) = updateAdd { it.copy(grams = decimalInput(value, 6), error = null) }
+
+    fun onFoodSelected(food: FoodSuggestion?) {
+        searchJob?.cancel()
+        updateAdd {
+            it.copy(selectedFood = food, suggestions = emptyList(), isSearching = false, foodQuery = food?.name ?: it.foodQuery, error = null)
+        }
+    }
+
+    /** Mismo buscador de alimentos que el formulario de recetas, con una pequeña espera. */
+    fun onFoodQueryChange(query: String) {
+        updateAdd { it.copy(foodQuery = query, selectedFood = null, error = null) }
+        searchJob?.cancel()
+        if (query.trim().length < 2) {
+            updateAdd { it.copy(suggestions = emptyList(), isSearching = false) }
+            return
+        }
+        updateAdd { it.copy(isSearching = true) }
+        searchJob = viewModelScope.launch {
+            delay(300)
+            val result = recipeRepository.searchFoods(query.trim())
+            updateAdd {
+                it.copy(
+                    suggestions = (result as? ApiResult.Success)?.data.orEmpty(),
+                    isSearching = false,
+                    error = (result as? ApiResult.Error)?.message
+                )
+            }
+        }
+    }
+
+    fun saveEntry() {
+        val state = _addState.value ?: return
+        if (!state.canSave) return
+        val date = _date.value
+        updateAdd { it.copy(isSaving = true, error = null) }
+        viewModelScope.launch {
+            val result = when (state.source) {
+                AddSource.RECIPE -> logRepository.addRecipe(date, state.selectedRecipe!!.id, state.servingsValue!!)
+                AddSource.FOOD -> logRepository.addFood(date, state.selectedFood!!.id, state.gramsValue!!)
+            }
+            when (result) {
+                is ApiResult.Success -> {
+                    _addState.value = null
+                    _message.value = "Añadido: ${result.data.name}"
+                    loadDay()
+                }
+                is ApiResult.Error -> updateAdd { it.copy(isSaving = false, error = result.message) }
+            }
+        }
+    }
+
+    private fun updateAdd(transform: (AddEntryState) -> AddEntryState) {
+        _addState.update { it?.let(transform) }
+    }
+}

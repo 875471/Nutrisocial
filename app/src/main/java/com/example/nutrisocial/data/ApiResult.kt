@@ -43,6 +43,18 @@ suspend fun <T> safeApiCall(
     }
 }
 
+/**
+ * Como [safeApiCall], para respuestas sin cuerpo (204). Retrofit entrega el cuerpo de un 204 como
+ * null aunque el tipo sea Unit, y [safeApiCall] lo trataría como "Respuesta vacía".
+ */
+suspend fun safeApiCallNoContent(
+    defaultErrorMessage: (code: Int) -> String? = { null },
+    call: suspend () -> Response<Unit>
+): ApiResult<Unit> = safeApiCall(defaultErrorMessage) {
+    val response = call()
+    if (response.isSuccessful) Response.success(Unit, response.raw()) else response
+}
+
 private fun parseErrorBody(response: Response<*>): String? = try {
     response.errorBody()?.string()
         ?.let { gson.fromJson(it, ApiErrorBody::class.java)?.error }

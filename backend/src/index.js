@@ -6,9 +6,13 @@ app.use(express.json());
 const authRoutes = require('./routes/auth');
 const recipeRoutes = require('./routes/recipes');
 const foodRoutes = require('./routes/foods');
+const profileRoutes = require('./routes/profile');
+const logRoutes = require('./routes/log');
 app.use('/auth', authRoutes);
 app.use('/recipes', recipeRoutes);
 app.use('/foods', foodRoutes);
+app.use('/profile', profileRoutes);
+app.use('/log', logRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 

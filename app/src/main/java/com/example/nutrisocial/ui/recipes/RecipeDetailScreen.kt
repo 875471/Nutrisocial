@@ -268,7 +268,7 @@ private fun ServingWeight(perServing: Double, total: Double?) {
 }
 
 @Composable
-private fun MacroStat(label: String, grams: Double, modifier: Modifier = Modifier) {
+fun MacroStat(label: String, grams: Double, modifier: Modifier = Modifier) {
     Surface(
         shape = CardShape,
         color = MaterialTheme.colorScheme.primaryContainer,

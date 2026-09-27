@@ -4,6 +4,7 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
@@ -11,12 +12,24 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String
-  createdAt DateTime @default(now())
-  recipes   Recipe[]
+  id            Int        @id @default(autoincrement())
+  email         String     @unique
+  password      String
+  name          String
+  createdAt     DateTime   @default(now())
+  // Datos de perfil para el objetivo calórico (ver src/nutrition/calorieGoal.js). Opcionales:
+  // un usuario recién registrado todavía no los ha rellenado.
+  birthDate     DateTime?
+  heightCm      Float?
+  weightKg      Float?
+  // "M" o "F"
+  sex           String?
+  // "sedentario" | "ligero" | "moderado" | "activo" | "muy_activo"
+  activityLevel String?
+  // "perder_peso" | "mantener" | "ganar_peso"
+  goal          String?
+  recipes       Recipe[]
+  logEntries    LogEntry[]
 }
 
 model Recipe {
@@ -36,6 +49,7 @@ model Recipe {
   authorId         Int
   author           User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
   ingredients      RecipeIngredient[]
+  logEntries       LogEntry[]
   createdAt        DateTime           @default(now())
 
   @@index([authorId])
@@ -52,6 +66,7 @@ model Food {
   fat         Float
   source      String             @default("BEDCA")
   ingredients RecipeIngredient[]
+  logEntries  LogEntry[]
 }
 
 model RecipeIngredient {
@@ -70,4 +85,32 @@ model RecipeIngredient {
   food     Food?   @relation(fields: [foodId], references: [id], onDelete: SetNull)
 
   @@index([recipeId])
+}
+
+// Entrada del registro nutricional diario: una receta (recipeId + servings) o un alimento
+// suelto (foodId + grams). Los valores nutricionales y el nombre se copian al crearla, para
+// que el histórico no cambie si después se modifica o se borra la receta.
+model LogEntry {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Solo importa el día: se guarda a las 00:00 UTC del día que indica el cliente
+  date      DateTime
+  // Nombre de la receta o del alimento en el momento de registrarlo
+  name      String
+  recipeId  Int?
+  recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  foodId    Int?
+  food      Food?    @relation(fields: [foodId], references: [id], onDelete: SetNull)
+  // Si es una receta: número de raciones consumidas
+  servings  Float?
+  // Si es un alimento suelto: gramos consumidos
+  grams     Float?
+  kcal      Float
+  protein   Float
+  carbs     Float
+  fat       Float
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
 }

@@ -113,13 +113,35 @@ const SERVINGS_RE = /^(?:para\s+)?[a-z]?(\d+)\s*(pers\w*|raci\w*|comensal\w*|por
 const SERVINGS_RE_2 = /^(?:raciones|porciones|comensales|personas)\s*:?\s*(\d+)\b/;
 
 // Viñetas y numeración de pasos al principio de la línea: "- ", "• ", "1. ", "2) ", "Paso 3:".
-const BULLET_RE = /^\s*(?:[-–—•·*>+]|o(?=\s))\s*/;
+// Una viñeta pequeña ("·", "▪") a menudo llega como un punto o una coma sueltos (". 5 ml").
+const BULLET_RE = /^\s*(?:(?:[-–—•·*>+▪■◦●]|[.,;:](?=\s)|o(?=\s))\s*)+/;
 const STEP_NUMBER_RE = /^\s*(?:paso\s*)?\d{1,2}\s*(?:[.)ºª:-]|\.-)(?!\d)\s*/i;
+
+// Alimentos que se cuentan por piezas. Sirven para reconocer un "1" leído como "I" o "l"
+// pegado al nombre ("Ihuevo"): solo se corrige si lo que queda es uno de estos alimentos,
+// para no tocar palabras que empiezan por l de verdad ("leche", "lentejas").
+const COUNTABLE_FOODS = new Set(`huevo diente loncha rebanada rodaja cebolla cebolleta tomate
+  patata zanahoria limon lima naranja manzana pera platano pimiento pepino calabacin berenjena
+  puerro aguacate yema clara hoja rama ramita sobre yogur pechuga filete muslo ajo uva nuez
+  guindilla chalota`.split(/\s+/));
+
+function isCountableFood(word) {
+  const w = normalize(word);
+  return COUNTABLE_FOODS.has(w) || COUNTABLE_FOODS.has(w.replace(/e?s$/, '')) || COUNTABLE_FOODS.has(w.replace(/s$/, ''));
+}
+
+const UNIT_WORD = String.raw`(?:kg|kilos?|g|gr|grs|gramos?|ml|l|litros?)(?![a-záéíóúñ])`;
 
 // Errores típicos del OCR en la cantidad: "l" o "I" por 1 y "O" por 0 ("2OO g", "l cebolla").
 function fixOcrDigits(line) {
   return line
     .replace(/^[lI|](?=\s|\/)/, '1')
+    // Pegado a otras cifras: "I15 g" → "115 g".
+    .replace(/^[lI|](?=\d)/, '1')
+    // Pegado al nombre: "Ihuevo" → "1 huevo".
+    .replace(/^[lI|]([a-záéíóúñ]+)/, (m, rest) => (isCountableFood(rest) ? `1 ${rest}` : m))
+    // Un espacio de más dentro de la cifra antes de una unidad de peso o volumen: "1 15 g" → "115 g".
+    .replace(new RegExp(String.raw`^(\d) (\d{2,3})(?=\s*${UNIT_WORD})`, 'i'), '$1$2')
     .replace(/^([0-9oO]+)(?=\s*[a-zA-Z]|$)/, (m) => (/\d/.test(m) ? m.replace(/[oO]/g, '0') : m))
     // "g" manuscrita leída como "9": "300 9 de lentejas" → "300 g de lentejas".
     .replace(/^(\d+(?:[.,]\d+)?)\s+9(?=\s+[a-zA-ZáéíóúñÁÉÍÓÚÑ])/, '$1 g');
@@ -187,6 +209,25 @@ function parseQuantityLine(line) {
 }
 
 /**
+ * Dentro de "Preparación", una línea solo cuenta como ingrediente si tiene forma inequívoca
+ * ("5 ml de esencia de vainilla": cantidad + unidad escrita + "de" + nombre) y ninguna de sus
+ * palabras es un verbo de cocina. En recetas a varias columnas ML Kit no respeta el orden de
+ * lectura y un ingrediente puede aparecer detrás del encabezado de los pasos.
+ */
+function parseStrayIngredient(line) {
+  const parsed = parseQuantityLine(line);
+  if (!parsed) return null;
+  const shape = new RegExp(String.raw`^\s*${QUANTITY}\s*[a-záéíóúñ]+\.?\s+(de|del)\s+\S`, 'i');
+  const unitMatch = line.replace(QUANTITY_RE, '').match(/^\s*([a-záéíóúñ]+)/i);
+  if (!shape.test(line) || !unitMatch || !toUnit(unitMatch[1])) return null;
+  if (normalize(line).replace(/,/g, ' ').split(' ').some(isActionWord)) return null;
+  return parsed;
+}
+
+// Conectores con los que empieza la segunda línea de un título partido ("de chocolate").
+const TITLE_CONTINUATION_RE = /^(de|del|con|y|e|al|a|en|sin|para)\s/i;
+
+/**
  * Analiza el texto completo. Devuelve { title, servings, ingredients, steps, lines }, donde
  * `lines` indica cómo se ha clasificado cada línea (útil para evaluar la heurística).
  */
@@ -203,6 +244,11 @@ function parseRecipeText(rawText) {
   const steps = [];
   const classified = [];
   let lastKind = null;
+  // Las líneas que hay antes del primer encabezado pueden ser un título en varias líneas.
+  const firstHeading = lines.findIndex((l) => {
+    const n = normalize(l).replace(/[:.]+$/, '');
+    return HEADINGS.some(([re]) => re.test(n)) && n.split(' ').length <= 4;
+  });
 
   lines.forEach((original, index) => {
     const n = normalize(original).replace(/[:.]+$/, '');
@@ -223,6 +269,7 @@ function parseRecipeText(rawText) {
       return record('servings');
     }
 
+    const bulleted = BULLET_RE.test(original);
     const withoutBullet = original.replace(BULLET_RE, '');
     const stepNumbered = STEP_NUMBER_RE.test(withoutBullet);
     const text = stepNumbered ? withoutBullet.replace(STEP_NUMBER_RE, '') : withoutBullet;
@@ -236,6 +283,12 @@ function parseRecipeText(rawText) {
         ingredients.push(parsed);
         return record('ingredient');
       }
+    } else if (!stepNumbered) {
+      const stray = parseStrayIngredient(fixOcrDigits(text));
+      if (stray) {
+        ingredients.push(stray);
+        return record('ingredient');
+      }
     }
 
     const action = startsWithAction(text);
@@ -243,6 +296,16 @@ function parseRecipeText(rawText) {
     // 2) Título: primera línea, corta, sin cantidad ni verbo y antes de cualquier otra cosa.
     if (index === 0 && title == null && !action && !stepNumbered && words <= 8) {
       title = cleanName(text);
+      return record('title');
+    }
+
+    // 2b) Título en varias líneas ("Galletas con chips" / "de chocolate"): la línea sigue al
+    //     título, es corta, no tiene cantidad, viñeta ni verbo, y va antes del primer
+    //     encabezado o empieza por un conector que no puede abrir un ingrediente.
+    const beforeHeading = firstHeading !== -1 && index < firstHeading;
+    if (lastKind === 'title' && !bulleted && !action && !stepNumbered && words <= 8
+      && (beforeHeading || TITLE_CONTINUATION_RE.test(text))) {
+      title = `${title} ${text.replace(/[\s.,;:]+$/, '')}`;
       return record('title');
     }
 

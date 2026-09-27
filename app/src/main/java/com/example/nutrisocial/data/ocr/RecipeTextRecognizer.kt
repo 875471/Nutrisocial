@@ -2,6 +2,7 @@ package com.example.nutrisocial.data.ocr
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -30,6 +31,9 @@ class RecipeTextRecognizer(private val context: Context) : Closeable {
                 .addOnSuccessListener { cont.resume(it) }
                 .addOnFailureListener { cont.resumeWithException(it) }
         }
+        // Texto plano de ML Kit tal cual, antes de enviarlo al servidor, para diagnosticar fotos
+        // que se interpretan mal (filtrar el Logcat por OCR_RAW): revela el orden de lectura real.
+        Log.d(OCR_RAW_TAG, result.text)
         return result.textBlocks.joinToString("\n\n") { block ->
             block.lines.joinToString("\n") { it.text }
         }.trim()
@@ -37,3 +41,5 @@ class RecipeTextRecognizer(private val context: Context) : Closeable {
 
     override fun close() = recognizer.close()
 }
+
+private const val OCR_RAW_TAG = "OCR_RAW"
