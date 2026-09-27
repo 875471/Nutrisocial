@@ -1,5 +1,6 @@
 package com.example.nutrisocial.ui.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,9 +17,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -56,6 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -92,7 +98,9 @@ data class ProfileActions(
     val onRetry: () -> Unit,
     val onSavedMessageShown: () -> Unit,
     // "Modificar" en modo vista y "Cancelar" en modo edición.
-    val onEditToggle: () -> Unit
+    val onEditToggle: () -> Unit,
+    val onDeleteAccount: (password: String) -> Unit = {},
+    val onDeleteAccountDismissed: () -> Unit = {}
 )
 
 /** Pestaña "Perfil": datos personales, objetivo calórico diario y cierre de sesión. */
@@ -104,6 +112,10 @@ fun ProfileScreen(
     actions: ProfileActions,
     onLogout: () -> Unit
 ) {
+    // Cuenta borrada en el servidor: se cierra la sesión, lo que lleva de vuelta al login.
+    LaunchedEffect(state.accountDeletion.deleted) {
+        if (state.accountDeletion.deleted) onLogout()
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(state.savedMessage) {
         state.savedMessage?.let {
@@ -165,14 +177,129 @@ fun ProfileScreen(
                 OutlinedButton(
                     onClick = onLogout,
                     shape = ButtonShape,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(bottom = Spacing.lg)
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     Text("Cerrar sesión")
                 }
+                // Separada del resto y al final, para que no se pulse por error.
+                DangerZone(
+                    deletion = state.accountDeletion,
+                    actions = actions,
+                    modifier = Modifier.padding(top = Spacing.lg, bottom = Spacing.lg)
+                )
             }
         }
+    }
+}
+
+private enum class DeleteAccountStep { None, Password, Confirm }
+
+/**
+ * "Zona peligrosa": eliminar la cuenta. Pide la contraseña y después una segunda confirmación.
+ * Si el servidor rechaza la contraseña, se vuelve al primer paso con el error.
+ */
+@Composable
+private fun DangerZone(deletion: AccountDeletionState, actions: ProfileActions, modifier: Modifier = Modifier) {
+    var step by remember { mutableStateOf(DeleteAccountStep.None) }
+    // No se guarda con rememberSaveable: una contraseña no debe acabar en el estado guardado.
+    var password by remember { mutableStateOf("") }
+    LaunchedEffect(deletion.error) {
+        if (deletion.error != null && step == DeleteAccountStep.Confirm) step = DeleteAccountStep.Password
+    }
+    fun close() {
+        step = DeleteAccountStep.None
+        password = ""
+        actions.onDeleteAccountDismissed()
+    }
+
+    Surface(
+        shape = CardShape,
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Warning, contentDescription = null, modifier = Modifier.size(20.dp))
+                Text("Zona peligrosa", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = Spacing.sm))
+            }
+            Text(
+                text = "Eliminar tu cuenta borra para siempre tus recetas (con sus fotos y sus me gusta), " +
+                    "tu diario y tu despensa.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            OutlinedButton(
+                onClick = { step = DeleteAccountStep.Password },
+                shape = ButtonShape,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text("Eliminar cuenta", modifier = Modifier.padding(start = Spacing.sm))
+            }
+        }
+    }
+
+    when (step) {
+        DeleteAccountStep.None -> Unit
+        DeleteAccountStep.Password -> AlertDialog(
+            onDismissRequest = ::close,
+            title = { Text("Eliminar cuenta") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    Text("Escribe tu contraseña para confirmar que eres tú.")
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Contraseña") },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        isError = deletion.error != null,
+                        supportingText = deletion.error?.let { { Text(it) } },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { step = DeleteAccountStep.Confirm }, enabled = password.isNotBlank()) {
+                    Text("Continuar")
+                }
+            },
+            dismissButton = { TextButton(onClick = ::close) { Text("Cancelar") } }
+        )
+        DeleteAccountStep.Confirm -> AlertDialog(
+            // Mientras se borra no se puede cerrar: el resultado decide qué pasa después.
+            onDismissRequest = { if (!deletion.isDeleting) close() },
+            icon = { Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("¿Eliminar la cuenta definitivamente?") },
+            text = {
+                Text(
+                    "Esta acción no se puede deshacer. Se borrarán tu cuenta, tus recetas, tu diario " +
+                        "y tu despensa, y tendrás que registrarte de nuevo para volver a usar NutriSocial."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { actions.onDeleteAccount(password) },
+                    enabled = !deletion.isDeleting,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    if (deletion.isDeleting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    } else {
+                        Text("Eliminar definitivamente")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = ::close, enabled = !deletion.isDeleting) { Text("Cancelar") }
+            }
+        )
     }
 }
 

@@ -132,3 +132,9 @@ data class FeedPage(
 
 /** Respuesta de POST/DELETE /recipes/{id}/like. */
 data class LikeState(val likesCount: Int, val likedByMe: Boolean)
+
+/** Respuesta de DELETE /recipes/{id}: cuántas entradas del diario propias se han quedado sin receta. */
+data class DeleteRecipeResponse(
+    val deleted: Boolean = true,
+    val orphanedLogEntries: Int = 0
+)

@@ -57,7 +57,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun login(email: String, password: String) {
         if (_loginState.value is AuthUiState.Loading) return
         val cleanEmail = email.trim()
-        validate(name = null, email = cleanEmail, password = password)?.let {
+        validate(name = null, email = cleanEmail, password = password, isRegistration = false)?.let {
             _loginState.value = AuthUiState.Error(it)
             return
         }
@@ -72,7 +72,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         if (_registerState.value is AuthUiState.Loading) return
         val cleanName = name.trim()
         val cleanEmail = email.trim()
-        validate(name = cleanName, email = cleanEmail, password = password)?.let {
+        validate(name = cleanName, email = cleanEmail, password = password, isRegistration = true)?.let {
             _registerState.value = AuthUiState.Error(it)
             return
         }
@@ -110,18 +110,24 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             is ApiResult.Error -> AuthUiState.Error(result.message)
         }
 
-    /** Devuelve el mensaje de error de validación, o null si los datos son válidos. */
-    private fun validate(name: String?, email: String, password: String): String? = when {
+    /**
+     * Devuelve el mensaje de error de validación, o null si los datos son válidos. La longitud
+     * mínima solo se exige al registrarse (igual que el servidor): las cuentas creadas antes de
+     * subirla a 8 caracteres pueden tener contraseñas más cortas y tienen que poder entrar.
+     */
+    private fun validate(name: String?, email: String, password: String, isRegistration: Boolean): String? = when {
         name != null && name.isBlank() -> "El nombre no puede estar vacío"
         email.isBlank() -> "El email no puede estar vacío"
         !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> "El formato del email no es válido"
         password.isBlank() -> "La contraseña no puede estar vacía"
-        password.length < MIN_PASSWORD_LENGTH -> "La contraseña debe tener al menos $MIN_PASSWORD_LENGTH caracteres"
+        isRegistration && password.length < MIN_PASSWORD_LENGTH ->
+            "La contraseña debe tener al menos $MIN_PASSWORD_LENGTH caracteres"
         else -> null
     }
 
     private companion object {
         const val TAG = "AuthViewModel"
-        const val MIN_PASSWORD_LENGTH = 4
+        // El mismo mínimo que exige el servidor (backend/src/routes/auth.js).
+        const val MIN_PASSWORD_LENGTH = 8
     }
 }

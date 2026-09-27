@@ -119,16 +119,27 @@ fun PantryScreen(
             item(key = "items") { PantryItemsCard(state = itemsState, actions = actions) }
             item(key = "search") {
                 val hasItems = (itemsState as? PantryItemsState.Success)?.items?.isNotEmpty() == true
-                Button(
-                    onClick = actions.onSearchRecipes,
-                    enabled = hasItems && searchState != PantrySearchState.Loading,
-                    shape = ButtonShape,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    Icon(Icons.Filled.Search, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Text("Buscar recetas", modifier = Modifier.padding(start = Spacing.sm))
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    Button(
+                        onClick = actions.onSearchRecipes,
+                        enabled = hasItems && searchState != PantrySearchState.Loading,
+                        shape = ButtonShape,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Icon(Icons.Filled.Search, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Text("Buscar recetas", modifier = Modifier.padding(start = Spacing.sm))
+                    }
+                    // Un botón desactivado sin explicación parece un fallo: se dice qué falta.
+                    if (!hasItems && itemsState is PantryItemsState.Success) {
+                        Text(
+                            text = "Añade al menos un ingrediente para poder buscar recetas.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    }
                 }
             }
             searchResults(state = searchState, actions = actions)

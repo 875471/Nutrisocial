@@ -17,8 +17,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -27,6 +30,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -52,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.data.FoodRef
 import com.example.nutrisocial.data.Macros
 import com.example.nutrisocial.data.Nutrition
+import com.example.nutrisocial.data.RECIPE_GONE_MESSAGE
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RecipeIngredient
 import com.example.nutrisocial.data.isOpenFoodFacts
@@ -135,13 +140,24 @@ fun RecipeDetailScreen(
         val contentModifier = Modifier.padding(padding)
         when (state) {
             RecipeDetailUiState.Loading -> LoadingBox(contentModifier)
-            is RecipeDetailUiState.Error -> CenteredMessage(
-                title = "No se pudo cargar la receta",
-                message = state.message,
-                actionLabel = "Reintentar",
-                onAction = onRetry,
-                modifier = contentModifier
-            )
+            // Una receta borrada no se arregla reintentando: se ofrece volver.
+            is RecipeDetailUiState.Error -> if (state.message == RECIPE_GONE_MESSAGE) {
+                CenteredMessage(
+                    title = RECIPE_GONE_MESSAGE,
+                    message = "Su autor la ha eliminado. Si la tenías en el diario, esas entradas se conservan.",
+                    actionLabel = "Volver",
+                    onAction = onBack,
+                    modifier = contentModifier
+                )
+            } else {
+                CenteredMessage(
+                    title = "No se pudo cargar la receta",
+                    message = state.message,
+                    actionLabel = "Reintentar",
+                    onAction = onRetry,
+                    modifier = contentModifier
+                )
+            }
             is RecipeDetailUiState.Success -> RecipeDetailContent(
                 recipe = state.recipe,
                 isOwner = currentUserId != null && state.recipe.authorId == currentUserId,
@@ -204,15 +220,17 @@ private fun AddToDiaryDialog(recipe: Recipe, onConfirm: (Double) -> Unit, onDism
     )
 }
 
-/** Acciones sociales del detalle: "me gusta" y foto (solo el autor). */
+/** Acciones del detalle: "me gusta" y, solo para el autor, foto, editar y eliminar. */
 data class RecipeDetailActions(
     val onToggleLike: () -> Unit,
     val onUpdatePhoto: (String?) -> Unit,
     val onMessage: (String) -> Unit,
-    val onMessageShown: () -> Unit
+    val onMessageShown: () -> Unit,
+    val onEdit: () -> Unit,
+    val onDelete: () -> Unit
 ) {
     companion object {
-        val Noop = RecipeDetailActions({}, {}, {}, {})
+        val Noop = RecipeDetailActions({}, {}, {}, {}, {}, {})
     }
 }
 
@@ -261,6 +279,12 @@ private fun RecipeDetailContent(
                 OwnerPhotoActions(
                     hasPhoto = recipe.imageBase64 != null,
                     isUpdating = actionState.isUpdatingPhoto,
+                    actions = actions
+                )
+                OwnerEditActions(
+                    title = recipe.title,
+                    isDeleting = actionState.isDeleting,
+                    enabled = !actionState.isUpdatingPhoto,
                     actions = actions
                 )
             }
@@ -352,6 +376,56 @@ private fun OwnerPhotoActions(hasPhoto: Boolean, isUpdating: Boolean, actions: R
                 }) { Text("Quitar") }
             },
             dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text("Cancelar") } }
+        )
+    }
+}
+
+/** "Editar" y "Eliminar" (con confirmación), solo para el autor de la receta. */
+@Composable
+private fun OwnerEditActions(title: String, isDeleting: Boolean, enabled: Boolean, actions: RecipeDetailActions) {
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        OutlinedButton(onClick = actions.onEdit, enabled = enabled && !isDeleting, shape = ButtonShape) {
+            Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text("Editar", modifier = Modifier.padding(start = Spacing.sm))
+        }
+        TextButton(
+            onClick = { confirmDelete = true },
+            enabled = enabled && !isDeleting,
+            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+        ) {
+            if (isDeleting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.error
+                )
+            } else {
+                Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+            }
+            Text("Eliminar", modifier = Modifier.padding(start = Spacing.sm))
+        }
+    }
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("¿Eliminar la receta?") },
+            text = {
+                Text(
+                    "«$title» desaparecerá de tus recetas y del inicio, con sus me gusta. " +
+                        "Lo que ya hayas apuntado en el diario se conserva. No se puede deshacer."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmDelete = false
+                        actions.onDelete()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("Eliminar") }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancelar") } }
         )
     }
 }

@@ -9,6 +9,7 @@ import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.IngredientInput
 import com.example.nutrisocial.data.IngredientUnits
 import com.example.nutrisocial.data.OcrRecipeProposal
+import com.example.nutrisocial.data.RECIPE_GONE_MESSAGE
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RecipeRepository
 import kotlinx.coroutines.Job
@@ -31,9 +32,12 @@ sealed interface RecipeDetailUiState {
     data class Error(val message: String) : RecipeDetailUiState
 }
 
-/** Acciones del detalle que no cambian de pantalla: cambiar la foto y sus avisos. */
+/** Acciones del detalle: cambiar la foto, borrar la receta y sus avisos. */
 data class RecipeDetailActionState(
     val isUpdatingPhoto: Boolean = false,
+    val isDeleting: Boolean = false,
+    // Receta recién borrada: HomeScreen vuelve a la lista y llama a onDeletedHandled.
+    val deletedRecipeId: Int? = null,
     val message: String? = null
 )
 
@@ -62,10 +66,16 @@ data class RecipeFormState(
     val suggestions: List<FoodSuggestion> = emptyList(),
     // true si el contenido viene de escanear una foto y el usuario aún debe revisarlo.
     val fromOcr: Boolean = false,
+    // Id de la receta que se está editando; null al crear una nueva.
+    val editingRecipeId: Int? = null,
+    // Foto que tenía la receta al empezar a editarla, para saber si ha cambiado.
+    val originalPhotoBase64: String? = null,
     val isSaving: Boolean = false,
     val error: String? = null,
     val saved: Boolean = false
-)
+) {
+    val isEditing: Boolean get() = editingRecipeId != null
+}
 
 class RecipeViewModel(
     private val repository: RecipeRepository = RecipeRepository()
@@ -82,6 +92,10 @@ class RecipeViewModel(
 
     private val _detailActionState = MutableStateFlow(RecipeDetailActionState())
     val detailActionState: StateFlow<RecipeDetailActionState> = _detailActionState.asStateFlow()
+
+    // Aviso para la lista de "Mis recetas" (p. ej. tras borrar una receta).
+    private val _listMessage = MutableStateFlow<String?>(null)
+    val listMessage: StateFlow<String?> = _listMessage.asStateFlow()
 
     init {
         loadMyRecipes()
@@ -105,19 +119,73 @@ class RecipeViewModel(
     // ---- Detalle ----
 
     fun loadRecipe(id: Int) {
-        // Se muestra al instante la copia de la lista (si existe) y se actualiza con el servidor.
-        val cached = (_listState.value as? RecipeListUiState.Success)?.recipes?.find { it.id == id }
+        // Se muestra al instante la copia que ya haya (la del propio detalle al volver del
+        // formulario, o la de la lista) y se actualiza con el servidor.
+        val sameRecipe = currentRecipe(id)
+        val cached = sameRecipe ?: (_listState.value as? RecipeListUiState.Success)?.recipes?.find { it.id == id }
         _detailState.value = cached?.let { RecipeDetailUiState.Success(it) } ?: RecipeDetailUiState.Loading
-        _detailActionState.value = RecipeDetailActionState()
+        // Al volver a la misma receta se conservan sus avisos pendientes ("Cambios guardados").
+        if (sameRecipe == null) _detailActionState.value = RecipeDetailActionState()
 
         viewModelScope.launch {
             when (val result = repository.getRecipe(id)) {
                 is ApiResult.Success -> _detailState.value = RecipeDetailUiState.Success(result.data)
-                is ApiResult.Error -> if (cached == null) {
+                // Borrada (quizá desde otro dispositivo): aunque hubiera copia en la lista, no se
+                // enseña una receta que ya no existe.
+                is ApiResult.Error -> if (result.code == 404) {
+                    onRecipeGone(id)
+                } else if (cached == null) {
                     _detailState.value = RecipeDetailUiState.Error(result.message)
                 }
             }
         }
+    }
+
+    /** La receta ya no está en el servidor: el detalle lo dice y la lista deja de mostrarla. */
+    private fun onRecipeGone(id: Int) {
+        if (currentRecipe(id) != null || _detailState.value is RecipeDetailUiState.Loading) {
+            _detailState.value = RecipeDetailUiState.Error(RECIPE_GONE_MESSAGE)
+        }
+        _detailActionState.value = RecipeDetailActionState()
+        removeFromList(id)
+    }
+
+    private fun removeFromList(id: Int) = _listState.update { state ->
+        if (state is RecipeListUiState.Success) RecipeListUiState.Success(state.recipes.filterNot { it.id == id }) else state
+    }
+
+    /** Borra la receta que se está viendo (solo la propia; el servidor lo comprueba). */
+    fun deleteRecipe() {
+        val recipe = (_detailState.value as? RecipeDetailUiState.Success)?.recipe ?: return
+        if (_detailActionState.value.isDeleting) return
+        _detailActionState.value = RecipeDetailActionState(isDeleting = true)
+        viewModelScope.launch {
+            when (val result = repository.deleteRecipe(recipe.id)) {
+                is ApiResult.Success -> {
+                    removeFromList(recipe.id)
+                    val orphaned = result.data.orphanedLogEntries
+                    _listMessage.value = "«${recipe.title}» eliminada" + when (orphaned) {
+                        0 -> ""
+                        1 -> ". La entrada de tu diario con esta receta se conserva, pero ya no enlaza a ella."
+                        else -> ". Las $orphaned entradas de tu diario con esta receta se conservan, pero ya no enlazan a ella."
+                    }
+                    _detailActionState.value = RecipeDetailActionState(deletedRecipeId = recipe.id)
+                }
+                is ApiResult.Error -> if (result.code == 404) {
+                    // Ya estaba borrada: el resultado es el mismo que se pedía.
+                    removeFromList(recipe.id)
+                    _detailActionState.value = RecipeDetailActionState(deletedRecipeId = recipe.id)
+                } else {
+                    _detailActionState.value = RecipeDetailActionState(message = "No se pudo eliminar: ${result.message}")
+                }
+            }
+        }
+    }
+
+    fun onDeletedHandled() = _detailActionState.update { it.copy(deletedRecipeId = null) }
+
+    fun onListMessageShown() {
+        _listMessage.value = null
     }
 
     /** Da o quita el "me gusta" al momento y lo confirma con el servidor; si falla, lo deshace. */
@@ -137,7 +205,10 @@ class RecipeViewModel(
             val current = currentRecipe(recipe.id) ?: return@launch
             when (result) {
                 is ApiResult.Success -> replaceRecipe(current.copy(likedByMe = result.data.likedByMe, likesCount = result.data.likesCount))
-                is ApiResult.Error -> {
+                is ApiResult.Error -> if (result.code == 404) {
+                    onRecipeGone(recipe.id)
+                } else {
+                    // Sin conexión o error del servidor: el corazón vuelve a como estaba.
                     replaceRecipe(current.copy(likedByMe = recipe.likedByMe, likesCount = recipe.likesCount))
                     _detailActionState.update { it.copy(message = "No se pudo guardar el me gusta: ${result.message}") }
                 }
@@ -157,8 +228,11 @@ class RecipeViewModel(
                     val message = if (imageBase64 == null) "Foto quitada" else "Foto guardada"
                     _detailActionState.value = RecipeDetailActionState(message = message)
                 }
-                is ApiResult.Error -> _detailActionState.value =
-                    RecipeDetailActionState(message = "No se pudo guardar la foto: ${result.message}")
+                is ApiResult.Error -> if (result.code == 404) {
+                    onRecipeGone(recipe.id)
+                } else {
+                    _detailActionState.value = RecipeDetailActionState(message = "No se pudo guardar la foto: ${result.message}")
+                }
             }
         }
     }
@@ -183,6 +257,30 @@ class RecipeViewModel(
     }
 
     // ---- Formulario ----
+
+    /** Abre el formulario con los datos de la receta que se está viendo, para editarla. */
+    fun startEditing() {
+        val recipe = (_detailState.value as? RecipeDetailUiState.Success)?.recipe ?: return
+        searchJob?.cancel()
+        _formState.value = RecipeFormState(
+            title = recipe.title,
+            ingredients = recipe.ingredients.map { ing ->
+                IngredientFormItem(
+                    name = ing.name,
+                    quantity = ing.quantity?.let(::formatQuantity).orEmpty(),
+                    unit = ing.unit?.takeIf { it in IngredientUnits } ?: "g",
+                    // Se conserva el alimento elegido: al guardar no se vuelve a buscar por nombre.
+                    food = ing.food
+                )
+            }.ifEmpty { listOf(IngredientFormItem()) },
+            steps = recipe.steps.ifEmpty { listOf("") },
+            servings = recipe.servings.toString(),
+            prepMinutes = recipe.prepMinutes?.toString().orEmpty(),
+            photoBase64 = recipe.imageBase64,
+            editingRecipeId = recipe.id,
+            originalPhotoBase64 = recipe.imageBase64
+        )
+    }
 
     fun onPhotoChange(photoBase64: String?) = _formState.update { it.copy(photoBase64 = photoBase64, error = null) }
 
@@ -316,6 +414,14 @@ class RecipeViewModel(
 
         searchJob?.cancel()
         _formState.update { it.copy(isSaving = true, error = null, suggestionsFor = null, suggestions = emptyList()) }
+        val editingId = form.editingRecipeId
+        if (editingId != null) {
+            // La foto no va en el PUT: si ha cambiado se guarda después con PUT /image, que
+            // además permite quitarla (Gson no enviaría un null en el cuerpo).
+            val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes)
+            viewModelScope.launch { saveEdit(editingId, request, form) }
+            return
+        }
         viewModelScope.launch {
             val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes, form.photoBase64)
             when (val result = repository.createRecipe(request)) {
@@ -328,6 +434,31 @@ class RecipeViewModel(
                     loadMyRecipes()
                 }
                 is ApiResult.Error -> _formState.update { it.copy(isSaving = false, error = result.message) }
+            }
+        }
+    }
+
+    private suspend fun saveEdit(id: Int, request: CreateRecipeRequest, form: RecipeFormState) {
+        when (val result = repository.updateRecipe(id, request)) {
+            is ApiResult.Success -> {
+                var saved = result.data
+                var photoError: String? = null
+                if (form.photoBase64 != form.originalPhotoBase64) {
+                    when (val photo = repository.updateImage(id, form.photoBase64)) {
+                        is ApiResult.Success -> saved = photo.data
+                        is ApiResult.Error -> photoError = photo.message
+                    }
+                }
+                replaceRecipe(saved)
+                // Los cambios de la receta ya están guardados aunque falle la foto: se avisa en el detalle.
+                photoError?.let { msg ->
+                    _detailActionState.update { it.copy(message = "Cambios guardados, pero no la foto: $msg") }
+                } ?: _detailActionState.update { it.copy(message = "Cambios guardados") }
+                _formState.update { it.copy(isSaving = false, saved = true) }
+            }
+            is ApiResult.Error -> {
+                if (result.code == 404) onRecipeGone(id)
+                _formState.update { it.copy(isSaving = false, error = result.message) }
             }
         }
     }

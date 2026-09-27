@@ -5,6 +5,8 @@ import com.example.nutrisocial.data.CreateLogEntryRequest
 import com.example.nutrisocial.data.CreateRecipeRequest
 import com.example.nutrisocial.data.DailyLog
 import com.example.nutrisocial.data.DailyRecommendations
+import com.example.nutrisocial.data.DeleteAccountRequest
+import com.example.nutrisocial.data.DeleteRecipeResponse
 import com.example.nutrisocial.data.FeedPage
 import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.LikeState
@@ -25,6 +27,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -40,6 +43,11 @@ interface ApiService {
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
+    // @DELETE no admite cuerpo en Retrofit; la contraseña va en el cuerpo, no en la URL,
+    // para que no quede en los registros del servidor. 204 sin cuerpo.
+    @HTTP(method = "DELETE", path = "auth/me", hasBody = true)
+    suspend fun deleteAccount(@Body request: DeleteAccountRequest): Response<Unit>
+
     // Rutas protegidas: AuthInterceptor añade "Authorization: Bearer <token>".
     @POST("recipes")
     suspend fun createRecipe(@Body request: CreateRecipeRequest): Response<Recipe>
@@ -53,6 +61,13 @@ interface ApiService {
 
     @GET("recipes/{id}")
     suspend fun getRecipe(@Path("id") id: Int): Response<Recipe>
+
+    // Solo el autor (403 si no). Mismo cuerpo que al crear; la foto se cambia aparte.
+    @PUT("recipes/{id}")
+    suspend fun updateRecipe(@Path("id") id: Int, @Body request: CreateRecipeRequest): Response<Recipe>
+
+    @DELETE("recipes/{id}")
+    suspend fun deleteRecipe(@Path("id") id: Int): Response<DeleteRecipeResponse>
 
     // Recetas de todos los usuarios, de 20 en 20. Sin cursor, la primera página.
     @GET("recipes/feed")

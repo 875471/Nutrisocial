@@ -86,7 +86,15 @@ fun RecipeFormScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (state.fromOcr) "Revisar receta escaneada" else "Nueva receta") },
+                title = {
+                    Text(
+                        when {
+                            state.isEditing -> "Editar receta"
+                            state.fromOcr -> "Revisar receta escaneada"
+                            else -> "Nueva receta"
+                        }
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -179,7 +187,7 @@ fun RecipeFormScreen(
                 if (state.isSaving) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                 } else {
-                    Text("Guardar receta")
+                    Text(if (state.isEditing) "Guardar cambios" else "Guardar receta")
                 }
             }
         }

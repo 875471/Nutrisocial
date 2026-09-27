@@ -3,6 +3,7 @@ package com.example.nutrisocial.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nutrisocial.data.ApiResult
+import com.example.nutrisocial.data.AuthRepository
 import com.example.nutrisocial.data.Profile
 import com.example.nutrisocial.data.ProfileRepository
 import com.example.nutrisocial.data.UpdateProfileRequest
@@ -32,11 +33,20 @@ data class ProfileUiState(
     val isSaving: Boolean = false,
     val saveError: String? = null,
     // Aviso puntual tras guardar; la pantalla lo muestra y llama a onSavedMessageShown.
-    val savedMessage: String? = null
+    val savedMessage: String? = null,
+    val accountDeletion: AccountDeletionState = AccountDeletionState()
+)
+
+/** Borrado de la cuenta. Con [deleted] la pantalla cierra la sesión y vuelve al login. */
+data class AccountDeletionState(
+    val isDeleting: Boolean = false,
+    val error: String? = null,
+    val deleted: Boolean = false
 )
 
 class ProfileViewModel(
-    private val repository: ProfileRepository = ProfileRepository()
+    private val repository: ProfileRepository = ProfileRepository(),
+    private val authRepository: AuthRepository = AuthRepository()
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileUiState())
@@ -120,6 +130,31 @@ class ProfileViewModel(
                 is ApiResult.Error -> _state.update { it.copy(isSaving = false, saveError = result.message) }
             }
         }
+    }
+
+    /**
+     * Borra la cuenta tras comprobar la contraseña en el servidor. Una contraseña incorrecta
+     * llega como 403 (no 401), así que no cierra la sesión: el usuario puede volver a intentarlo.
+     */
+    fun deleteAccount(password: String) {
+        if (_state.value.accountDeletion.isDeleting) return
+        if (password.isBlank()) {
+            _state.update { it.copy(accountDeletion = AccountDeletionState(error = "Introduce tu contraseña")) }
+            return
+        }
+        _state.update { it.copy(accountDeletion = AccountDeletionState(isDeleting = true)) }
+        viewModelScope.launch {
+            val deletion = when (val result = authRepository.deleteAccount(password)) {
+                is ApiResult.Success -> AccountDeletionState(deleted = true)
+                is ApiResult.Error -> AccountDeletionState(error = result.message)
+            }
+            _state.update { it.copy(accountDeletion = deletion) }
+        }
+    }
+
+    /** Al cerrar el diálogo se olvida el error anterior. */
+    fun onDeleteAccountDismissed() = _state.update {
+        if (it.accountDeletion.isDeleting) it else it.copy(accountDeletion = AccountDeletionState())
     }
 
     private fun ProfileUiState.withProfile(profile: Profile) = copy(

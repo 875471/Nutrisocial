@@ -108,46 +108,75 @@ function cleanIngredients(value) {
   return { ingredients: result };
 }
 
-router.post('/', async (req, res) => {
-  const { title, ingredients, steps, servings, prepMinutes, imageBase64 } = req.body ?? {};
+/**
+ * Valida el cuerpo de POST /recipes y PUT /recipes/:id y calcula los valores nutricionales.
+ * Devuelve { fields } (columnas de Recipe, sin autor ni foto) e { ingredients } resueltos
+ * contra la tabla Food, o { error } para un 400. La foto se valida aparte (validateImageBase64).
+ */
+async function buildRecipeData(body) {
+  const { title, ingredients, steps, servings, prepMinutes } = body;
 
   const cleanTitle = typeof title === 'string' ? title.trim() : '';
-  if (!cleanTitle) {
-    return res.status(400).json({ error: 'El título no puede estar vacío' });
-  }
+  if (!cleanTitle) return { error: 'El título no puede estar vacío' };
   const parsedIngredients = cleanIngredients(ingredients);
-  if (parsedIngredients.error) {
-    return res.status(400).json({ error: parsedIngredients.error });
-  }
+  if (parsedIngredients.error) return { error: parsedIngredients.error };
   const cleanSteps = cleanStringList(steps);
-  if (!cleanSteps || cleanSteps.length === 0) {
-    return res.status(400).json({ error: 'Añade al menos un paso' });
-  }
+  if (!cleanSteps || cleanSteps.length === 0) return { error: 'Añade al menos un paso' };
   if (!Number.isInteger(servings) || servings < 1) {
-    return res.status(400).json({ error: 'Las raciones deben ser un número entero mayor que 0' });
+    return { error: 'Las raciones deben ser un número entero mayor que 0' };
   }
   if (prepMinutes != null && (!Number.isInteger(prepMinutes) || prepMinutes < 0)) {
-    return res.status(400).json({ error: 'El tiempo de preparación debe ser un número entero de minutos' });
-  }
-  const image = validateImageBase64(imageBase64);
-  if (image.error) {
-    return res.status(400).json({ error: image.error });
+    return { error: 'El tiempo de preparación debe ser un número entero de minutos' };
   }
 
-  // Cálculo nutricional en el momento de crear la receta: los totales quedan guardados
-  // y no cambian aunque después se actualice la tabla Food.
+  // Cálculo nutricional al guardar: los totales quedan guardados y no cambian aunque
+  // después se actualice la tabla Food (al editar la receta se recalculan).
   const { ingredients: resolved, totals } = await resolveIngredients(parsedIngredients.ingredients);
-
-  const recipe = await prisma.recipe.create({
-    data: {
+  return {
+    fields: {
       title: cleanTitle,
       steps: JSON.stringify(cleanSteps),
       servings,
       prepMinutes: prepMinutes ?? null,
       ...totals,
+    },
+    ingredients: resolved,
+  };
+}
+
+// Comprueba que la receta existe y que req.userId es su autor. Si no, responde 400/404/403
+// y devuelve null; si sí, devuelve el id.
+async function findOwnRecipeId(req, res, action) {
+  const id = parseId(req.params.id);
+  if (id == null) {
+    res.status(400).json({ error: 'Id de receta no válido' });
+    return null;
+  }
+  const recipe = await prisma.recipe.findUnique({ where: { id }, select: { id: true, authorId: true } });
+  if (!recipe) {
+    res.status(404).json({ error: 'Esta receta ya no existe' });
+    return null;
+  }
+  if (!canEditRecipe(recipe, req.userId)) {
+    res.status(403).json({ error: `Solo el autor puede ${action} la receta` });
+    return null;
+  }
+  return id;
+}
+
+router.post('/', async (req, res) => {
+  const body = req.body ?? {};
+  const image = validateImageBase64(body.imageBase64);
+  if (image.error) return res.status(400).json({ error: image.error });
+  const built = await buildRecipeData(body);
+  if (built.error) return res.status(400).json({ error: built.error });
+
+  const recipe = await prisma.recipe.create({
+    data: {
+      ...built.fields,
       imageBase64: image.value,
       authorId: req.userId,
-      ingredients: { create: resolved },
+      ingredients: { create: built.ingredients },
     },
     include: recipeInclude(req.userId),
   });
@@ -261,17 +290,55 @@ router.get('/:id', async (req, res) => {
   }
   const recipe = await prisma.recipe.findUnique({ where: { id }, include: recipeInclude(req.userId) });
   if (!recipe) {
-    return res.status(404).json({ error: 'Receta no encontrada' });
+    return res.status(404).json({ error: 'Esta receta ya no existe' });
   }
   res.json(toRecipeResponse(recipe));
 });
 
+// Edita una receta propia con los mismos campos que POST /recipes. Los ingredientes se
+// sustituyen por completo y los totales se recalculan. La foto solo cambia si el cuerpo trae
+// imageBase64 (null la quita); si no, se conserva la que hubiera.
+router.put('/:id', async (req, res) => {
+  const id = await findOwnRecipeId(req, res, 'editar');
+  if (id == null) return;
+  const body = req.body ?? {};
+  let image = null;
+  if ('imageBase64' in body) {
+    image = validateImageBase64(body.imageBase64);
+    if (image.error) return res.status(400).json({ error: image.error });
+  }
+  const built = await buildRecipeData(body);
+  if (built.error) return res.status(400).json({ error: built.error });
+
+  // Un único update anidado: borrar los ingredientes antiguos y crear los nuevos es atómico.
+  const updated = await prisma.recipe.update({
+    where: { id },
+    data: {
+      ...built.fields,
+      ...(image && { imageBase64: image.value }),
+      ingredients: { deleteMany: {}, create: built.ingredients },
+    },
+    include: recipeInclude(req.userId),
+  });
+  res.json(toRecipeResponse(updated));
+});
+
+// Borra una receta propia (sus ingredientes y likes se borran en cascada). Las entradas del
+// diario que la usaban se conservan con sus valores copiados, pero pierden el enlace
+// (onDelete: SetNull). Se informa de cuántas eran del propio autor para que la app avise;
+// las de otros usuarios no se cuentan, para no revelar quién ha registrado la receta.
+router.delete('/:id', async (req, res) => {
+  const id = await findOwnRecipeId(req, res, 'borrar');
+  if (id == null) return;
+  const [orphanedLogEntries] = await prisma.$transaction([
+    prisma.logEntry.count({ where: { recipeId: id, userId: req.userId } }),
+    prisma.recipe.delete({ where: { id } }),
+  ]);
+  res.json({ deleted: true, orphanedLogEntries });
+});
+
 // Pone, cambia o quita (imageBase64: null) la foto de una receta. Solo su autor.
 router.put('/:id/image', async (req, res) => {
-  const id = parseId(req.params.id);
-  if (id == null) {
-    return res.status(400).json({ error: 'Id de receta no válido' });
-  }
   const body = req.body ?? {};
   if (!('imageBase64' in body)) {
     return res.status(400).json({ error: 'Falta imageBase64 (usa null para quitar la foto)' });
@@ -280,14 +347,8 @@ router.put('/:id/image', async (req, res) => {
   if (image.error) {
     return res.status(400).json({ error: image.error });
   }
-
-  const recipe = await prisma.recipe.findUnique({ where: { id }, select: { id: true, authorId: true } });
-  if (!recipe) {
-    return res.status(404).json({ error: 'Receta no encontrada' });
-  }
-  if (!canEditRecipe(recipe, req.userId)) {
-    return res.status(403).json({ error: 'Solo el autor puede cambiar la foto de la receta' });
-  }
+  const id = await findOwnRecipeId(req, res, 'cambiar la foto de');
+  if (id == null) return;
 
   const updated = await prisma.recipe.update({
     where: { id },
@@ -310,7 +371,7 @@ router.post('/:id/like', async (req, res) => {
   }
   const exists = await prisma.recipe.findUnique({ where: { id }, select: { id: true } });
   if (!exists) {
-    return res.status(404).json({ error: 'Receta no encontrada' });
+    return res.status(404).json({ error: 'Esta receta ya no existe' });
   }
   // upsert: dar like dos veces no duplica ni choca con el índice único.
   await prisma.recipeLike.upsert({
@@ -328,7 +389,7 @@ router.delete('/:id/like', async (req, res) => {
   }
   const exists = await prisma.recipe.findUnique({ where: { id }, select: { id: true } });
   if (!exists) {
-    return res.status(404).json({ error: 'Receta no encontrada' });
+    return res.status(404).json({ error: 'Esta receta ya no existe' });
   }
   // deleteMany: quitar un like que no existe no es un error.
   await prisma.recipeLike.deleteMany({ where: { userId: req.userId, recipeId: id } });

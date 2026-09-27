@@ -111,7 +111,12 @@ class FeedViewModel(
                 is ApiResult.Success -> updateRecipe(recipeId) {
                     it.copy(likedByMe = result.data.likedByMe, likesCount = result.data.likesCount)
                 }
-                is ApiResult.Error -> {
+                // La receta se ha borrado entretanto: se quita del feed.
+                is ApiResult.Error -> if (result.code == 404) {
+                    removeRecipe(recipeId)
+                    _state.update { it.copy(message = result.message) }
+                } else {
+                    // Sin conexión o error del servidor: el corazón vuelve a como estaba.
                     updateRecipe(recipeId) { it.copy(likedByMe = recipe.likedByMe, likesCount = recipe.likesCount) }
                     _state.update { it.copy(message = "No se pudo guardar el me gusta: ${result.message}") }
                 }
@@ -127,9 +132,18 @@ class FeedViewModel(
         it.copy(
             title = recipe.title,
             imageBase64 = recipe.imageBase64,
+            // Al editar la receta cambian sus raciones, tiempo y kcal.
+            servings = recipe.servings,
+            prepMinutes = recipe.prepMinutes,
+            kcalPerServing = recipe.nutrition.perServing.kcal,
             likesCount = recipe.likesCount,
             likedByMe = recipe.likedByMe
         )
+    }
+
+    /** Quita del feed una receta borrada (por su autor, desde aquí o desde otro dispositivo). */
+    fun removeRecipe(id: Int) = _state.update { state ->
+        state.copy(recipes = state.recipes.filterNot { it.id == id })
     }
 
     fun onMessageShown() = _state.update { it.copy(message = null) }

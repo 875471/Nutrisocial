@@ -26,3 +26,8 @@ data class LoginResponse(
 data class ApiErrorBody(
     val error: String?
 )
+
+/** Cuerpo de DELETE /auth/me: la contraseña actual, para confirmar. */
+data class DeleteAccountRequest(
+    val password: String
+)

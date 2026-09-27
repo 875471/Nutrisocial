@@ -145,6 +145,13 @@ class PantryViewModel(
     private var searchJob: Job? = null
 
     fun searchRecipes() {
+        // Con la despensa vacía no hay nada que buscar: se explica sin llamar al servidor.
+        val items = (_itemsState.value as? PantryItemsState.Success)?.items
+        if (items.isNullOrEmpty()) {
+            _searchState.value = PantrySearchState.Idle
+            _message.value = "Añade primero algún ingrediente a tu despensa."
+            return
+        }
         searchJob?.cancel()
         _searchState.value = PantrySearchState.Loading
         searchJob = viewModelScope.launch {

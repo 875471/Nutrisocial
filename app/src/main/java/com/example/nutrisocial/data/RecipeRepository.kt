@@ -16,9 +16,19 @@ class RecipeRepository(
         safeApiCall { api.getMyRecipes() }
 
     suspend fun getRecipe(id: Int): ApiResult<Recipe> =
-        safeApiCall(defaultErrorMessage = { code -> if (code == 404) "Receta no encontrada" else null }) {
-            api.getRecipe(id)
-        }
+        safeApiCall(defaultErrorMessage = ::recipeErrorMessage) { api.getRecipe(id) }
+
+    suspend fun updateRecipe(id: Int, request: CreateRecipeRequest): ApiResult<Recipe> =
+        safeApiCall(defaultErrorMessage = ::recipeErrorMessage) { api.updateRecipe(id, request) }
+
+    suspend fun deleteRecipe(id: Int): ApiResult<DeleteRecipeResponse> =
+        safeApiCall(defaultErrorMessage = ::recipeErrorMessage) { api.deleteRecipe(id) }
+
+    private fun recipeErrorMessage(code: Int): String? = when (code) {
+        404 -> RECIPE_GONE_MESSAGE
+        403 -> "Solo el autor puede modificar esta receta"
+        else -> null
+    }
 
     suspend fun searchFoods(query: String): ApiResult<List<FoodSuggestion>> =
         safeApiCall { api.searchFoods(query) }
@@ -43,3 +53,6 @@ class RecipeRepository(
     suspend fun setLiked(id: Int, liked: Boolean): ApiResult<LikeState> =
         safeApiCall { if (liked) api.likeRecipe(id) else api.unlikeRecipe(id) }
 }
+
+/** Mensaje para una receta que ya no existe (borrada, quizá desde otro dispositivo). */
+const val RECIPE_GONE_MESSAGE = "Esta receta ya no existe"

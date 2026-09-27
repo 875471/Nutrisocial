@@ -1,6 +1,17 @@
 const express = require('express');
 require('dotenv').config();
+
+// Sin secreto no se pueden firmar ni verificar tokens: mejor no arrancar que fallar después,
+// en el primer login, con un error confuso de jsonwebtoken.
+if (!process.env.JWT_SECRET) {
+  console.error('ERROR: falta la variable de entorno JWT_SECRET (en .env o en el panel de Render). El servidor no arranca.');
+  process.exit(1);
+}
+
 const app = express();
+// Render pone un proxy delante: sin esto, req.ip sería la IP del proxy y el límite de intentos
+// de login (middleware/rateLimit.js) se repartiría entre todos los usuarios a la vez.
+app.set('trust proxy', 1);
 // Las fotos de receta viajan en Base64 dentro del JSON: 2 MB de imagen son unos 2,7 MB
 // de texto. La ruta valida después el tamaño real de la foto (ver social/recipeSocial.js).
 app.use(express.json({ limit: '3mb' }));

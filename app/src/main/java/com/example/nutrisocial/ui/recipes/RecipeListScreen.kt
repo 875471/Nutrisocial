@@ -12,11 +12,15 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -35,9 +39,20 @@ fun RecipeListScreen(
     onRecipeClick: (Int) -> Unit,
     onCreateRecipe: () -> Unit,
     onRetry: () -> Unit,
-    onScanRecipe: () -> Unit = {}
+    onScanRecipe: () -> Unit = {},
+    // Aviso puntual, p. ej. tras eliminar una receta; se muestra en un snackbar.
+    message: String? = null,
+    onMessageShown: () -> Unit = {}
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(message) {
+        message?.let {
+            snackbarHostState.showSnackbar(it)
+            onMessageShown()
+        }
+    }
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Mis recetas") },

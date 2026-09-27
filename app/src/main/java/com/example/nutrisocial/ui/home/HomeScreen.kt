@@ -56,6 +56,7 @@ private object HomeRoutes {
     const val DESPENSA = "despensa"
     const val PERFIL = "perfil"
     const val NUEVA_RECETA = "recetas/nueva"
+    const val EDITAR_RECETA = "recetas/editar"
     const val ESCANEAR_RECETA = "recetas/escanear"
     const val DETALLE_RECETA = "recetas/detalle/{id}"
     fun detalleReceta(id: Int) = "recetas/detalle/$id"
@@ -142,7 +143,10 @@ fun HomeScreen(
 
             composable(HomeRoutes.RECETAS) {
                 val listState by recipeViewModel.listState.collectAsStateWithLifecycle()
+                val listMessage by recipeViewModel.listMessage.collectAsStateWithLifecycle()
                 RecipeListScreen(
+                    message = listMessage,
+                    onMessageShown = recipeViewModel::onListMessageShown,
                     state = listState,
                     onRecipeClick = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) },
                     onCreateRecipe = {
@@ -268,7 +272,9 @@ fun HomeScreen(
                             onSave = profileViewModel::save,
                             onRetry = profileViewModel::loadProfile,
                             onSavedMessageShown = profileViewModel::onSavedMessageShown,
-                            onEditToggle = profileViewModel::onEditToggle
+                            onEditToggle = profileViewModel::onEditToggle,
+                            onDeleteAccount = profileViewModel::deleteAccount,
+                            onDeleteAccountDismissed = profileViewModel::onDeleteAccountDismissed
                         )
                     },
                     onLogout = onLogout
@@ -276,27 +282,8 @@ fun HomeScreen(
             }
 
             composable(HomeRoutes.NUEVA_RECETA) {
-                val formState by recipeViewModel.formState.collectAsStateWithLifecycle()
-                RecipeFormScreen(
-                    state = formState,
-                    onTitleChange = recipeViewModel::onTitleChange,
-                    onServingsChange = recipeViewModel::onServingsChange,
-                    onPrepMinutesChange = recipeViewModel::onPrepMinutesChange,
-                    ingredientActions = remember(recipeViewModel) {
-                        IngredientActions(
-                            onNameChange = recipeViewModel::onIngredientNameChange,
-                            onQuantityChange = recipeViewModel::onIngredientQuantityChange,
-                            onUnitChange = recipeViewModel::onIngredientUnitChange,
-                            onSuggestionSelected = recipeViewModel::onSuggestionSelected,
-                            onNameFocusLost = recipeViewModel::onIngredientFocusLost,
-                            onAdd = recipeViewModel::addIngredient,
-                            onRemove = recipeViewModel::removeIngredient
-                        )
-                    },
-                    onStepChange = recipeViewModel::onStepChange,
-                    onAddStep = recipeViewModel::addStep,
-                    onRemoveStep = recipeViewModel::removeStep,
-                    onSave = recipeViewModel::saveRecipe,
+                RecipeFormDestination(
+                    recipeViewModel = recipeViewModel,
                     onSaved = {
                         // Tras guardar se vuelve a "Mis recetas", que ya incluye la nueva receta.
                         recipeViewModel.resetForm()
@@ -308,9 +295,22 @@ fun HomeScreen(
                             navController.navigateToTab(HomeRoutes.RECETAS)
                         }
                     },
-                    onBack = { navController.popBackStack() },
-                    onDismissOcrNotice = recipeViewModel::dismissOcrNotice,
-                    onPhotoChange = recipeViewModel::onPhotoChange
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(HomeRoutes.EDITAR_RECETA) {
+                RecipeFormDestination(
+                    recipeViewModel = recipeViewModel,
+                    // Se vuelve al detalle, que ya muestra la receta actualizada.
+                    onSaved = {
+                        recipeViewModel.resetForm()
+                        navController.popBackStack()
+                    },
+                    onBack = {
+                        recipeViewModel.resetForm()
+                        navController.popBackStack()
+                    }
                 )
             }
 
@@ -322,7 +322,18 @@ fun HomeScreen(
                 LaunchedEffect(id) { recipeViewModel.loadRecipe(id) }
                 val detailState by recipeViewModel.detailState.collectAsStateWithLifecycle()
                 val detailActionState by recipeViewModel.detailActionState.collectAsStateWithLifecycle()
-                // Lo que cambie aquí (likes, foto) se copia a la tarjeta del feed.
+                // Receta eliminada: fuera del feed y de vuelta a "Mis recetas", que muestra el aviso.
+                LaunchedEffect(detailActionState.deletedRecipeId) {
+                    val deletedId = detailActionState.deletedRecipeId ?: return@LaunchedEffect
+                    feedViewModel.removeRecipe(deletedId)
+                    recipeViewModel.onDeletedHandled()
+                    if (!navController.popBackStack(HomeRoutes.RECETAS, inclusive = false)) {
+                        // Se abrió desde otra pestaña (Inicio, Diario, Despensa).
+                        navController.popBackStack()
+                        navController.navigateToTab(HomeRoutes.RECETAS)
+                    }
+                }
+                // Lo que cambie aquí (likes, foto, edición) se copia a la tarjeta del feed.
                 LaunchedEffect(detailState) {
                     (detailState as? RecipeDetailUiState.Success)?.let { feedViewModel.syncRecipe(it.recipe) }
                 }
@@ -341,7 +352,12 @@ fun HomeScreen(
                             onToggleLike = recipeViewModel::toggleLike,
                             onUpdatePhoto = recipeViewModel::updatePhoto,
                             onMessage = recipeViewModel::showDetailMessage,
-                            onMessageShown = recipeViewModel::onDetailMessageShown
+                            onMessageShown = recipeViewModel::onDetailMessageShown,
+                            onEdit = {
+                                recipeViewModel.startEditing()
+                                navController.navigate(HomeRoutes.EDITAR_RECETA)
+                            },
+                            onDelete = recipeViewModel::deleteRecipe
                         )
                     },
                     actionState = detailActionState
@@ -349,6 +365,37 @@ fun HomeScreen(
             }
         }
     }
+}
+
+/** Formulario de receta, compartido por crear y editar (el modo lo lleva el estado del ViewModel). */
+@Composable
+private fun RecipeFormDestination(recipeViewModel: RecipeViewModel, onSaved: () -> Unit, onBack: () -> Unit) {
+    val formState by recipeViewModel.formState.collectAsStateWithLifecycle()
+    RecipeFormScreen(
+        state = formState,
+        onTitleChange = recipeViewModel::onTitleChange,
+        onServingsChange = recipeViewModel::onServingsChange,
+        onPrepMinutesChange = recipeViewModel::onPrepMinutesChange,
+        ingredientActions = remember(recipeViewModel) {
+            IngredientActions(
+                onNameChange = recipeViewModel::onIngredientNameChange,
+                onQuantityChange = recipeViewModel::onIngredientQuantityChange,
+                onUnitChange = recipeViewModel::onIngredientUnitChange,
+                onSuggestionSelected = recipeViewModel::onSuggestionSelected,
+                onNameFocusLost = recipeViewModel::onIngredientFocusLost,
+                onAdd = recipeViewModel::addIngredient,
+                onRemove = recipeViewModel::removeIngredient
+            )
+        },
+        onStepChange = recipeViewModel::onStepChange,
+        onAddStep = recipeViewModel::addStep,
+        onRemoveStep = recipeViewModel::removeStep,
+        onSave = recipeViewModel::saveRecipe,
+        onSaved = onSaved,
+        onBack = onBack,
+        onDismissOcrNotice = recipeViewModel::dismissOcrNotice,
+        onPhotoChange = recipeViewModel::onPhotoChange
+    )
 }
 
 /** Navegación estándar entre pestañas: conserva y restaura el estado de cada una. */
