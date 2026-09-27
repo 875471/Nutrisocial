@@ -38,6 +38,7 @@ import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.ui.home.formatKcal
 import com.example.nutrisocial.ui.recipes.RecipeListUiState
 import com.example.nutrisocial.ui.recipes.formatNumber
+import com.example.nutrisocial.ui.recipes.suggestionDetail
 import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.Spacing
@@ -180,7 +181,7 @@ private fun FoodPicker(state: AddEntryState, actions: AddEntryActions) {
             items(state.suggestions, key = { it.id }) { food ->
                 SelectableRow(
                     title = food.name,
-                    detail = "${food.kcal.roundToInt()} kcal/100 g",
+                    detail = suggestionDetail(food),
                     selected = false,
                     onClick = { actions.onFoodSelected(food) }
                 )

@@ -12,7 +12,7 @@ const router = express.Router();
 router.use(requireAuth);
 
 const INCLUDE_INGREDIENTS = {
-  ingredients: { orderBy: { position: 'asc' }, include: { food: { select: { id: true, name: true } } } },
+  ingredients: { orderBy: { position: 'asc' }, include: { food: { select: { id: true, name: true, source: true } } } },
 };
 
 // Los pasos se guardan como JSON en texto; al responder se devuelven como array.
@@ -127,18 +127,17 @@ router.post('/parse-ocr', async (req, res) => {
   }
 
   const parsed = parseRecipeText(rawText);
-  const ingredients = [];
-  for (const ing of parsed.ingredients) {
-    const food = await matchFood(ing.rawName);
-    ingredients.push({
-      rawName: ing.rawName,
-      quantity: ing.quantity,
-      unit: ing.unit,
-      matched: food != null,
-      foodId: food?.id ?? null,
-      foodName: food?.name ?? null,
-    });
-  }
+  // En paralelo: algunos ingredientes pueden necesitar una consulta a Open Food Facts.
+  const foods = await Promise.all(parsed.ingredients.map((ing) => matchFood(ing.rawName)));
+  const ingredients = parsed.ingredients.map((ing, i) => ({
+    rawName: ing.rawName,
+    quantity: ing.quantity,
+    unit: ing.unit,
+    matched: foods[i] != null,
+    foodId: foods[i]?.id ?? null,
+    foodName: foods[i]?.name ?? null,
+    foodSource: foods[i]?.source ?? null,
+  }));
   res.json({
     title: parsed.title,
     servings: parsed.servings,

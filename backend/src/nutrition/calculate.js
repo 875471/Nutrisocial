@@ -14,8 +14,14 @@ async function resolveIngredients(ingredients) {
   let totalWeightGrams = null;
   const resolved = [];
 
+  // Los alimentos se buscan a la vez: los que no están en BEDCA pueden requerir una
+  // consulta a Open Food Facts, y en serie se sumarían sus esperas.
+  const foods = await Promise.all(
+    ingredients.map((ing) => (ing.foodId != null ? findFoodById(ing.foodId) : matchFood(ing.name)))
+  );
+
   for (const [position, ing] of ingredients.entries()) {
-    const food = ing.foodId != null ? await findFoodById(ing.foodId) : await matchFood(ing.name);
+    const food = foods[position];
     if (ing.foodId != null && !food) {
       const err = new Error(`El alimento ${ing.foodId} no existe`);
       err.status = 400;

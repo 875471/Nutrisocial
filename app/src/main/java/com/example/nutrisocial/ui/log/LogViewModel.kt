@@ -36,6 +36,13 @@ sealed interface RecommendationsUiState {
 
 enum class AddSource { RECIPE, FOOD }
 
+/** Añadir una receta al diario de hoy desde su pantalla de detalle. */
+data class QuickAddState(
+    val isSaving: Boolean = false,
+    // Resultado (añadido o error) para un Snackbar en el detalle.
+    val message: String? = null
+)
+
 /**
  * Hoja "Añadir al diario". Se elige primero la receta o el alimento y después la cantidad
  * (raciones o gramos), escrita como texto tal cual.
@@ -91,6 +98,10 @@ class LogViewModel(
     // Id de la receta recomendada que se está añadiendo, para desactivar su botón.
     private val _addingRecommendationId = MutableStateFlow<Int?>(null)
     val addingRecommendationId: StateFlow<Int?> = _addingRecommendationId.asStateFlow()
+
+    // Separado de [message]: lo muestra la pantalla de detalle de receta, no el diario.
+    private val _quickAddState = MutableStateFlow(QuickAddState())
+    val quickAddState: StateFlow<QuickAddState> = _quickAddState.asStateFlow()
 
     // Mensajes puntuales (entrada añadida, error al borrar...) para un Snackbar.
     private val _message = MutableStateFlow<String?>(null)
@@ -162,6 +173,28 @@ class LogViewModel(
             _addingRecommendationId.value = null
         }
     }
+
+    /**
+     * Registra [servings] raciones de la receta en el diario de hoy, sea cual sea el día que se
+     * esté viendo en la pestaña Diario: la acción es "me estoy comiendo esto ahora". Si el diario
+     * está mostrando hoy, se recarga como al añadir una recomendación.
+     */
+    fun addRecipeFromDetail(recipeId: Int, servings: Double) {
+        if (_quickAddState.value.isSaving) return
+        val today = todayIso()
+        _quickAddState.value = QuickAddState(isSaving = true)
+        viewModelScope.launch {
+            _quickAddState.value = when (val result = logRepository.addRecipe(today, recipeId, servings)) {
+                is ApiResult.Success -> {
+                    if (_date.value == today) loadDay()
+                    QuickAddState(message = "Añadido a tu diario de hoy: ${result.data.name}")
+                }
+                is ApiResult.Error -> QuickAddState(message = result.message)
+            }
+        }
+    }
+
+    fun onQuickAddMessageShown() = _quickAddState.update { it.copy(message = null) }
 
     fun deleteEntry(id: Int) {
         // Se quita de la lista al momento; los totales se recalculan al recargar el día.

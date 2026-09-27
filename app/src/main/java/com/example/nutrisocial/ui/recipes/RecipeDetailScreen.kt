@@ -11,24 +11,40 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.data.FoodRef
@@ -36,18 +52,60 @@ import com.example.nutrisocial.data.Macros
 import com.example.nutrisocial.data.Nutrition
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RecipeIngredient
+import com.example.nutrisocial.data.isOpenFoodFacts
+import com.example.nutrisocial.ui.home.decimalInput
+import com.example.nutrisocial.ui.home.formatKcal
+import com.example.nutrisocial.ui.home.parseDecimal
+import com.example.nutrisocial.ui.log.QuickAddState
+import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeDetailScreen(
     state: RecipeDetailUiState,
     onBack: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    quickAddState: QuickAddState = QuickAddState(),
+    onAddToDiary: (recipeId: Int, servings: Double) -> Unit = { _, _ -> },
+    onQuickAddMessageShown: () -> Unit = {}
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(quickAddState.message) {
+        quickAddState.message?.let {
+            snackbarHostState.showSnackbar(it)
+            onQuickAddMessageShown()
+        }
+    }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
+        floatingActionButton = {
+            if (state is RecipeDetailUiState.Success) {
+                ExtendedFloatingActionButton(
+                    onClick = { if (!quickAddState.isSaving) showAddDialog = true },
+                    icon = {
+                        if (quickAddState.isSaving) {
+                            CircularProgressIndicator(
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        } else {
+                            Icon(Icons.Filled.Add, contentDescription = null)
+                        }
+                    },
+                    text = { Text("Añadir a mi diario de hoy") },
+                    shape = ButtonShape,
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                )
+            }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Receta") },
@@ -75,6 +133,57 @@ fun RecipeDetailScreen(
             is RecipeDetailUiState.Success -> RecipeDetailContent(state.recipe, contentModifier)
         }
     }
+
+    if (showAddDialog && state is RecipeDetailUiState.Success) {
+        AddToDiaryDialog(
+            recipe = state.recipe,
+            onConfirm = { servings ->
+                showAddDialog = false
+                onAddToDiary(state.recipe.id, servings)
+            },
+            onDismiss = { showAddDialog = false }
+        )
+    }
+}
+
+/** Pide cuántas raciones se han comido y muestra las kcal resultantes antes de confirmar. */
+@Composable
+private fun AddToDiaryDialog(recipe: Recipe, onConfirm: (Double) -> Unit, onDismiss: () -> Unit) {
+    var servings by rememberSaveable { mutableStateOf("1") }
+    // Mismo rango que la hoja "Añadir al diario" y que valida el servidor.
+    val value = parseDecimal(servings)?.takeIf { it in 0.1..20.0 }
+    val kcal = recipe.nutrition.perServing.kcal
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Añadir a mi diario de hoy") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                Text("¿Cuántas raciones de «${recipe.title}» has comido?")
+                OutlinedTextField(
+                    value = servings,
+                    onValueChange = { servings = decimalInput(it, 4) },
+                    label = { Text("Raciones") },
+                    singleLine = true,
+                    isError = value == null,
+                    supportingText = {
+                        Text(
+                            when {
+                                value == null -> "Entre 0,1 y 20 raciones"
+                                kcal > 0 -> "≈ ${formatKcal((kcal * value).roundToInt())} kcal"
+                                else -> "Esta receta no tiene datos nutricionales"
+                            }
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { value?.let(onConfirm) }, enabled = value != null) { Text("Añadir") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
 }
 
 @Composable
@@ -83,7 +192,9 @@ private fun RecipeDetailContent(recipe: Recipe, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(Spacing.md),
+            .padding(Spacing.md)
+            // Hueco para que el botón flotante no tape el último paso.
+            .padding(bottom = 72.dp),
         verticalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
@@ -158,7 +269,9 @@ private fun ingredientDetail(ingredient: RecipeIngredient): String {
         !food.name.equals(ingredient.name, ignoreCase = true) -> "calculado como «${food.name}»"
         else -> null
     }
-    return listOfNotNull(amount, note).joinToString(" · ")
+    // Los datos de Open Food Facts son menos fiables que los de BEDCA: se indica siempre.
+    val source = if (ingredient.grams != null && isOpenFoodFacts(food?.source)) "datos de Open Food Facts" else null
+    return listOfNotNull(amount, note, source).joinToString(" · ")
 }
 
 private fun quantityLabel(quantity: Double, unit: String?): String {
@@ -231,8 +344,10 @@ private fun NutritionSection(recipe: Recipe) {
                 )
             }
         }
+        val usesOpenFoodFacts = recipe.ingredients.any { it.grams != null && isOpenFoodFacts(it.food?.source) }
         Text(
-            text = "Fuente: BEDCA (Base de Datos Española de Composición de Alimentos).",
+            text = "Fuente: BEDCA (Base de Datos Española de Composición de Alimentos)" +
+                if (usesOpenFoodFacts) " y, para lo que no está en ella, Open Food Facts." else ".",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

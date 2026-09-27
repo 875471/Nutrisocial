@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
@@ -89,7 +90,9 @@ data class ProfileActions(
     val onGoalChange: (String) -> Unit,
     val onSave: () -> Unit,
     val onRetry: () -> Unit,
-    val onSavedMessageShown: () -> Unit
+    val onSavedMessageShown: () -> Unit,
+    // "Modificar" en modo vista y "Cancelar" en modo edición.
+    val onEditToggle: () -> Unit
 )
 
 /** Pestaña "Perfil": datos personales, objetivo calórico diario y cierre de sesión. */
@@ -154,7 +157,11 @@ fun ProfileScreen(
             ) {
                 UserHeader(name = user?.name ?: state.profile.name, email = user?.email ?: state.profile.email)
                 CalorieGoalCard(state.profile)
-                ProfileForm(state = state, actions = actions)
+                if (state.isEditing) {
+                    ProfileForm(state = state, actions = actions)
+                } else {
+                    ProfileSummary(profile = state.profile, onEdit = actions.onEditToggle)
+                }
                 OutlinedButton(
                     onClick = onLogout,
                     shape = ButtonShape,
@@ -265,6 +272,52 @@ private fun joinSpanish(items: List<String>): String = when (items.size) {
     else -> items.dropLast(1).joinToString(", ") + " y " + items.last()
 }
 
+/** Datos guardados, en solo lectura, con el botón para modificarlos. */
+@Composable
+private fun ProfileSummary(profile: Profile, onEdit: () -> Unit) {
+    ElevatedCard(
+        shape = CardShape,
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
+        ) {
+            Text("Tus datos", style = MaterialTheme.typography.titleMedium)
+            val activity = ActivityOptions.find { it.value == profile.activityLevel }
+            SummaryRow(
+                "Fecha de nacimiento",
+                profile.birthDate?.let { displayDate(it) + (profile.age?.let { age -> " ($age años)" } ?: "") }
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                SummaryRow("Altura", profile.heightCm?.let { "${formatDecimal(it)} cm" }, Modifier.weight(1f))
+                SummaryRow("Peso", profile.weightKg?.let { "${formatDecimal(it)} kg" }, Modifier.weight(1f))
+            }
+            SummaryRow("Sexo", SexOptions.find { it.value == profile.sex }?.label)
+            SummaryRow("Nivel de actividad", activity?.let { a -> a.label + (a.description?.let { " · $it" } ?: "") })
+            SummaryRow("Objetivo", GoalOptions.find { it.value == profile.goal }?.label)
+            Button(
+                onClick = onEdit,
+                shape = ButtonShape,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text("Modificar", modifier = Modifier.padding(start = Spacing.sm))
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(label: String, value: String?, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value ?: "Sin indicar", style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProfileForm(state: ProfileUiState, actions: ProfileActions) {
@@ -319,20 +372,33 @@ private fun ProfileForm(state: ProfileUiState, actions: ProfileActions) {
                 Text(text = it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
             }
 
-            Button(
-                onClick = actions.onSave,
-                enabled = enabled,
-                shape = ButtonShape,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (state.isSaving) {
-                    CircularProgressIndicator(
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                } else {
-                    Text("Guardar y calcular")
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                // Sin un perfil completo guardado no hay modo vista al que volver.
+                if (state.profile?.isComplete == true) {
+                    OutlinedButton(
+                        onClick = actions.onEditToggle,
+                        enabled = enabled,
+                        shape = ButtonShape,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancelar")
+                    }
+                }
+                Button(
+                    onClick = actions.onSave,
+                    enabled = enabled,
+                    shape = ButtonShape,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    if (state.isSaving) {
+                        CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
+                        Text("Guardar y calcular", maxLines = 1)
+                    }
                 }
             }
 
@@ -476,7 +542,7 @@ private fun ActivityDropdown(selected: String?, enabled: Boolean, onSelect: (Str
     }
 }
 
-private val PreviewActions = ProfileActions({}, {}, {}, {}, {}, {}, {}, {}, {})
+private val PreviewActions = ProfileActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {})
 
 @Preview(showBackground = true)
 @Composable
@@ -500,13 +566,34 @@ private fun ProfileScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
+private fun ProfileEditingPreview() {
+    val profile = Profile(
+        1, "ana@example.com", "Ana", birthDate = "1996-05-10", age = 30, heightCm = 165.0, weightKg = 60.0,
+        sex = "F", activityLevel = "moderado", goal = "mantener", dailyCalorieGoal = 2085, bmr = 1345, tdee = 2085
+    )
+    NutriSocialTheme {
+        ProfileScreen(
+            user = User(1, "ana@example.com", "Ana"),
+            state = ProfileUiState(
+                isLoading = false, profile = profile, birthDate = "1996-05-10", heightCm = "165", weightKg = "61,5",
+                sex = "F", activityLevel = "moderado", goal = "perder_peso", isEditing = true
+            ),
+            actions = PreviewActions,
+            onLogout = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
 private fun ProfileIncompletePreview() {
     NutriSocialTheme {
         ProfileScreen(
             user = User(1, "ana@example.com", "Ana"),
             state = ProfileUiState(
                 isLoading = false,
-                profile = Profile(1, "ana@example.com", "Ana", missingFields = listOf("birthDate", "weightKg", "goal"))
+                profile = Profile(1, "ana@example.com", "Ana", missingFields = listOf("birthDate", "weightKg", "goal")),
+                isEditing = true
             ),
             actions = PreviewActions,
             onLogout = {}

@@ -23,15 +23,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RecipeIngredient
+import com.example.nutrisocial.data.isOpenFoodFacts
 import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
+import kotlin.math.roundToInt
 
 /** Elevación común de las tarjetas: suficiente para separarlas del fondo sin recargar. */
 val RecipeCardElevation = 3.dp
+
+/** "32 kcal/100 g", indicando si el dato viene de Open Food Facts en vez de BEDCA. */
+fun suggestionDetail(food: FoodSuggestion): String =
+    "${food.kcal.roundToInt()} kcal/100 g" + if (isOpenFoodFacts(food.source)) " · Open Food Facts" else ""
 
 fun servingsLabel(servings: Int): String = if (servings == 1) "1 ración" else "$servings raciones"
 

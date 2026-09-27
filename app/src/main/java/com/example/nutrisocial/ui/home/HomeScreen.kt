@@ -218,7 +218,8 @@ fun HomeScreen(
                             onGoalChange = profileViewModel::onGoalChange,
                             onSave = profileViewModel::save,
                             onRetry = profileViewModel::loadProfile,
-                            onSavedMessageShown = profileViewModel::onSavedMessageShown
+                            onSavedMessageShown = profileViewModel::onSavedMessageShown,
+                            onEditToggle = profileViewModel::onEditToggle
                         )
                     },
                     onLogout = onLogout
@@ -268,10 +269,15 @@ fun HomeScreen(
                 val id = entry.arguments?.getInt("id") ?: return@composable
                 LaunchedEffect(id) { recipeViewModel.loadRecipe(id) }
                 val detailState by recipeViewModel.detailState.collectAsStateWithLifecycle()
+                // El LogViewModel compartido: al añadir la receta hoy, el diario se actualiza.
+                val quickAddState by logViewModel.quickAddState.collectAsStateWithLifecycle()
                 RecipeDetailScreen(
                     state = detailState,
                     onBack = { navController.popBackStack() },
-                    onRetry = { recipeViewModel.loadRecipe(id) }
+                    onRetry = { recipeViewModel.loadRecipe(id) },
+                    quickAddState = quickAddState,
+                    onAddToDiary = logViewModel::addRecipeFromDetail,
+                    onQuickAddMessageShown = logViewModel::onQuickAddMessageShown
                 )
             }
         }

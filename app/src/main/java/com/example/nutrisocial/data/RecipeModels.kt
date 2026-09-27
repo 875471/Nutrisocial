@@ -12,7 +12,7 @@ data class Recipe(
     val nutrition: Nutrition = Nutrition()
 )
 
-/** Ingrediente guardado: cantidad tal como se escribió, peso estimado y alimento de BEDCA asociado. */
+/** Ingrediente guardado: cantidad tal como se escribió, peso estimado y alimento asociado (BEDCA u Open Food Facts). */
 data class RecipeIngredient(
     val name: String,
     val quantity: Double? = null,
@@ -21,7 +21,13 @@ data class RecipeIngredient(
     val food: FoodRef? = null
 )
 
-data class FoodRef(val id: Int, val name: String)
+/** Alimento asociado a un ingrediente. [source] es "BEDCA" u "OpenFoodFacts" (ver [isOpenFoodFacts]). */
+data class FoodRef(val id: Int, val name: String, val source: String? = null)
+
+/** Valor de `source` de los alimentos que el servidor ha traído de Open Food Facts. */
+const val OPEN_FOOD_FACTS_SOURCE = "OpenFoodFacts"
+
+fun isOpenFoodFacts(source: String?): Boolean = source == OPEN_FOOD_FACTS_SOURCE
 
 data class Macros(
     val kcal: Double = 0.0,
@@ -65,7 +71,9 @@ data class FoodSuggestion(
     val kcal: Double,
     val protein: Double,
     val carbs: Double,
-    val fat: Double
+    val fat: Double,
+    // "BEDCA" u "OpenFoodFacts": los segundos se marcan en la lista para distinguirlos.
+    val source: String? = null
 )
 
 /** Unidades que admite el servidor (ver backend/src/nutrition/unitConversion.js). */
@@ -90,5 +98,6 @@ data class OcrIngredient(
     val unit: String? = null,
     val matched: Boolean = false,
     val foodId: Int? = null,
-    val foodName: String? = null
+    val foodName: String? = null,
+    val foodSource: String? = null
 )

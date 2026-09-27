@@ -337,7 +337,7 @@ private fun SuggestionList(suggestions: List<FoodSuggestion>, onSelect: (FoodSug
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "${food.kcal.toInt()} kcal/100 g",
+                        text = suggestionDetail(food),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = Spacing.sm)

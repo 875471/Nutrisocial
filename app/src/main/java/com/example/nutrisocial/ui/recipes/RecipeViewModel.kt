@@ -140,7 +140,7 @@ class RecipeViewModel(
 
     fun onSuggestionSelected(index: Int, food: FoodSuggestion) {
         searchJob?.cancel()
-        updateIngredient(index) { it.copy(name = food.name, food = FoodRef(food.id, food.name)) }
+        updateIngredient(index) { it.copy(name = food.name, food = FoodRef(food.id, food.name, food.source)) }
         dismissSuggestions()
     }
 
@@ -267,7 +267,7 @@ class RecipeViewModel(
                 name = ing.rawName,
                 quantity = ing.quantity?.let(::formatQuantity).orEmpty(),
                 unit = ing.unit?.takeIf { it in IngredientUnits } ?: "g",
-                food = if (ing.foodId != null && ing.foodName != null) FoodRef(ing.foodId, ing.foodName) else null
+                food = if (ing.foodId != null && ing.foodName != null) FoodRef(ing.foodId, ing.foodName, ing.foodSource) else null
             )
         }
         _formState.value = RecipeFormState(

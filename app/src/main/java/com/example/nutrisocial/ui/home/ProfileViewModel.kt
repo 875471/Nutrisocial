@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 /**
  * Estado de la pestaña Perfil. [profile] es la última versión guardada en el servidor (con el
  * objetivo calórico calculado); los campos del formulario se guardan como texto tal cual se escriben.
+ * Con [isEditing] a false se muestran los datos guardados, sin formulario.
  */
 data class ProfileUiState(
     val isLoading: Boolean = true,
@@ -27,6 +28,7 @@ data class ProfileUiState(
     val sex: String? = null,
     val activityLevel: String? = null,
     val goal: String? = null,
+    val isEditing: Boolean = false,
     val isSaving: Boolean = false,
     val saveError: String? = null,
     // Aviso puntual tras guardar; la pantalla lo muestra y llama a onSavedMessageShown.
@@ -48,9 +50,25 @@ class ProfileViewModel(
         _state.update { it.copy(isLoading = it.profile == null, loadError = null) }
         viewModelScope.launch {
             when (val result = repository.getProfile()) {
-                is ApiResult.Success -> _state.update { it.withProfile(result.data).copy(isLoading = false) }
+                // La primera vez (perfil sin objetivo calculable) se abre directamente el formulario.
+                is ApiResult.Success -> _state.update {
+                    it.withProfile(result.data).copy(isLoading = false, isEditing = !result.data.isComplete)
+                }
                 is ApiResult.Error -> _state.update { it.copy(isLoading = false, loadError = result.message) }
             }
+        }
+    }
+
+    /**
+     * "Modificar" abre el formulario con los datos guardados; "Cancelar" lo cierra y descarta lo
+     * escrito, volviendo a los valores del último perfil guardado.
+     */
+    fun onEditToggle() = _state.update { current ->
+        when {
+            current.isSaving -> current
+            !current.isEditing -> current.copy(isEditing = true, saveError = null)
+            current.profile != null -> current.withProfile(current.profile).copy(isEditing = false, saveError = null)
+            else -> current
         }
     }
 
@@ -91,8 +109,13 @@ class ProfileViewModel(
                 goal = current.goal
             )
             when (val result = repository.updateProfile(request)) {
+                // Si aún faltan datos para el objetivo, el formulario sigue abierto para completarlos.
                 is ApiResult.Success -> _state.update {
-                    it.withProfile(result.data).copy(isSaving = false, savedMessage = "Perfil guardado")
+                    it.withProfile(result.data).copy(
+                        isSaving = false,
+                        isEditing = !result.data.isComplete,
+                        savedMessage = "Perfil guardado"
+                    )
                 }
                 is ApiResult.Error -> _state.update { it.copy(isSaving = false, saveError = result.message) }
             }
@@ -109,6 +132,9 @@ class ProfileViewModel(
         goal = profile.goal
     )
 }
+
+/** Perfil con todos los datos necesarios para calcular el objetivo calórico. */
+internal val Profile.isComplete: Boolean get() = dailyCalorieGoal != null
 
 /** Solo dígitos y un separador decimal (coma o punto), como el campo de cantidad de las recetas. */
 internal fun decimalInput(value: String, maxLength: Int = 6): String {

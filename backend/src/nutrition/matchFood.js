@@ -1,5 +1,6 @@
 const prisma = require('../prismaClient');
-const { normalize } = require('./normalize');
+const { normalize, STOPWORDS } = require('./normalize');
+const { searchOpenFoodFacts, searchOpenFoodFactsCandidates, matchesTerm, SOURCE: OFF_SOURCE } = require('./openFoodFacts');
 
 // BEDCA nombra los alimentos como "Nombre base, descripción" ("Calabaza, cruda",
 // "Arroz, blanco, hervido"). Cada alimento se indexa por su nombre completo y por la
@@ -9,9 +10,6 @@ function indexFood(food) {
   const head = full.split(',')[0].trim();
   return { food, full, head, words: new Set(full.replace(/,/g, ' ').split(' ')) };
 }
-
-// Palabras que no aportan al comparar por palabras ("pechuga de pollo" ~ "Pollo, pechuga").
-const STOPWORDS = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'con', 'en', 'y', 'al', 'a']);
 
 // Nombres genéricos para los que BEDCA tiene muchas variantes y ninguna regla elige
 // la habitual en una receta ("huevo" daría "Huevo de pato, crudo"). Clave normalizada
@@ -32,12 +30,44 @@ const ALIASES = {
   aceite: 'Aceite de oliva',
 };
 
-// La tabla Food solo cambia con `npx prisma db seed`, así que se carga una vez y se
-// mantiene en memoria (unos pocos cientos de filas). Tras un seed hay que reiniciar.
+// La tabla Food se carga una vez y se mantiene en memoria (unos pocos cientos de filas).
+// Solo cambia con `npx prisma db seed` (tras un seed hay que reiniciar) o al guardar un
+// producto de Open Food Facts, que se añade también al índice (ver cacheProduct).
 let indexPromise = null;
 function loadIndex() {
   indexPromise ??= prisma.food.findMany().then((foods) => foods.map(indexFood));
   return indexPromise;
+}
+
+const isOff = (entry) => entry.food.source === OFF_SOURCE;
+
+// Guarda un producto de Open Food Facts en Food (clave: nombre) para no volver a pedirlo.
+// Si ya existe un alimento con ese nombre se conserva tal cual: nunca se pisa uno de BEDCA.
+// Devuelve null si no se puede guardar: el ingrediente queda sin datos, pero la receta se guarda.
+async function cacheProduct(product) {
+  let food;
+  try {
+    food = await prisma.food.upsert({ where: { name: product.name }, create: product, update: {} });
+  } catch (err) {
+    // Dos peticiones a la vez pueden intentar crear el mismo producto; la segunda falla
+    // por el índice único, pero el alimento ya existe.
+    food = await prisma.food.findUnique({ where: { name: product.name } }).catch(() => null);
+    if (!food) {
+      console.warn(`No se pudo guardar "${product.name}" de Open Food Facts: ${err.message}`);
+      return null;
+    }
+  }
+  const index = await loadIndex();
+  if (!index.some((e) => e.food.id === food.id)) index.push(indexFood(food));
+  return food;
+}
+
+// Producto de Open Food Facts ya guardado que corresponde al término, con el mismo
+// criterio con el que se eligió al buscarlo; el nombre más corto es el más genérico.
+function findCachedProduct(index, name) {
+  return index
+    .filter((e) => isOff(e) && matchesTerm(name, e.food.name))
+    .sort((a, b) => a.full.length - b.full.length)[0]?.food ?? null;
 }
 
 // Variantes de la consulta para tolerar plurales sencillos ("cebollas", "limones").
@@ -119,18 +149,40 @@ function rank(index, query, allowContains) {
 
 // Alimento de la tabla Food que mejor corresponde al nombre de un ingrediente, o
 // null si ninguno es suficientemente parecido (no se aceptan meras subcadenas).
+// BEDCA tiene prioridad; solo si no tiene nada se recurre a Open Food Facts, primero a
+// los productos ya guardados y, si no hay, a su API (el resultado se guarda en Food).
 async function matchFood(name) {
   if (!normalize(name)) return null;
-  const [best] = rank(await loadIndex(), name, false);
-  return best?.entry.food ?? null;
+  const index = await loadIndex();
+  const [best] = rank(index.filter((e) => !isOff(e)), name, false);
+  if (best) return best.entry.food;
+  const cached = findCachedProduct(index, name);
+  if (cached) return cached;
+  const product = await searchOpenFoodFacts(name);
+  return product ? cacheProduct(product) : null;
 }
 
 // Sugerencias para el autocompletado: incluye también coincidencias por subcadena.
+// Primero BEDCA y después lo ya guardado de Open Food Facts. Si hay menos de 3, se
+// completa con la API de Open Food Facts (a partir de 3 letras), y lo que devuelva se
+// guarda en Food para que la próxima búsqueda lo encuentre en local.
+const MIN_LOCAL_RESULTS = 3;
+const MIN_EXTERNAL_QUERY = 3;
 async function searchFoods(query, limit = 10) {
   if (normalize(query).length < 2) return [];
-  return rank(await loadIndex(), query, true)
-    .slice(0, limit)
-    .map((r) => r.entry.food);
+  const index = await loadIndex();
+  const results = [
+    ...rank(index.filter((e) => !isOff(e)), query, true),
+    ...rank(index.filter(isOff), query, true),
+  ].map((r) => r.entry.food);
+  if (results.length < MIN_LOCAL_RESULTS && normalize(query).length >= MIN_EXTERNAL_QUERY) {
+    const products = await searchOpenFoodFactsCandidates(query, { prefix: true });
+    for (const product of products) {
+      const food = await cacheProduct(product);
+      if (food && !results.some((f) => f.id === food.id)) results.push(food);
+    }
+  }
+  return results.slice(0, limit);
 }
 
 async function findFoodById(id) {

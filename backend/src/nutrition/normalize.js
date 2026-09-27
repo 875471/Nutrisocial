@@ -12,4 +12,7 @@ function normalize(text) {
     .trim();
 }
 
-module.exports = { normalize };
+// Palabras que no aportan al comparar nombres por palabras ("pechuga de pollo" ~ "Pollo, pechuga").
+const STOPWORDS = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'con', 'en', 'y', 'al', 'a']);
+
+module.exports = { normalize, STOPWORDS };
