@@ -12,26 +12,34 @@ datasource db {
 }
 
 model User {
-  id            Int          @id @default(autoincrement())
-  email         String       @unique
-  password      String
-  name          String
-  createdAt     DateTime     @default(now())
+  id                        Int          @id @default(autoincrement())
+  email                     String       @unique
+  password                  String
+  name                      String
+  createdAt                 DateTime     @default(now())
   // Datos de perfil para el objetivo calórico (ver src/nutrition/calorieGoal.js). Opcionales:
   // un usuario recién registrado todavía no los ha rellenado.
-  birthDate     DateTime?
-  heightCm      Float?
-  weightKg      Float?
+  birthDate                 DateTime?
+  heightCm                  Float?
+  weightKg                  Float?
   // "M" o "F"
-  sex           String?
+  sex                       String?
   // "sedentario" | "ligero" | "moderado" | "activo" | "muy_activo"
-  activityLevel String?
+  activityLevel             String?
   // "perder_peso" | "mantener" | "ganar_peso"
-  goal          String?
-  recipes       Recipe[]
-  logEntries    LogEntry[]
-  pantryItems   PantryItem[]
-  recipeLikes   RecipeLike[]
+  goal                      String?
+  // Verificación del email (ver src/routes/auth.js). Los tokens se guardan hasheados
+  // (SHA-256): el enlace o el código que recibe el usuario no está en la base de datos.
+  emailVerified             Boolean      @default(false)
+  verificationTokenHash     String?      @unique
+  verificationTokenExpires  DateTime?
+  // Recuperación de contraseña: código de un solo uso con caducidad corta.
+  passwordResetTokenHash    String?      @unique
+  passwordResetTokenExpires DateTime?
+  recipes                   Recipe[]
+  logEntries                LogEntry[]
+  pantryItems               PantryItem[]
+  recipeLikes               RecipeLike[]
 }
 
 model Recipe {
