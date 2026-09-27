@@ -31,9 +31,11 @@ suspend fun uriToCompressedBase64(
     val resolver = context.contentResolver
 
     // 1) Solo las dimensiones, para no cargar en memoria la foto completa (12 Mpx ≈ 48 MB).
+    // Ojo: con inJustDecodeBounds, decodeStream devuelve siempre null (solo rellena `bounds`),
+    // así que el null que indica un fallo es el de openInputStream, no el de decodeStream.
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-        ?: throw IOException("No se pudo abrir la imagen")
+    val boundsStream = resolver.openInputStream(uri) ?: throw IOException("No se pudo abrir la imagen")
+    boundsStream.use { BitmapFactory.decodeStream(it, null, bounds) }
     if (bounds.outWidth <= 0 || bounds.outHeight <= 0) throw IOException("El archivo no es una imagen")
 
     // 2) Decodificación reducida por potencias de 2, sin bajar de maxDimension.
@@ -75,6 +77,9 @@ fun base64ToBitmap(base64: String, maxDimension: Int? = null): Bitmap? = try {
     }
     BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
 } catch (e: IllegalArgumentException) {
+    // Base64 mal formado.
+    null
+} catch (e: OutOfMemoryError) {
     null
 }
 

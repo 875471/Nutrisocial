@@ -1,5 +1,6 @@
 package com.example.nutrisocial.ui.recipes
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -57,20 +59,45 @@ fun Base64Image(
     modifier: Modifier = Modifier,
     maxDimension: Int? = null
 ) {
-    val bitmap by produceState<ImageBitmap?>(initialValue = null, base64, maxDimension) {
-        value = decodeBase64Cached(base64, maxDimension)?.asImageBitmap()
+    // null mientras se decodifica; Failed si el texto no es una imagen válida.
+    val result by produceState<DecodedImage?>(initialValue = null, base64, maxDimension) {
+        val bitmap = decodeBase64Cached(base64, maxDimension)
+        if (bitmap == null) {
+            // La longitud distingue un texto vacío o truncado de una foto entera pero corrupta.
+            Log.w(PHOTO_LOG_TAG, "No se pudo decodificar una foto de ${base64.length} caracteres")
+        }
+        value = bitmap?.let { DecodedImage.Loaded(it.asImageBitmap()) } ?: DecodedImage.Failed
     }
-    Box(modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant)) {
-        bitmap?.let {
-            Image(
-                bitmap = it,
+    Box(
+        modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        when (val image = result) {
+            is DecodedImage.Loaded -> Image(
+                bitmap = image.bitmap,
                 contentDescription = contentDescription,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
+            // En vez de un hueco vacío, un aviso visible de que la foto existe pero no se puede ver.
+            DecodedImage.Failed -> Icon(
+                imageVector = Icons.Filled.Warning,
+                contentDescription = "No se pudo cargar la foto",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxSize(0.4f)
+            )
+            null -> Unit
         }
     }
 }
+
+private sealed interface DecodedImage {
+    data class Loaded(val bitmap: ImageBitmap) : DecodedImage
+    data object Failed : DecodedImage
+}
+
+/** Etiqueta de Logcat para seguir una foto de receta de principio a fin (filtrar por "FotoReceta"). */
+const val PHOTO_LOG_TAG = "FotoReceta"
 
 /** Miniatura de la receta en las tarjetas: su foto si tiene, o el cuadro con la inicial. */
 @Composable
@@ -133,11 +160,18 @@ fun rememberRecipePhotoPicker(onPhotoReady: (String) -> Unit, onMessage: (String
             isProcessing = true
             scope.launch {
                 try {
-                    onPhotoReady(uriToCompressedBase64(context, uri))
+                    val base64 = uriToCompressedBase64(context, uri)
+                    Log.d(PHOTO_LOG_TAG, "Foto comprimida: ${base64.length} caracteres Base64 (≈ ${base64.length * 3 / 4 / 1024} KB)")
+                    onPhotoReady(base64)
                 } catch (e: CancellationException) {
                     throw e
+                } catch (e: OutOfMemoryError) {
+                    // Es un Error, no una Exception: sin capturarlo aparte, la app se cerraría.
+                    Log.e(PHOTO_LOG_TAG, "Sin memoria al comprimir la foto $uri", e)
+                    onMessage("La foto es demasiado grande para procesarla en este móvil. Prueba con otra.")
                 } catch (e: Exception) {
-                    onMessage("No se pudo leer la foto. Prueba con otra imagen.")
+                    Log.e(PHOTO_LOG_TAG, "No se pudo comprimir la foto $uri", e)
+                    onMessage("No se pudo leer la foto: ${e.message ?: e::class.java.simpleName}")
                 } finally {
                     isProcessing = false
                 }

@@ -67,6 +67,9 @@ private fun genericErrorMessage(code: Int): String = when (code) {
     400 -> "Datos incorrectos o incompletos"
     401 -> "Tu sesión no es válida. Vuelve a iniciar sesión."
     404 -> "No se ha encontrado lo que buscabas"
+    // Si el proxy de Render corta la petición antes de llegar a Express, no hay JSON con el motivo.
+    413 -> "La petición es demasiado grande. Si lleva una foto, prueba con otra más pequeña."
+    429 -> "Demasiados intentos. Espera unos minutos."
     in 500..599 -> "Error del servidor ($code)"
     else -> "Error inesperado ($code)"
 }

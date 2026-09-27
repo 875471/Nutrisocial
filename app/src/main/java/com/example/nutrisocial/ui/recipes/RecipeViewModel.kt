@@ -1,5 +1,6 @@
 package com.example.nutrisocial.ui.recipes
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nutrisocial.data.ApiResult
@@ -129,7 +130,10 @@ class RecipeViewModel(
 
         viewModelScope.launch {
             when (val result = repository.getRecipe(id)) {
-                is ApiResult.Success -> _detailState.value = RecipeDetailUiState.Success(result.data)
+                is ApiResult.Success -> {
+                    logPhoto("Receta ${id} cargada", result.data.imageBase64)
+                    _detailState.value = RecipeDetailUiState.Success(result.data)
+                }
                 // Borrada (quizá desde otro dispositivo): aunque hubiera copia en la lista, no se
                 // enseña una receta que ya no existe.
                 is ApiResult.Error -> if (result.code == 404) {
@@ -221,9 +225,11 @@ class RecipeViewModel(
         val recipe = (_detailState.value as? RecipeDetailUiState.Success)?.recipe ?: return
         if (_detailActionState.value.isUpdatingPhoto) return
         _detailActionState.value = RecipeDetailActionState(isUpdatingPhoto = true)
+        logPhoto("Enviando foto de la receta ${recipe.id}", imageBase64)
         viewModelScope.launch {
             when (val result = repository.updateImage(recipe.id, imageBase64)) {
                 is ApiResult.Success -> {
+                    logPhoto("Respuesta al guardar la foto de ${recipe.id}", result.data.imageBase64)
                     replaceRecipe(result.data)
                     val message = if (imageBase64 == null) "Foto quitada" else "Foto guardada"
                     _detailActionState.value = RecipeDetailActionState(message = message)
@@ -231,6 +237,7 @@ class RecipeViewModel(
                 is ApiResult.Error -> if (result.code == 404) {
                     onRecipeGone(recipe.id)
                 } else {
+                    Log.e(PHOTO_LOG_TAG, "El servidor rechazó la foto de ${recipe.id}: ${result.code} ${result.message}")
                     _detailActionState.value = RecipeDetailActionState(message = "No se pudo guardar la foto: ${result.message}")
                 }
             }
@@ -422,10 +429,12 @@ class RecipeViewModel(
             viewModelScope.launch { saveEdit(editingId, request, form) }
             return
         }
+        logPhoto("Creando receta", form.photoBase64)
         viewModelScope.launch {
             val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes, form.photoBase64)
             when (val result = repository.createRecipe(request)) {
                 is ApiResult.Success -> {
+                    logPhoto("Receta ${result.data.id} creada", result.data.imageBase64)
                     // Se inserta al principio para que la lista esté actualizada al volver,
                     // y se refresca desde el servidor por coherencia.
                     val current = (_listState.value as? RecipeListUiState.Success)?.recipes.orEmpty()
@@ -444,9 +453,13 @@ class RecipeViewModel(
                 var saved = result.data
                 var photoError: String? = null
                 if (form.photoBase64 != form.originalPhotoBase64) {
+                    logPhoto("Enviando foto editada de la receta $id", form.photoBase64)
                     when (val photo = repository.updateImage(id, form.photoBase64)) {
                         is ApiResult.Success -> saved = photo.data
-                        is ApiResult.Error -> photoError = photo.message
+                        is ApiResult.Error -> {
+                            Log.e(PHOTO_LOG_TAG, "El servidor rechazó la foto de $id: ${photo.code} ${photo.message}")
+                            photoError = photo.message
+                        }
                     }
                 }
                 replaceRecipe(saved)
@@ -487,6 +500,11 @@ class RecipeViewModel(
     }
 
     fun dismissOcrNotice() = _formState.update { it.copy(fromOcr = false) }
+
+    /** Traza de Logcat: si la foto iba (y cuánto ocupaba) en cada paso, para saber dónde se pierde. */
+    private fun logPhoto(step: String, imageBase64: String?) {
+        Log.d(PHOTO_LOG_TAG, "$step: " + if (imageBase64 == null) "sin foto" else "con foto (${imageBase64.length} caracteres)")
+    }
 
     /** 0.5 → "0,5", 0.333 → "0,33", 2.0 → "2" (el campo acepta coma decimal). */
     private fun formatQuantity(value: Double): String =
