@@ -8,7 +8,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.nutrisocial.data.ApiResult
 import com.example.nutrisocial.data.OcrRecipeProposal
 import com.example.nutrisocial.data.RecipeRepository
+import com.example.nutrisocial.data.ocr.ImageQuality
 import com.example.nutrisocial.data.ocr.RecipeTextRecognizer
+import com.example.nutrisocial.data.ocr.measureImageQuality
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +20,11 @@ import kotlinx.coroutines.launch
 
 sealed interface ScanUiState {
     data object Idle : ScanUiState
+    /**
+     * La foto parece oscura o borrosa (ver data/ocr/ImageQuality.kt). No se procesa hasta que
+     * el usuario elige continuar igualmente o repetirla.
+     */
+    data class LowQuality(val uri: Uri, val message: String) : ScanUiState
     /** ML Kit está leyendo la foto en el propio teléfono. */
     data object Recognizing : ScanUiState
     /** El servidor está separando ingredientes y pasos. */
@@ -42,12 +49,37 @@ class ScanRecipeViewModel(application: Application) : AndroidViewModel(applicati
     private var lastText: String? = null
     private var job: Job? = null
 
-    fun processImage(uri: Uri) {
+    /** Nueva foto: antes del OCR se comprueba que no esté demasiado oscura o borrosa. */
+    fun processImage(uri: Uri) = start(uri, checkQuality = true)
+
+    /** "Continuar igualmente" tras el aviso de calidad. */
+    fun processAnyway() {
+        (_state.value as? ScanUiState.LowQuality)?.let { start(it.uri, checkQuality = false) }
+    }
+
+    private fun start(uri: Uri, checkQuality: Boolean) {
         lastImage = uri
         lastText = null
         job?.cancel()
         job = viewModelScope.launch {
             _state.value = ScanUiState.Recognizing
+            if (checkQuality) {
+                // Si la medida falla (imagen rara), no se bloquea: se deja que lo intente ML Kit.
+                val quality = try {
+                    measureImageQuality(getApplication(), uri)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    null
+                }
+                if (quality != null) {
+                    Log.d(LOG_TAG, "Calidad de la foto: brillo %.0f, nitidez %.2f".format(quality.brightness, quality.sharpness))
+                }
+                if (quality?.isPoor == true) {
+                    _state.value = ScanUiState.LowQuality(uri, lowQualityMessage(quality))
+                    return@launch
+                }
+            }
             val text = try {
                 recognizer.recognize(uri)
             } catch (e: CancellationException) {
@@ -75,7 +107,8 @@ class ScanRecipeViewModel(application: Application) : AndroidViewModel(applicati
                 job?.cancel()
                 job = viewModelScope.launch { analyze(text) }
             }
-            lastImage != null -> processImage(lastImage!!)
+            // Ya se avisó (o se aceptó) la calidad de esta foto: no se vuelve a preguntar.
+            lastImage != null -> start(lastImage!!, checkQuality = false)
         }
     }
 
@@ -104,6 +137,13 @@ class ScanRecipeViewModel(application: Application) : AndroidViewModel(applicati
     override fun onCleared() {
         recognizer.close()
     }
+}
+
+private fun lowQualityMessage(quality: ImageQuality): String = when {
+    quality.isDark && quality.isBlurry ->
+        "La foto parece oscura y borrosa. Prueba con más luz y acercando la cámara, sin moverla."
+    quality.isDark -> "La foto parece oscura. Prueba con más luz o sin sombras sobre la hoja."
+    else -> "La foto parece borrosa. Acerca la cámara, espera a que enfoque y sujétala firme."
 }
 
 private const val LOG_TAG = "NutriSocialOcr"

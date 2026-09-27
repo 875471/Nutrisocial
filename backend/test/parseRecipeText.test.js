@@ -231,3 +231,39 @@ test('receta a dos columnas con el orden de lectura de ML Kit alterado', () => {
     'Cocinar en freidora sobre papel mantequilla a 160 °C por 6-8 min.',
   ]);
 });
+
+// ---- Fracciones y listas numeradas ----
+
+test('fracciones en las cantidades: 1/2, 1/4, 3/4, mixtas, con espacios y con barra tipográfica', () => {
+  assert.deepEqual(parseQuantityLine('1/2 taza de leche'), { rawName: 'leche', quantity: 0.5, unit: 'taza' });
+  assert.deepEqual(parseQuantityLine('1/4 cucharadita de sal'), { rawName: 'sal', quantity: 0.25, unit: 'cucharadita' });
+  assert.deepEqual(parseQuantityLine('3/4 kg de patatas'), { rawName: 'patatas', quantity: 0.75, unit: 'kg' });
+  assert.deepEqual(parseQuantityLine('1 1/2 tazas de harina'), { rawName: 'harina', quantity: 1.5, unit: 'taza' });
+  assert.equal(parseQuantityLine('1 / 2 cebolla').quantity, 0.5);
+  // La barra de fracción (U+2044) que devuelven algunos OCR se trata como "/".
+  const { ingredients } = parseRecipeText('Batido\nIngredientes\n1⁄2 taza de leche\n3∕4 cucharadita de canela');
+  assert.deepEqual(ingredients.map((i) => i.quantity), [0.5, 0.75]);
+});
+
+test('lista de ingredientes numerada ("1. Harina") bajo su encabezado', () => {
+  const r = parseRecipeText(
+    'Bizcocho\nIngredientes\n1. Harina\n2. 200 g de azúcar\n3) Tres huevos\n'
+    + 'Preparación\n1. Batir los huevos con el azúcar.\n2. Añadir la harina.',
+  );
+  assert.deepEqual(r.ingredients, [
+    { rawName: 'Harina', quantity: null, unit: null },
+    { rawName: 'azúcar', quantity: 200, unit: 'g' },
+    { rawName: 'huevos', quantity: 3, unit: 'unidad' },
+  ]);
+  assert.deepEqual(r.steps, ['Batir los huevos con el azúcar.', 'Añadir la harina.']);
+});
+
+test('sin encabezados: la numeración con forma de ingrediente va a ingredientes, la de verbos a pasos', () => {
+  const r = parseRecipeText('Tortilla\n1. 4 huevos\n2. 3 patatas\n3. Sal\n1. Pelar las patatas.\n2. Freírlas.');
+  assert.deepEqual(r.ingredients.map((i) => i.rawName), ['huevos', 'patatas', 'Sal']);
+  assert.deepEqual(r.steps, ['Pelar las patatas.', 'Freírlas.']);
+  // Pasos numerados sin lista de ingredientes: siguen siendo pasos.
+  const salsa = parseRecipeText('Salsa\n1. En un cazo, calentar el aceite.\n2. Añadir el tomate.');
+  assert.deepEqual(salsa.ingredients, []);
+  assert.equal(salsa.steps.length, 2);
+});

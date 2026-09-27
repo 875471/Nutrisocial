@@ -166,6 +166,8 @@ fun HomeScreen(
                     state = scanState,
                     onImageSelected = scanViewModel::processImage,
                     onRetry = scanViewModel::retry,
+                    onProcessAnyway = scanViewModel::processAnyway,
+                    onDiscardPhoto = scanViewModel::reset,
                     onProposalReady = { proposal ->
                         recipeViewModel.loadOcrProposal(proposal)
                         scanViewModel.onProposalConsumed()

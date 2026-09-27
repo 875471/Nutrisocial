@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,6 +56,8 @@ fun ScanRecipeScreen(
     state: ScanUiState,
     onImageSelected: (Uri) -> Unit,
     onRetry: () -> Unit,
+    onProcessAnyway: () -> Unit = {},
+    onDiscardPhoto: () -> Unit = {},
     onProposalReady: (OcrRecipeProposal) -> Unit,
     onBack: () -> Unit
 ) {
@@ -146,6 +149,15 @@ fun ScanRecipeScreen(
                     actionLabel = if (state.canRetrySameImage) "Reintentar" else null,
                     onAction = onRetry
                 )
+                is ScanUiState.LowQuality -> LowQualityCard(
+                    message = state.message,
+                    onProcessAnyway = onProcessAnyway,
+                    onRetake = {
+                        onDiscardPhoto()
+                        photoPicker.takePhoto()
+                    },
+                    onDiscard = onDiscardPhoto
+                )
                 ScanUiState.Idle -> Unit
             }
         }
@@ -169,6 +181,36 @@ private fun TipsCard() {
                 "Si puedes, separa los apartados «Ingredientes» y «Preparación»."
             ).forEach { tip ->
                 Text("•  $tip", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
+
+/** Aviso de foto oscura o borrosa, con la decisión en manos del usuario. */
+@Composable
+private fun LowQualityCard(message: String, onProcessAnyway: () -> Unit, onRetake: () -> Unit, onDiscard: () -> Unit) {
+    Surface(
+        shape = CardShape,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Warning, contentDescription = null, modifier = Modifier.size(20.dp))
+                Text(
+                    "Puede que no se lea bien",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(start = Spacing.sm)
+                )
+            }
+            Text(message, style = MaterialTheme.typography.bodyMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                Button(onClick = onRetake, shape = ButtonShape) { Text("Repetir foto") }
+                OutlinedButton(onClick = onProcessAnyway, shape = ButtonShape) { Text("Continuar igualmente") }
+            }
+            TextButton(onClick = onDiscard, modifier = Modifier.align(Alignment.End)) {
+                Text("Elegir otra", color = MaterialTheme.colorScheme.onSecondaryContainer)
             }
         }
     }

@@ -224,6 +224,12 @@ function parseStrayIngredient(line) {
   return parsed;
 }
 
+/** Línea con forma de ingrediente: empieza por una cantidad, o es corta, sin verbo y sin punto final. */
+function looksLikeIngredient(text, words) {
+  if (parseQuantityLine(fixOcrDigits(text))) return true;
+  return !startsWithAction(text) && words <= 4 && !/[.!?]$/.test(text);
+}
+
 // Conectores con los que empieza la segunda línea de un título partido ("de chocolate").
 const TITLE_CONTINUATION_RE = /^(de|del|con|y|e|al|a|en|sin|para)\s/i;
 
@@ -233,6 +239,8 @@ const TITLE_CONTINUATION_RE = /^(de|del|con|y|e|al|a|en|sin|para)\s/i;
  */
 function parseRecipeText(rawText) {
   const lines = String(rawText ?? '')
+    // Barras de fracción tipográficas ("1⁄2", "3∕4") como una barra normal.
+    .replace(/[\u2044\u2215]/g, '/')
     .split(/\r?\n/)
     .map((l) => l.replace(/\s+/g, ' ').trim())
     .filter((l) => l.length > 0);
@@ -271,9 +279,16 @@ function parseRecipeText(rawText) {
 
     const bulleted = BULLET_RE.test(original);
     const withoutBullet = original.replace(BULLET_RE, '');
-    const stepNumbered = STEP_NUMBER_RE.test(withoutBullet);
-    const text = stepNumbered ? withoutBullet.replace(STEP_NUMBER_RE, '') : withoutBullet;
+    const numbered = STEP_NUMBER_RE.test(withoutBullet);
+    const text = numbered ? withoutBullet.replace(STEP_NUMBER_RE, '') : withoutBullet;
     const words = normalize(text).split(' ').length;
+    // Una lista numerada no es siempre de pasos: "1. Harina", "2. 200 g de azúcar" es una
+    // lista de ingredientes. Lo es en la sección de ingredientes y, sin encabezados, antes
+    // del primer paso si la línea tiene forma de ingrediente (cantidad, o corta y sin verbo).
+    const numberedIngredient = numbered && (section === 'ingredients'
+      || (section == null && steps.length === 0 && looksLikeIngredient(text, words)));
+    // A partir de aquí, "stepNumbered" solo marca los números de paso de verdad.
+    const stepNumbered = numbered && !numberedIngredient;
 
     // 1) Línea que empieza por una cantidad → ingrediente (salvo dentro de "Preparación",
     //    donde "2 huevos" puede ser una línea partida de un paso, o si está numerada como paso).
