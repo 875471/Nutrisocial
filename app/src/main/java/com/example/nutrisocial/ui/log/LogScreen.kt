@@ -1,5 +1,10 @@
 package com.example.nutrisocial.ui.log
 
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Search
+import com.example.nutrisocial.ui.recipes.InlineEmptyState
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -68,10 +73,10 @@ import com.example.nutrisocial.ui.recipes.InfoPill
 import com.example.nutrisocial.ui.recipes.InitialBadge
 import com.example.nutrisocial.ui.recipes.LoadingBox
 import com.example.nutrisocial.ui.recipes.MacroStat
-import com.example.nutrisocial.ui.recipes.RecipeCardElevation
 import com.example.nutrisocial.ui.recipes.RecipeListUiState
 import com.example.nutrisocial.ui.recipes.formatNumber
 import com.example.nutrisocial.ui.theme.ButtonShape
+import com.example.nutrisocial.ui.theme.CardElevation
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
@@ -149,6 +154,8 @@ fun LogScreen(
             when (dayState) {
                 DayUiState.Loading -> LoadingBox()
                 is DayUiState.Error -> CenteredMessage(
+                    icon = rememberVectorPainter(Icons.Filled.Warning),
+                    isError = true,
                     title = "No se pudo cargar el día",
                     message = dayState.message,
                     actionLabel = "Reintentar",
@@ -249,11 +256,10 @@ private fun DayContent(
         item { SectionTitle("Registrado") }
         if (log.entries.isEmpty()) {
             item {
-                Text(
+                InlineEmptyState(
+                    icon = rememberVectorPainter(Icons.Filled.DateRange),
                     text = "Todavía no has añadido nada este día. Pulsa «Añadir» para registrar una de tus " +
-                        "recetas o un alimento suelto.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "recetas o un alimento suelto."
                 )
             }
         }
@@ -280,7 +286,7 @@ private fun SummaryCard(log: DailyLog, onOpenProfile: () -> Unit) {
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -376,12 +382,11 @@ private fun LazyListScope.recommendationsSection(
                     GoalCoveredCard()
                 }
                 data.recommendations.isEmpty() -> item(key = "recommendations-empty") {
-                    Text(
+                    InlineEmptyState(
+                        icon = rememberVectorPainter(Icons.Filled.Search),
                         text = "Ninguna receta encaja ahora con lo que te queda" +
                             (data.remaining?.let { " (${formatKcal(it.kcal)} kcal)" } ?: "") +
-                            ". Prueba con una receta más ligera o añade un alimento suelto.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ". Prueba con una receta más ligera o añade un alimento suelto."
                     )
                 }
                 else -> items(data.recommendations, key = { "recommendation-${it.id}" }) { recommendation ->
@@ -403,7 +408,7 @@ private fun NoticeCard(title: String, message: String, actionLabel: String, onAc
     ElevatedCard(
         shape = CardShape,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(start = Spacing.md, end = Spacing.md, top = Spacing.md)) {
@@ -426,7 +431,7 @@ private fun GoalCoveredCard() {
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(modifier = Modifier.padding(Spacing.md), verticalAlignment = Alignment.CenterVertically) {
@@ -455,7 +460,7 @@ private fun RecommendationCard(
         onClick = onOpen,
         shape = CardShape,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -523,7 +528,7 @@ private fun EntryRow(entry: LogEntry, onDelete: () -> Unit, onOpen: (() -> Unit)
     ElevatedCard(
         shape = CardShape,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onOpen != null) Modifier.clip(CardShape).clickable(onClick = onOpen) else Modifier)

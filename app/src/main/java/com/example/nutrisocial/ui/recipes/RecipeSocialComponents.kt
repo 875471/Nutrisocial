@@ -1,6 +1,19 @@
 package com.example.nutrisocial.ui.recipes
 
 import android.util.Log
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -30,11 +44,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.R
@@ -72,21 +89,26 @@ fun Base64Image(
         modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
-        when (val image = result) {
-            is DecodedImage.Loaded -> Image(
-                bitmap = image.bitmap,
-                contentDescription = contentDescription,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-            // En vez de un hueco vacío, un aviso visible de que la foto existe pero no se puede ver.
-            DecodedImage.Failed -> Icon(
-                imageVector = Icons.Filled.Warning,
-                contentDescription = "No se pudo cargar la foto",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.fillMaxSize(0.4f)
-            )
-            null -> Unit
+        // Fundido suave al aparecer la foto, en vez de un salto del fondo a la imagen.
+        Crossfade(targetState = result, label = "photo") { image ->
+            when (image) {
+                is DecodedImage.Loaded -> Image(
+                    bitmap = image.bitmap,
+                    contentDescription = contentDescription,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                // En vez de un hueco vacío, un aviso visible de que la foto existe pero no se puede ver.
+                DecodedImage.Failed -> Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = "No se pudo cargar la foto",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxSize(0.4f)
+                    )
+                }
+                null -> Unit
+            }
         }
     }
 }
@@ -117,24 +139,54 @@ fun RecipeThumbnail(title: String, imageBase64: String?, modifier: Modifier = Mo
     }
 }
 
-/** Corazón de "me gusta" con el contador. El cambio se pinta al momento (ver toggleLike). */
+/**
+ * Corazón de "me gusta" con el contador. El cambio se pinta al momento (ver toggleLike) y se
+ * anima: al dar like el corazón da un pequeño bote y el número se desliza hacia arriba (hacia
+ * abajo al quitarlo). No se anima en la primera composición, solo cuando cambia.
+ */
 @Composable
 fun LikeButton(liked: Boolean, count: Int, onToggle: () -> Unit, modifier: Modifier = Modifier) {
+    val scale = remember { Animatable(1f) }
+    var previousLiked by remember { mutableStateOf(liked) }
+    LaunchedEffect(liked) {
+        if (liked && !previousLiked) {
+            scale.animateTo(1.3f, animationSpec = tween(durationMillis = 90))
+            scale.animateTo(1f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+        }
+        previousLiked = liked
+    }
+    val tint by animateColorAsState(
+        targetValue = if (liked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        label = "likeTint"
+    )
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onToggle) {
             Icon(
                 imageVector = if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                 contentDescription = if (liked) "Quitar me gusta" else "Me gusta",
-                tint = if (liked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                tint = tint,
+                modifier = Modifier.scale(scale.value)
             )
         }
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        AnimatedContent(
+            targetState = count,
+            transitionSpec = {
+                val up = targetState > initialState
+                (slideInVertically { if (up) it else -it } + fadeIn()) togetherWith
+                    (slideOutVertically { if (up) -it else it } + fadeOut()) using SizeTransform(clip = false)
+            },
+            label = "likeCount",
             // El IconButton ya deja aire a su izquierda; el número va pegado al corazón.
             modifier = Modifier.padding(end = Spacing.sm)
-        )
+        ) { value ->
+            Text(
+                text = value.toString(),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                // Suelto, un lector de pantalla solo diría "3"; así dice "3 me gusta".
+                modifier = Modifier.semantics { contentDescription = "$value me gusta" }
+            )
+        }
     }
 }
 

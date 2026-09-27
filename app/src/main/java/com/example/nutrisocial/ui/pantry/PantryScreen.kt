@@ -1,5 +1,8 @@
 package com.example.nutrisocial.ui.pantry
 
+import androidx.compose.material.icons.filled.ShoppingCart
+import com.example.nutrisocial.ui.recipes.InlineEmptyState
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +37,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -56,9 +58,9 @@ import com.example.nutrisocial.data.PantryRecipeMatch
 import com.example.nutrisocial.data.PantrySearchResult
 import com.example.nutrisocial.ui.recipes.FoodSuggestionList
 import com.example.nutrisocial.ui.recipes.InfoPill
-import com.example.nutrisocial.ui.recipes.RecipeCardElevation
 import com.example.nutrisocial.ui.recipes.RecipeThumbnail
 import com.example.nutrisocial.ui.theme.ButtonShape
+import com.example.nutrisocial.ui.theme.CardElevation
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
@@ -189,9 +191,10 @@ private fun AddIngredientField(input: PantryInputState, actions: PantryActions) 
 
 @Composable
 private fun PantryItemsCard(state: PantryItemsState, actions: PantryActions) {
-    Surface(
+    ElevatedCard(
         shape = CardShape,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(vertical = Spacing.sm)) {
@@ -222,11 +225,10 @@ private fun PantryItemsCard(state: PantryItemsState, actions: PantryActions) {
                 }
 
                 is PantryItemsState.Success -> if (state.items.isEmpty()) {
-                    Text(
+                    InlineEmptyState(
+                        icon = rememberVectorPainter(Icons.Filled.ShoppingCart),
                         text = "Aún no has añadido nada. Empieza por lo básico: huevos, aceite, sal…",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm)
+                        modifier = Modifier.padding(horizontal = Spacing.md)
                     )
                 } else {
                     state.items.forEachIndexed { index, item ->
@@ -292,11 +294,10 @@ private fun LazyListScope.searchResults(state: PantrySearchState, actions: Pantr
             val result = state.result
             if (result.readyToCook.isEmpty() && result.almostReady.isEmpty()) {
                 item(key = "search-empty") {
-                    Text(
+                    InlineEmptyState(
+                        icon = rememberVectorPainter(Icons.Filled.Search),
                         text = "Ninguna receta tiene al menos la mitad de sus ingredientes en tu despensa. " +
-                            "Prueba a añadir algún ingrediente más.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                            "Prueba a añadir algún ingrediente más."
                     )
                 }
             }
@@ -331,7 +332,7 @@ private fun PantryRecipeCard(recipe: PantryRecipeMatch, onClick: () -> Unit) {
         onClick = onClick,
         shape = CardShape,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(modifier = Modifier.padding(Spacing.md), verticalAlignment = Alignment.CenterVertically) {

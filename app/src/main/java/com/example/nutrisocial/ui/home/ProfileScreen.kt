@@ -1,5 +1,6 @@
 package com.example.nutrisocial.ui.home
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -77,8 +78,8 @@ import com.example.nutrisocial.ui.isoToPickerMillis
 import com.example.nutrisocial.ui.pickerMillisToIso
 import com.example.nutrisocial.ui.recipes.CenteredMessage
 import com.example.nutrisocial.ui.recipes.LoadingBox
-import com.example.nutrisocial.ui.recipes.RecipeCardElevation
 import com.example.nutrisocial.ui.theme.ButtonShape
+import com.example.nutrisocial.ui.theme.CardElevation
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
@@ -145,6 +146,8 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CenteredMessage(
+                    icon = rememberVectorPainter(Icons.Filled.Warning),
+                    isError = true,
                     title = "No se pudo cargar tu perfil",
                     message = state.loadError ?: "Inténtalo de nuevo en unos segundos.",
                     actionLabel = "Reintentar",
@@ -347,7 +350,7 @@ private fun CalorieGoalCard(profile: Profile) {
             containerColor = if (complete) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
             contentColor = if (complete) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -405,7 +408,7 @@ private fun ProfileSummary(profile: Profile, onEdit: () -> Unit) {
     ElevatedCard(
         shape = CardShape,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -452,7 +455,7 @@ private fun ProfileForm(state: ProfileUiState, actions: ProfileActions) {
     ElevatedCard(
         shape = CardShape,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(

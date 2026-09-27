@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- El plato con hoja del icono de la app, en un solo color (se tiñe desde Compose) para los
+     estados vacíos de recetas. Mismo dibujo que ic_launcher_monochrome, sin el margen del
+     icono adaptativo. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="60"
+    android:viewportHeight="60">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M2,30a28,28 0,1 1,56 0a28,28 0,1 1,-56 0zM6,30a24,24 0,1 0,48 0a24,24 0,1 0,-48 0z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M16,44C16,28 26,16 44,16C44,34 32,44 16,44z" />
+</vector>

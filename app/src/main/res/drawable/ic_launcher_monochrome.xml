@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Versión monocroma del icono (Android 13+, iconos temáticos): solo cuenta la opacidad.
+     El plato es un anillo (evenOdd) y la hoja va encima, con el nervio calado. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M26,54a28,28 0,1 1,56 0a28,28 0,1 1,-56 0zM30,54a24,24 0,1 0,48 0a24,24 0,1 0,-48 0z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M40,68C40,52 50,40 68,40C68,58 56,68 40,68z" />
+</vector>

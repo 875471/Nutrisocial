@@ -1,5 +1,9 @@
 package com.example.nutrisocial.ui.home
 
+import com.example.nutrisocial.R
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,11 +43,11 @@ import com.example.nutrisocial.ui.recipes.CenteredMessage
 import com.example.nutrisocial.ui.recipes.InfoPill
 import com.example.nutrisocial.ui.recipes.LikeButton
 import com.example.nutrisocial.ui.recipes.LoadingBox
-import com.example.nutrisocial.ui.recipes.RecipeCardElevation
 import com.example.nutrisocial.ui.recipes.RecipeThumbnail
 import com.example.nutrisocial.ui.recipes.formatNumber
 import com.example.nutrisocial.ui.recipes.prepTimeLabel
 import com.example.nutrisocial.ui.theme.ButtonShape
+import com.example.nutrisocial.ui.theme.CardElevation
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
@@ -113,6 +117,8 @@ fun HomeTabScreen(
 
                     state.error != null -> item(key = "error") {
                         CenteredMessage(
+                            icon = rememberVectorPainter(Icons.Filled.Warning),
+                            isError = true,
                             title = "No se pudo cargar el inicio",
                             message = state.error,
                             actionLabel = "Reintentar",
@@ -123,6 +129,7 @@ fun HomeTabScreen(
 
                     state.recipes.isEmpty() -> item(key = "empty") {
                         CenteredMessage(
+                            icon = painterResource(R.drawable.ic_brand_plate),
                             title = "Todavía no hay recetas",
                             message = "Sé la primera persona en compartir una: pulsa «Nueva receta».",
                             modifier = Modifier.fillParentMaxSize(0.6f)
@@ -184,7 +191,7 @@ private fun FeedRecipeCard(recipe: FeedRecipe, isOwn: Boolean, onClick: () -> Un
         onClick = onClick,
         shape = CardShape,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(

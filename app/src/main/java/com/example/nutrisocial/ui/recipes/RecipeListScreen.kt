@@ -1,5 +1,7 @@
 package com.example.nutrisocial.ui.recipes
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -87,6 +89,8 @@ fun RecipeListScreen(
             RecipeListUiState.Loading -> LoadingBox(contentModifier)
 
             is RecipeListUiState.Error -> CenteredMessage(
+                icon = rememberVectorPainter(Icons.Filled.Warning),
+                isError = true,
                 title = "No se pudieron cargar tus recetas",
                 message = state.message,
                 actionLabel = "Reintentar",
@@ -96,6 +100,7 @@ fun RecipeListScreen(
 
             is RecipeListUiState.Success -> if (state.recipes.isEmpty()) {
                 CenteredMessage(
+                    icon = painterResource(R.drawable.ic_brand_plate),
                     title = "Todavía no tienes recetas",
                     message = "Pulsa «Nueva receta» para guardar la primera, o «Escanear» para " +
                         "pasar una receta en papel con la cámara.",

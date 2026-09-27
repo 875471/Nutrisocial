@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -20,22 +22,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RecipeIngredient
 import com.example.nutrisocial.data.isOpenFoodFacts
 import com.example.nutrisocial.ui.theme.ButtonShape
+import com.example.nutrisocial.ui.theme.CardElevation
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
 import kotlin.math.roundToInt
 
-/** Elevación común de las tarjetas: suficiente para separarlas del fondo sin recargar. */
-val RecipeCardElevation = 3.dp
 
 /** "32 kcal/100 g", indicando si el dato viene de Open Food Facts en vez de BEDCA. */
 fun suggestionDetail(food: FoodSuggestion): String =
@@ -105,7 +108,7 @@ fun RecipeCard(
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -196,22 +199,31 @@ fun LoadingBox(modifier: Modifier = Modifier) {
     }
 }
 
-/** Mensaje centrado para estados vacíos o de error, con acción opcional. */
+/**
+ * Mensaje centrado para estados vacíos o de error, con acción opcional. Con [icon] se dibuja
+ * encima un icono grande en un círculo tintado ([isError] lo pinta con el color de error),
+ * para que un estado vacío no sea solo texto suelto.
+ */
 @Composable
 fun CenteredMessage(
     title: String,
     message: String,
     modifier: Modifier = Modifier,
+    icon: Painter? = null,
+    isError: Boolean = false,
     actionLabel: String? = null,
     onAction: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(Spacing.lg),
+            .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
         verticalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (icon != null) {
+            EmptyStateIcon(icon = icon, isError = isError, size = 96.dp, modifier = Modifier.padding(bottom = Spacing.md))
+        }
         Text(text = title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Text(
             text = message,
@@ -228,6 +240,43 @@ fun CenteredMessage(
                 Text(actionLabel)
             }
         }
+    }
+}
+
+/** Icono de estado vacío: círculo tintado con el icono a media escala. */
+@Composable
+private fun EmptyStateIcon(icon: Painter, isError: Boolean, size: Dp, modifier: Modifier = Modifier) {
+    Surface(
+        shape = CircleShape,
+        color = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+        contentColor = if (isError) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
+        modifier = modifier.size(size)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(painter = icon, contentDescription = null, modifier = Modifier.size(size / 2))
+        }
+    }
+}
+
+/**
+ * Estado vacío dentro de una sección (el diario de un día, la despensa): la misma idea que
+ * [CenteredMessage], pero en una fila compacta que no ocupa toda la pantalla.
+ */
+@Composable
+fun InlineEmptyState(icon: Painter, text: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = Spacing.sm),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        EmptyStateIcon(icon = icon, isError = false, size = 48.dp)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = Spacing.md)
+        )
     }
 }
 

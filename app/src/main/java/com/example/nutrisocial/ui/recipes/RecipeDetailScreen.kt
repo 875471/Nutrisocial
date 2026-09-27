@@ -1,5 +1,7 @@
 package com.example.nutrisocial.ui.recipes
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -65,6 +67,7 @@ import com.example.nutrisocial.ui.home.formatKcal
 import com.example.nutrisocial.ui.home.parseDecimal
 import com.example.nutrisocial.ui.log.QuickAddState
 import com.example.nutrisocial.ui.theme.ButtonShape
+import com.example.nutrisocial.ui.theme.CardElevation
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
@@ -143,6 +146,7 @@ fun RecipeDetailScreen(
             // Una receta borrada no se arregla reintentando: se ofrece volver.
             is RecipeDetailUiState.Error -> if (state.message == RECIPE_GONE_MESSAGE) {
                 CenteredMessage(
+                    icon = rememberVectorPainter(Icons.Filled.Delete),
                     title = RECIPE_GONE_MESSAGE,
                     message = "Su autor la ha eliminado. Si la tenías en el diario, esas entradas se conservan.",
                     actionLabel = "Volver",
@@ -151,6 +155,8 @@ fun RecipeDetailScreen(
                 )
             } else {
                 CenteredMessage(
+                    icon = rememberVectorPainter(Icons.Filled.Warning),
+                    isError = true,
                     title = "No se pudo cargar la receta",
                     message = state.message,
                     actionLabel = "Reintentar",
@@ -586,7 +592,7 @@ private fun DetailSection(title: String, content: @Composable () -> Unit) {
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = RecipeCardElevation),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(

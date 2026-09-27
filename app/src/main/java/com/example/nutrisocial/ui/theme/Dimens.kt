@@ -13,6 +13,12 @@ object Spacing {
     val xl = 32.dp
 }
 
+/**
+ * Elevación única de todas las tarjetas: separa la tarjeta del fondo crema sin recargar.
+ * Antes convivían 3 dp (recetas) y 1 dp (diario), y la despensa no tenía sombra.
+ */
+val CardElevation = 2.dp
+
 /** Radio común de tarjetas y botones. */
 val CornerRadius = 16.dp
 val CardShape = RoundedCornerShape(CornerRadius)
