@@ -1,0 +1,10 @@
+# Saltos de linea LF en el repositorio, se editen donde se editen (Windows incluido).
+* text=auto eol=lf
+*.bat text eol=crlf
+
+# Binarios: sin conversion de saltos de linea.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.jar binary
