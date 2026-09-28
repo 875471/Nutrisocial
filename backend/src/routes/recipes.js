@@ -40,15 +40,20 @@ async function likersPreview(recipeIds) {
   return likersByRecipe(rows);
 }
 
-// Receta completa con likersPreview: para el detalle y las ediciones que se hacen desde él.
+// Recetas completas con sus likersPreview (una consulta más para todas).
+async function toRecipeResponses(recipes) {
+  const likers = await likersPreview(recipes.map((r) => r.id));
+  return recipes.map((r) => toRecipeResponse(r, likers));
+}
+
 async function toDetailResponse(recipe) {
-  const likers = await likersPreview([recipe.id]);
-  return { ...toRecipeResponse(recipe), likersPreview: likers.get(recipe.id) ?? [] };
+  return (await toRecipeResponses([recipe]))[0];
 }
 
 // Los pasos se guardan como JSON en texto; al responder se devuelven como array.
 // Los ingredientes vienen de RecipeIngredient, con el alimento asociado si lo hay.
-function toRecipeResponse(recipe) {
+// `likers` es el mapa de likersPreview (ver toRecipeResponses).
+function toRecipeResponse(recipe, likers) {
   return {
     id: recipe.id,
     title: recipe.title,
@@ -68,6 +73,7 @@ function toRecipeResponse(recipe) {
     authorId: recipe.authorId,
     authorName: recipe.author.name,
     ...socialSummary(recipe),
+    likersPreview: likers.get(recipe.id) ?? [],
     createdAt: recipe.createdAt,
   };
 }
@@ -245,7 +251,8 @@ router.post('/', async (req, res) => {
     },
     include: recipeInclude(req.userId),
   });
-  res.status(201).json(toRecipeResponse(recipe));
+  // Recién creada: todavía no tiene likes.
+  res.status(201).json(toRecipeResponse(recipe, new Map()));
 });
 
 // Propuesta de receta a partir del texto reconocido por OCR en el móvil. No guarda nada:
@@ -287,7 +294,7 @@ router.get('/mine', async (req, res) => {
     orderBy: { createdAt: 'desc' },
     include: recipeInclude(req.userId),
   });
-  res.json(recipes.map(toRecipeResponse));
+  res.json(await toRecipeResponses(recipes));
 });
 
 // Feed social: recetas de todos los usuarios, de la más reciente a la más antigua.
@@ -455,16 +462,21 @@ router.get('/:id/comments', async (req, res) => {
   const id = await findRecipeId(req, res);
   if (id == null) return;
 
-  const comments = await prisma.comment.findMany({
-    where: { recipeId: id },
-    orderBy: NEWEST_FIRST,
-    take: limit + 1,
-    ...(cursor != null && { cursor: { id: cursor }, skip: 1 }),
-    select: COMMENT_SELECT,
-  });
+  const [comments, total] = await Promise.all([
+    prisma.comment.findMany({
+      where: { recipeId: id },
+      orderBy: NEWEST_FIRST,
+      take: limit + 1,
+      ...(cursor != null && { cursor: { id: cursor }, skip: 1 }),
+      select: COMMENT_SELECT,
+    }),
+    // El total va en cada página: la app lo usa para el contador de la tarjeta del feed.
+    prisma.comment.count({ where: { recipeId: id } }),
+  ]);
   const page = comments.slice(0, limit);
   res.json({
     comments: page.map(toCommentResponse),
+    total,
     nextCursor: comments.length > limit ? page[page.length - 1].id : null,
   });
 });

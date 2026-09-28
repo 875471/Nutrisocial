@@ -145,6 +145,7 @@ function fakePrisma() {
         const start = cursor ? sorted.findIndex((c) => c.id === cursor.id) : 0;
         return sorted.slice(start + skip, start + skip + take).map(withAuthor);
       },
+      count: async ({ where }) => comments.filter((c) => c.recipeId === where.recipeId).length,
       create: async ({ data }) => {
         const comment = { id: comments.length + 1, ...data, createdAt: now() };
         comments.push(comment);
@@ -278,6 +279,7 @@ test('GET /recipes/:id/comments: del más reciente al más antiguo, por páginas
     const first = await api.luis('GET', '/recipes/10/comments');
     assert.equal(first.status, 200);
     assert.equal(first.body.comments.length, 20);
+    assert.equal(first.body.total, 25);
     assert.equal(first.body.comments[0].text, 'Comentario 25');
     assert.deepEqual(
       { authorId: first.body.comments[0].authorId, authorName: first.body.comments[0].authorName },
