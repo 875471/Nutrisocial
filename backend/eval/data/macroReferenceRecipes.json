@@ -1,0 +1,338 @@
+{
+  "LEEME": "PENDIENTE DE REVISIÓN MANUAL. Los valores de referencia de este archivo son un BORRADOR: los valores por 100 g de 'referenceFoods' son valores típicos de tablas de composición (BEDCA y USDA FoodData Central), redondeados y escritos de memoria, no copiados de la base de datos oficial; y los pesos de 'referenceBreakdown' son pesos medios razonables (un huevo mediano sin cáscara, una cebolla mediana...). Antes de citar los resultados en la memoria hay que: (1) comprobar cada alimento de 'referenceFoods' en BEDCA (https://www.bedca.net) o en la etiqueta del producto real y corregir su 'source'; (2) revisar los gramos de cada receta (mejor aún, pesar los ingredientes al cocinarla); (3) poner 'verified': true en cada receta revisada. El script de evaluación avisa mientras quede alguna sin verificar y, con --solo-verificadas, calcula el error solo con las revisadas. Si se prefiere dar el total de una receta directamente (por ejemplo, de una etiqueta), se puede rellenar 'referenceTotals' ({ kcal, protein, carbs, fat } de la receta completa), que tiene prioridad sobre el desglose.",
+  "convenciones": "Valores por 100 g de parte comestible en crudo. 'carbs' son hidratos de carbono disponibles (sin fibra), como en las tablas europeas. Líquidos: leche 1,03 g/ml, aceite 0,92 g/ml. Cucharada de aceite 13,5 g; cucharadita de canela 2,6 g, de comino 2 g, de miel 7 g; cucharada de zumo de limón 15 g; pizca 0,4 g.",
+  "referenceFoods": {
+    "Avena en copos": { "kcal": 367, "protein": 13.5, "carbs": 58.7, "fat": 7.0, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Leche de vaca entera": { "kcal": 64, "protein": 3.1, "carbs": 4.7, "fat": 3.6, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Plátano": { "kcal": 90, "protein": 1.1, "carbs": 20.3, "fat": 0.3, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Canela molida": { "kcal": 247, "protein": 4.0, "carbs": 27.5, "fat": 1.2, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Pan blanco de barra": { "kcal": 265, "protein": 8.5, "carbs": 53.0, "fat": 1.5, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Tomate": { "kcal": 20, "protein": 0.9, "carbs": 3.5, "fat": 0.2, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Aceite de oliva": { "kcal": 899, "protein": 0, "carbs": 0, "fat": 99.9, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Aceite de girasol": { "kcal": 899, "protein": 0, "carbs": 0, "fat": 99.9, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Sal": { "kcal": 0, "protein": 0, "carbs": 0, "fat": 0, "source": "sin aporte energético" },
+    "Patata": { "kcal": 80, "protein": 2.0, "carbs": 17.0, "fat": 0.1, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Huevo de gallina": { "kcal": 145, "protein": 12.6, "carbs": 0.7, "fat": 9.9, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Cebolla": { "kcal": 38, "protein": 1.1, "carbs": 7.5, "fat": 0.1, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Lenteja seca": { "kcal": 330, "protein": 24.0, "carbs": 50.0, "fat": 1.5, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Zanahoria": { "kcal": 35, "protein": 0.9, "carbs": 7.0, "fat": 0.2, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Pimiento rojo": { "kcal": 28, "protein": 1.0, "carbs": 4.5, "fat": 0.3, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Ajo": { "kcal": 140, "protein": 6.4, "carbs": 30.0, "fat": 0.5, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Pasta seca": { "kcal": 355, "protein": 12.5, "carbs": 72.0, "fat": 1.5, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Tomate frito (conserva)": { "kcal": 80, "protein": 1.5, "carbs": 9.5, "fat": 3.8, "source": "valor típico de etiqueta, sin verificar" },
+    "Atún en aceite escurrido": { "kcal": 198, "protein": 29.0, "carbs": 0, "fat": 8.2, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Queso mozzarella": { "kcal": 280, "protein": 20.0, "carbs": 2.0, "fat": 21.0, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Pechuga de pollo": { "kcal": 112, "protein": 23.0, "carbs": 0, "fat": 1.8, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Zumo de limón": { "kcal": 22, "protein": 0.4, "carbs": 6.5, "fat": 0.2, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Arroz blanco": { "kcal": 360, "protein": 7.0, "carbs": 79.0, "fat": 0.6, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Calabaza": { "kcal": 26, "protein": 1.0, "carbs": 6.0, "fat": 0.1, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Carne picada de ternera": { "kcal": 200, "protein": 19.0, "carbs": 0, "fat": 13.5, "source": "valor típico de etiqueta (picada con ~13 % de grasa), sin verificar" },
+    "Tomate triturado (conserva)": { "kcal": 30, "protein": 1.5, "carbs": 5.2, "fat": 0.3, "source": "valor típico de etiqueta, sin verificar" },
+    "Yogur natural": { "kcal": 62, "protein": 3.5, "carbs": 4.7, "fat": 3.3, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Harina de trigo": { "kcal": 350, "protein": 10.0, "carbs": 74.0, "fat": 1.2, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Azúcar blanco": { "kcal": 400, "protein": 0, "carbs": 99.8, "fat": 0, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Garbanzo cocido (conserva)": { "kcal": 130, "protein": 7.5, "carbs": 17.0, "fat": 2.3, "source": "valor típico de etiqueta, sin verificar" },
+    "Espinaca": { "kcal": 22, "protein": 2.8, "carbs": 1.4, "fat": 0.4, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Comino": { "kcal": 375, "protein": 17.8, "carbs": 34.0, "fat": 22.3, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Salmón": { "kcal": 200, "protein": 20.0, "carbs": 0, "fat": 13.0, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Calabacín": { "kcal": 17, "protein": 1.2, "carbs": 2.5, "fat": 0.3, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Berenjena": { "kcal": 24, "protein": 1.0, "carbs": 3.0, "fat": 0.2, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Champiñón": { "kcal": 22, "protein": 3.1, "carbs": 2.3, "fat": 0.3, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Yogur griego natural": { "kcal": 125, "protein": 3.4, "carbs": 4.4, "fat": 10.4, "source": "valor típico de etiqueta, sin verificar" },
+    "Fresa": { "kcal": 32, "protein": 0.7, "carbs": 5.7, "fat": 0.3, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Nuez": { "kcal": 654, "protein": 15.2, "carbs": 7.0, "fat": 65.0, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" },
+    "Miel": { "kcal": 304, "protein": 0.3, "carbs": 82.0, "fat": 0, "source": "valor típico de tablas (BEDCA/USDA), sin verificar" }
+  },
+  "recipes": [
+    {
+      "id": "porridge",
+      "title": "Porridge de avena con plátano",
+      "servings": 1,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods y pesos medios (plátano pelado 115 g). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "avena", "quantity": 50, "unit": "g" },
+        { "name": "leche", "quantity": 200, "unit": "ml" },
+        { "name": "plátano", "quantity": 1, "unit": "unidad" },
+        { "name": "canela", "quantity": 1, "unit": "pizca" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Avena en copos", "grams": 50 },
+        { "food": "Leche de vaca entera", "grams": 206 },
+        { "food": "Plátano", "grams": 115 },
+        { "food": "Canela molida", "grams": 0.4 }
+      ]
+    },
+    {
+      "id": "tostadas-tomate",
+      "title": "Tostadas con tomate y aceite",
+      "servings": 2,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods y pesos medios (tomate mediano 130 g). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "pan", "quantity": 120, "unit": "g" },
+        { "name": "tomate", "quantity": 1, "unit": "unidad" },
+        { "name": "aceite de oliva", "quantity": 2, "unit": "cucharada" },
+        { "name": "sal", "quantity": 1, "unit": "pizca" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Pan blanco de barra", "grams": 120 },
+        { "food": "Tomate", "grams": 130 },
+        { "food": "Aceite de oliva", "grams": 27 },
+        { "food": "Sal", "grams": 0.4 }
+      ]
+    },
+    {
+      "id": "yogur-griego",
+      "title": "Yogur griego con fresas y nueces",
+      "servings": 1,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods. Pendiente de verificar.",
+      "ingredients": [
+        { "name": "yogur griego", "quantity": 125, "unit": "g" },
+        { "name": "fresa", "quantity": 100, "unit": "g" },
+        { "name": "nuez", "quantity": 20, "unit": "g" },
+        { "name": "miel", "quantity": 1, "unit": "cucharadita" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Yogur griego natural", "grams": 125 },
+        { "food": "Fresa", "grams": 100 },
+        { "food": "Nuez", "grams": 20 },
+        { "food": "Miel", "grams": 7 }
+      ]
+    },
+    {
+      "id": "lentejas",
+      "title": "Lentejas con verduras",
+      "servings": 4,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods y pesos medios (cebolla 130 g, zanahoria 70 g, pimiento 160 g, diente de ajo 4 g). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "lentejas", "quantity": 300, "unit": "g" },
+        { "name": "cebolla", "quantity": 1, "unit": "unidad" },
+        { "name": "zanahoria", "quantity": 2, "unit": "unidad" },
+        { "name": "pimiento rojo", "quantity": 1, "unit": "unidad" },
+        { "name": "ajo", "quantity": 2, "unit": "unidad" },
+        { "name": "aceite de oliva", "quantity": 2, "unit": "cucharada" },
+        { "name": "sal", "quantity": 1, "unit": "pizca" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Lenteja seca", "grams": 300 },
+        { "food": "Cebolla", "grams": 130 },
+        { "food": "Zanahoria", "grams": 140 },
+        { "food": "Pimiento rojo", "grams": 160 },
+        { "food": "Ajo", "grams": 8 },
+        { "food": "Aceite de oliva", "grams": 27 },
+        { "food": "Sal", "grams": 0.4 }
+      ]
+    },
+    {
+      "id": "garbanzos-espinacas",
+      "title": "Garbanzos con espinacas",
+      "servings": 4,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods (garbanzo de bote escurrido). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "garbanzo hervido", "quantity": 400, "unit": "g" },
+        { "name": "espinacas", "quantity": 250, "unit": "g" },
+        { "name": "ajo", "quantity": 3, "unit": "unidad" },
+        { "name": "comino", "quantity": 1, "unit": "cucharadita" },
+        { "name": "aceite de oliva", "quantity": 3, "unit": "cucharada" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Garbanzo cocido (conserva)", "grams": 400 },
+        { "food": "Espinaca", "grams": 250 },
+        { "food": "Ajo", "grams": 12 },
+        { "food": "Comino", "grams": 2 },
+        { "food": "Aceite de oliva", "grams": 40.5 }
+      ]
+    },
+    {
+      "id": "macarrones-atun",
+      "title": "Macarrones con tomate y atún",
+      "servings": 4,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods (atún escurrido: 160 g de lata dan unos 120 g). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "pasta", "quantity": 400, "unit": "g" },
+        { "name": "tomate frito", "quantity": 300, "unit": "g" },
+        { "name": "atún en aceite", "quantity": 160, "unit": "g" },
+        { "name": "cebolla", "quantity": 1, "unit": "unidad" },
+        { "name": "queso mozzarella", "quantity": 100, "unit": "g" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Pasta seca", "grams": 400 },
+        { "food": "Tomate frito (conserva)", "grams": 300 },
+        { "food": "Atún en aceite escurrido", "grams": 120 },
+        { "food": "Cebolla", "grams": 130 },
+        { "food": "Queso mozzarella", "grams": 100 }
+      ]
+    },
+    {
+      "id": "pollo-limon",
+      "title": "Pollo al limón con arroz",
+      "servings": 2,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods (cucharada de zumo 15 g). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "pechuga de pollo", "quantity": 300, "unit": "g" },
+        { "name": "zumo de limón", "quantity": 3, "unit": "cucharada" },
+        { "name": "ajo", "quantity": 2, "unit": "unidad" },
+        { "name": "arroz", "quantity": 150, "unit": "g" },
+        { "name": "aceite de oliva", "quantity": 2, "unit": "cucharada" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Pechuga de pollo", "grams": 300 },
+        { "food": "Zumo de limón", "grams": 45 },
+        { "food": "Ajo", "grams": 8 },
+        { "food": "Arroz blanco", "grams": 150 },
+        { "food": "Aceite de oliva", "grams": 27 }
+      ]
+    },
+    {
+      "id": "boloñesa",
+      "title": "Espaguetis a la boloñesa",
+      "servings": 4,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods (picada con ~13 % de grasa). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "pasta", "quantity": 400, "unit": "g" },
+        { "name": "carne picada de ternera", "quantity": 400, "unit": "g" },
+        { "name": "tomate triturado", "quantity": 400, "unit": "g" },
+        { "name": "cebolla", "quantity": 1, "unit": "unidad" },
+        { "name": "zanahoria", "quantity": 1, "unit": "unidad" },
+        { "name": "aceite de oliva", "quantity": 2, "unit": "cucharada" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Pasta seca", "grams": 400 },
+        { "food": "Carne picada de ternera", "grams": 400 },
+        { "food": "Tomate triturado (conserva)", "grams": 400 },
+        { "food": "Cebolla", "grams": 130 },
+        { "food": "Zanahoria", "grams": 70 },
+        { "food": "Aceite de oliva", "grams": 27 }
+      ]
+    },
+    {
+      "id": "salmon-verduras",
+      "title": "Salmón a la plancha con verduras",
+      "servings": 2,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods (calabacín 220 g, berenjena 280 g). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "salmón", "quantity": 300, "unit": "g" },
+        { "name": "calabacín", "quantity": 1, "unit": "unidad" },
+        { "name": "berenjena", "quantity": 1, "unit": "unidad" },
+        { "name": "aceite de oliva", "quantity": 2, "unit": "cucharada" },
+        { "name": "sal", "quantity": 1, "unit": "pizca" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Salmón", "grams": 300 },
+        { "food": "Calabacín", "grams": 220 },
+        { "food": "Berenjena", "grams": 280 },
+        { "food": "Aceite de oliva", "grams": 27 },
+        { "food": "Sal", "grams": 0.4 }
+      ]
+    },
+    {
+      "id": "crema-calabaza",
+      "title": "Crema de calabaza",
+      "servings": 4,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods (patata mediana 180 g). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "calabaza", "quantity": 800, "unit": "g" },
+        { "name": "cebolla", "quantity": 1, "unit": "unidad" },
+        { "name": "patata", "quantity": 1, "unit": "unidad" },
+        { "name": "aceite de oliva", "quantity": 2, "unit": "cucharada" },
+        { "name": "sal", "quantity": 1, "unit": "pizca" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Calabaza", "grams": 800 },
+        { "food": "Cebolla", "grams": 130 },
+        { "food": "Patata", "grams": 180 },
+        { "food": "Aceite de oliva", "grams": 27 },
+        { "food": "Sal", "grams": 0.4 }
+      ]
+    },
+    {
+      "id": "tortilla-patatas",
+      "title": "Tortilla de patatas",
+      "servings": 4,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods (huevo mediano sin cáscara 53 g). Todo el aceite listado cuenta, aunque parte se quede en la sartén. Pendiente de verificar.",
+      "ingredients": [
+        { "name": "patata", "quantity": 600, "unit": "g" },
+        { "name": "huevo", "quantity": 6, "unit": "unidad" },
+        { "name": "cebolla", "quantity": 1, "unit": "unidad" },
+        { "name": "aceite de oliva", "quantity": 4, "unit": "cucharada" },
+        { "name": "sal", "quantity": 1, "unit": "pizca" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Patata", "grams": 600 },
+        { "food": "Huevo de gallina", "grams": 318 },
+        { "food": "Cebolla", "grams": 130 },
+        { "food": "Aceite de oliva", "grams": 54 },
+        { "food": "Sal", "grams": 0.4 }
+      ]
+    },
+    {
+      "id": "revuelto-champinones",
+      "title": "Revuelto de champiñones y ajos tiernos",
+      "servings": 2,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods (huevo 53 g, diente de ajo 4 g). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "champiñón", "quantity": 250, "unit": "g" },
+        { "name": "huevo", "quantity": 4, "unit": "unidad" },
+        { "name": "ajo", "quantity": 2, "unit": "unidad" },
+        { "name": "aceite de oliva", "quantity": 1, "unit": "cucharada" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Champiñón", "grams": 250 },
+        { "food": "Huevo de gallina", "grams": 212 },
+        { "food": "Ajo", "grams": 8 },
+        { "food": "Aceite de oliva", "grams": 13.5 }
+      ]
+    },
+    {
+      "id": "bizcocho-yogur",
+      "title": "Bizcocho de yogur",
+      "servings": 8,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods (aceite de girasol 0,92 g/ml, huevo 53 g). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "yogur", "quantity": 125, "unit": "g" },
+        { "name": "harina de trigo", "quantity": 250, "unit": "g" },
+        { "name": "azúcar", "quantity": 200, "unit": "g" },
+        { "name": "huevo", "quantity": 3, "unit": "unidad" },
+        { "name": "aceite de girasol", "quantity": 100, "unit": "ml" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Yogur natural", "grams": 125 },
+        { "food": "Harina de trigo", "grams": 250 },
+        { "food": "Azúcar blanco", "grams": 200 },
+        { "food": "Huevo de gallina", "grams": 159 },
+        { "food": "Aceite de girasol", "grams": 92 }
+      ]
+    },
+    {
+      "id": "arroz-con-leche",
+      "title": "Arroz con leche",
+      "servings": 6,
+      "verified": false,
+      "referenceSource": "Borrador: suma de ingredientes con referenceFoods (leche 1,03 g/ml, cucharadita de canela 2,6 g). Pendiente de verificar.",
+      "ingredients": [
+        { "name": "leche", "quantity": 1, "unit": "l" },
+        { "name": "arroz", "quantity": 150, "unit": "g" },
+        { "name": "azúcar", "quantity": 120, "unit": "g" },
+        { "name": "canela", "quantity": 1, "unit": "cucharadita" }
+      ],
+      "referenceBreakdown": [
+        { "food": "Leche de vaca entera", "grams": 1030 },
+        { "food": "Arroz blanco", "grams": 150 },
+        { "food": "Azúcar blanco", "grams": 120 },
+        { "food": "Canela molida", "grams": 2.6 }
+      ]
+    }
+  ]
+}

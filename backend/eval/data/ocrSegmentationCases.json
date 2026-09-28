@@ -1,0 +1,370 @@
+{
+  "description": "Casos para evaluar la segmentación del texto reconocido por OCR en título, ingredientes (nombre, cantidad y unidad) y pasos. rawText es el texto tal como lo recibe POST /recipes/parse-ocr; expected* es la respuesta correcta según una persona, no lo que devuelve hoy el parser. Los nombres se escriben como aparecen en el texto (con sus erratas de OCR si las tiene, porque corregir la ortografía no es tarea de la segmentación) y las unidades como las guarda la aplicación: g, kg, ml, l, cucharada, cucharadita, taza, pizca, unidad (un diente o una pieza), o null si no hay cantidad. 'origen' indica si el texto es una salida real de ML Kit o un caso construido para cubrir una variante de formato.",
+  "cases": [
+    {
+      "id": "real-lentejas-manuscrita",
+      "origen": "real",
+      "nota": "Salida real de ML Kit en el emulador para una receta con letra manuscrita simulada (informe 05).",
+      "rawText": "Lentejas con verduras\n\nPara A4 persoas\n\nIngredientes:\n300 9 de lentejas\n\n-1 cebola\n\n-2 2anahorias\n\n-1 pİmiento rojo\n\n-2 dientes de ajo\n\n-2 cdas de aceite de oliva\n\n-Sal\n\nPreparAción:\n\n1. Picar la cebolla, el ajo y el\n\npimiento y pocharlos en el aceite.\n\n2. Añadir las zanahorias en rodajas.\n\n3. Echar las lentejas y cuorir con aGUa.\n\n4. Cocer 4D mintos a fueoo lento.",
+      "expectedTitle": "Lentejas con verduras",
+      "expectedIngredients": [
+        { "name": "lentejas", "quantity": 300, "unit": "g" },
+        { "name": "cebola", "quantity": 1, "unit": "unidad" },
+        { "name": "zanahorias", "quantity": 2, "unit": "unidad" },
+        { "name": "pimiento rojo", "quantity": 1, "unit": "unidad" },
+        { "name": "ajo", "quantity": 2, "unit": "unidad" },
+        { "name": "aceite de oliva", "quantity": 2, "unit": "cucharada" },
+        { "name": "Sal", "quantity": null, "unit": null }
+      ],
+      "expectedSteps": [
+        "Picar la cebolla, el ajo y el pimiento y pocharlos en el aceite.",
+        "Añadir las zanahorias en rodajas.",
+        "Echar las lentejas y cuorir con aGUa.",
+        "Cocer 4D mintos a fueoo lento."
+      ]
+    },
+    {
+      "id": "real-galletas-dos-columnas",
+      "origen": "real",
+      "nota": "Receta impresa de 'Galletas con chips de chocolate' a dos columnas (informe 07), con el orden de lectura de ML Kit alterado: título partido, '1 huevo' leído como 'Ihuevo' y un ingrediente detrás de 'Preparación'.",
+      "rawText": "Galletas con chips\n\nde chocolate\n\nIngredientes\n- 115 g de mantequilla blanda\n- 100 g de azúcar rubia\n- 100 g de azúcar blanca\n- 190 g de harina\n\n- Ihuevo\n- 3 g de bicarbonato\n- 170 g de chips de chocolate\n\nPreparación\n. 5 ml de esencia de vainilla\nBatir mantequilla con los azúcares, añadir huevo y vainilla.\nIncorporar harina y bicarbonato, luego los chips.\nFormar bolitas y aplanar ligeramente.\nCocinar en freidora sobre papel mantequilla a 160 °C por 6-8 min.",
+      "expectedTitle": "Galletas con chips de chocolate",
+      "expectedIngredients": [
+        { "name": "mantequilla blanda", "quantity": 115, "unit": "g" },
+        { "name": "azúcar rubia", "quantity": 100, "unit": "g" },
+        { "name": "azúcar blanca", "quantity": 100, "unit": "g" },
+        { "name": "harina", "quantity": 190, "unit": "g" },
+        { "name": "huevo", "quantity": 1, "unit": "unidad" },
+        { "name": "bicarbonato", "quantity": 3, "unit": "g" },
+        { "name": "chips de chocolate", "quantity": 170, "unit": "g" },
+        { "name": "esencia de vainilla", "quantity": 5, "unit": "ml" }
+      ],
+      "expectedSteps": [
+        "Batir mantequilla con los azúcares, añadir huevo y vainilla.",
+        "Incorporar harina y bicarbonato, luego los chips.",
+        "Formar bolitas y aplanar ligeramente.",
+        "Cocinar en freidora sobre papel mantequilla a 160 °C por 6-8 min."
+      ]
+    },
+    {
+      "id": "encabezados-vinetas-pasos-partidos",
+      "origen": "sintético",
+      "nota": "Estructura típica: raciones, encabezados, viñetas, pasos numerados partidos en dos líneas.",
+      "rawText": "Tortilla de patatas\nPara 4 personas\nIngredientes:\n- 1 kg de patatas\n- 6 huevos\n- 1 cebolla\n- Aceite de oliva\n- Sal\nPreparación:\n1. Pelar y cortar las patatas\nen láminas finas.\n2. Freír las patatas y la cebolla\na fuego lento.\n3. Batir los huevos, mezclar y cuajar.",
+      "expectedTitle": "Tortilla de patatas",
+      "expectedIngredients": [
+        { "name": "patatas", "quantity": 1, "unit": "kg" },
+        { "name": "huevos", "quantity": 6, "unit": "unidad" },
+        { "name": "cebolla", "quantity": 1, "unit": "unidad" },
+        { "name": "Aceite de oliva", "quantity": null, "unit": null },
+        { "name": "Sal", "quantity": null, "unit": null }
+      ],
+      "expectedSteps": [
+        "Pelar y cortar las patatas en láminas finas.",
+        "Freír las patatas y la cebolla a fuego lento.",
+        "Batir los huevos, mezclar y cuajar."
+      ]
+    },
+    {
+      "id": "sin-encabezados",
+      "origen": "sintético",
+      "nota": "Sin 'Ingredientes' ni 'Preparación': la separación depende de la forma de cada línea.",
+      "rawText": "Crema de calabaza\n800 g calabaza\n1 cebolla\n1 cda aceite\nPochar la cebolla con el aceite.\nAñadir la calabaza troceada y cubrir de agua.\nCocer 20 minutos y triturar.",
+      "expectedTitle": "Crema de calabaza",
+      "expectedIngredients": [
+        { "name": "calabaza", "quantity": 800, "unit": "g" },
+        { "name": "cebolla", "quantity": 1, "unit": "unidad" },
+        { "name": "aceite", "quantity": 1, "unit": "cucharada" }
+      ],
+      "expectedSteps": [
+        "Pochar la cebolla con el aceite.",
+        "Añadir la calabaza troceada y cubrir de agua.",
+        "Cocer 20 minutos y triturar."
+      ]
+    },
+    {
+      "id": "ingredientes-numerados",
+      "origen": "sintético",
+      "nota": "Lista de ingredientes numerada bajo su encabezado, además de los pasos numerados.",
+      "rawText": "Bizcocho\nIngredientes\n1. Harina\n2. 200 g de azúcar\n3) Tres huevos\nPreparación\n1. Batir los huevos con el azúcar.\n2. Añadir la harina.",
+      "expectedTitle": "Bizcocho",
+      "expectedIngredients": [
+        { "name": "Harina", "quantity": null, "unit": null },
+        { "name": "azúcar", "quantity": 200, "unit": "g" },
+        { "name": "huevos", "quantity": 3, "unit": "unidad" }
+      ],
+      "expectedSteps": [
+        "Batir los huevos con el azúcar.",
+        "Añadir la harina."
+      ]
+    },
+    {
+      "id": "numerado-sin-encabezados",
+      "origen": "sintético",
+      "nota": "Dos listas numeradas seguidas sin encabezados: primero ingredientes, después pasos.",
+      "rawText": "Tortilla\n1. 4 huevos\n2. 3 patatas\n3. Sal\n1. Pelar las patatas.\n2. Freírlas.",
+      "expectedTitle": "Tortilla",
+      "expectedIngredients": [
+        { "name": "huevos", "quantity": 4, "unit": "unidad" },
+        { "name": "patatas", "quantity": 3, "unit": "unidad" },
+        { "name": "Sal", "quantity": null, "unit": null }
+      ],
+      "expectedSteps": [
+        "Pelar las patatas.",
+        "Freírlas."
+      ]
+    },
+    {
+      "id": "fracciones",
+      "origen": "sintético",
+      "nota": "Fracciones con barra, fracciones Unicode y números mixtos, con y sin espacio.",
+      "rawText": "Batido de plátano\nIngredientes\n1/2 taza de leche\n¾ cucharadita de canela\n1 ½ plátanos\n1 1/2 cucharadas de miel\nPreparación\nTriturar todo en la batidora.\nServir frío.",
+      "expectedTitle": "Batido de plátano",
+      "expectedIngredients": [
+        { "name": "leche", "quantity": 0.5, "unit": "taza" },
+        { "name": "canela", "quantity": 0.75, "unit": "cucharadita" },
+        { "name": "plátanos", "quantity": 1.5, "unit": "unidad" },
+        { "name": "miel", "quantity": 1.5, "unit": "cucharada" }
+      ],
+      "expectedSteps": [
+        "Triturar todo en la batidora.",
+        "Servir frío."
+      ]
+    },
+    {
+      "id": "cantidades-pegadas",
+      "origen": "sintético",
+      "nota": "Cantidad y unidad pegadas ('500g', '1cdta'), sin 'de', y encabezados en mayúsculas.",
+      "rawText": "Pan casero\nINGREDIENTES\n500g harina de fuerza\n300ml agua templada\n10g levadura fresca\n1cdta sal\n2cdas aceite de oliva\nPREPARACIÓN\nMezclar la harina con la sal.\nDisolver la levadura en el agua y añadirla.\nAmasar 10 minutos y dejar reposar 1 hora.\nHornear a 220 ºC durante 35 minutos.",
+      "expectedTitle": "Pan casero",
+      "expectedIngredients": [
+        { "name": "harina de fuerza", "quantity": 500, "unit": "g" },
+        { "name": "agua templada", "quantity": 300, "unit": "ml" },
+        { "name": "levadura fresca", "quantity": 10, "unit": "g" },
+        { "name": "sal", "quantity": 1, "unit": "cucharadita" },
+        { "name": "aceite de oliva", "quantity": 2, "unit": "cucharada" }
+      ],
+      "expectedSteps": [
+        "Mezclar la harina con la sal.",
+        "Disolver la levadura en el agua y añadirla.",
+        "Amasar 10 minutos y dejar reposar 1 hora.",
+        "Hornear a 220 ºC durante 35 minutos."
+      ]
+    },
+    {
+      "id": "columnas-desordenadas",
+      "origen": "sintético",
+      "nota": "Un ingrediente sin unidad ('2 huevos') llega detrás de 'Preparación' por el orden de lectura por bloques.",
+      "rawText": "Revuelto de setas\nIngredientes\n250 g de setas\n1 diente de ajo\nPreparación\n2 huevos\nLimpiar y laminar las setas.\nSaltear las setas con el ajo picado.\nAñadir los huevos batidos y remover hasta que cuajen.",
+      "expectedTitle": "Revuelto de setas",
+      "expectedIngredients": [
+        { "name": "setas", "quantity": 250, "unit": "g" },
+        { "name": "ajo", "quantity": 1, "unit": "unidad" },
+        { "name": "huevos", "quantity": 2, "unit": "unidad" }
+      ],
+      "expectedSteps": [
+        "Limpiar y laminar las setas.",
+        "Saltear las setas con el ajo picado.",
+        "Añadir los huevos batidos y remover hasta que cuajen."
+      ]
+    },
+    {
+      "id": "cantidad-al-final",
+      "origen": "sintético",
+      "nota": "Cantidad detrás del nombre ('Tomates, 3'), formato que la heurística no contempla (informe 05).",
+      "rawText": "Ensalada de tomate\nIngredientes:\nTomates, 3\nCebolla morada, media\nAceite de oliva, 2 cucharadas\nSal\nPreparación:\nCortar los tomates en rodajas.\nAñadir la cebolla en juliana.\nAliñar con el aceite y la sal.",
+      "expectedTitle": "Ensalada de tomate",
+      "expectedIngredients": [
+        { "name": "Tomates", "quantity": 3, "unit": "unidad" },
+        { "name": "Cebolla morada", "quantity": 0.5, "unit": "unidad" },
+        { "name": "Aceite de oliva", "quantity": 2, "unit": "cucharada" },
+        { "name": "Sal", "quantity": null, "unit": null }
+      ],
+      "expectedSteps": [
+        "Cortar los tomates en rodajas.",
+        "Añadir la cebolla en juliana.",
+        "Aliñar con el aceite y la sal."
+      ]
+    },
+    {
+      "id": "varios-por-linea",
+      "origen": "sintético",
+      "nota": "Dos ingredientes en la misma línea ('Sal y pimienta'), otra limitación conocida (informe 05).",
+      "rawText": "Merluza a la plancha\nIngredientes\n2 lomos de merluza\nSal y pimienta\nAceite de oliva y perejil\nPreparación\nSalpimentar la merluza.\nHacerla a la plancha 4 minutos por cada lado.\nServir con un chorrito de aceite y perejil picado.",
+      "expectedTitle": "Merluza a la plancha",
+      "expectedIngredients": [
+        { "name": "lomos de merluza", "quantity": 2, "unit": "unidad" },
+        { "name": "Sal", "quantity": null, "unit": null },
+        { "name": "pimienta", "quantity": null, "unit": null },
+        { "name": "Aceite de oliva", "quantity": null, "unit": null },
+        { "name": "perejil", "quantity": null, "unit": null }
+      ],
+      "expectedSteps": [
+        "Salpimentar la merluza.",
+        "Hacerla a la plancha 4 minutos por cada lado.",
+        "Servir con un chorrito de aceite y perejil picado."
+      ]
+    },
+    {
+      "id": "numeros-con-letra",
+      "origen": "sintético",
+      "nota": "Cantidades escritas con letra ('un litro', 'media taza', 'cuatro yemas').",
+      "rawText": "Natillas caseras\nIngredientes\nun litro de leche\ncuatro yemas de huevo\nmedia taza de azúcar\ndos cucharadas de maicena\nuna rama de canela\nPreparación\nCalentar la leche con la canela.\nBatir las yemas con el azúcar y la maicena.\nMezclar todo y cocer a fuego lento sin dejar de remover hasta que espese.\nRepartir en cuencos y enfriar.",
+      "expectedTitle": "Natillas caseras",
+      "expectedIngredients": [
+        { "name": "leche", "quantity": 1, "unit": "l" },
+        { "name": "yemas de huevo", "quantity": 4, "unit": "unidad" },
+        { "name": "azúcar", "quantity": 0.5, "unit": "taza" },
+        { "name": "maicena", "quantity": 2, "unit": "cucharada" },
+        { "name": "rama de canela", "quantity": 1, "unit": "unidad" }
+      ],
+      "expectedSteps": [
+        "Calentar la leche con la canela.",
+        "Batir las yemas con el azúcar y la maicena.",
+        "Mezclar todo y cocer a fuego lento sin dejar de remover hasta que espese.",
+        "Repartir en cuencos y enfriar."
+      ]
+    },
+    {
+      "id": "errores-ocr-en-cifras",
+      "origen": "sintético",
+      "nota": "Errores típicos del OCR en las cantidades: 'l' e 'I' por 1 y 'O' por 0.",
+      "rawText": "Arroz con leche\nIngredientes\nl litro de leche\n2OO g de arroz\nI5O g de azúcar\nl rama de canela\nPreparación\nCocer el arroz en la leche 40 minutos.\nAñadir el azúcar y cocer 5 minutos más.",
+      "expectedTitle": "Arroz con leche",
+      "expectedIngredients": [
+        { "name": "leche", "quantity": 1, "unit": "l" },
+        { "name": "arroz", "quantity": 200, "unit": "g" },
+        { "name": "azúcar", "quantity": 150, "unit": "g" },
+        { "name": "rama de canela", "quantity": 1, "unit": "unidad" }
+      ],
+      "expectedSteps": [
+        "Cocer el arroz en la leche 40 minutos.",
+        "Añadir el azúcar y cocer 5 minutos más."
+      ]
+    },
+    {
+      "id": "pasos-sin-verbo",
+      "origen": "sintético",
+      "nota": "Pasos que no empiezan por un verbo de cocina y raciones en formato 'Para N personas'.",
+      "rawText": "Gazpacho\nPara 4 personas\nIngredientes\n1 kg de tomates maduros\n1 pimiento verde\n1 pepino\n1 diente de ajo\n50 ml de aceite de oliva\nPreparación\nTodo en la batidora con un poco de agua.\nEl gazpacho se sirve muy frío.\nMejor si reposa una noche en la nevera.",
+      "expectedTitle": "Gazpacho",
+      "expectedIngredients": [
+        { "name": "tomates maduros", "quantity": 1, "unit": "kg" },
+        { "name": "pimiento verde", "quantity": 1, "unit": "unidad" },
+        { "name": "pepino", "quantity": 1, "unit": "unidad" },
+        { "name": "ajo", "quantity": 1, "unit": "unidad" },
+        { "name": "aceite de oliva", "quantity": 50, "unit": "ml" }
+      ],
+      "expectedSteps": [
+        "Todo en la batidora con un poco de agua.",
+        "El gazpacho se sirve muy frío.",
+        "Mejor si reposa una noche en la nevera."
+      ]
+    },
+    {
+      "id": "rangos",
+      "origen": "sintético",
+      "nota": "Cantidades en rango ('2-3', '1 a 2'): se espera el punto medio.",
+      "rawText": "Pasta al ajillo\nIngredientes\n200 g de espaguetis\n2-3 dientes de ajo\n1 a 2 cucharadas de aceite de oliva\n1 guindilla\nPreparación\nCocer la pasta.\nDorar el ajo y la guindilla en el aceite.\nMezclar con la pasta.",
+      "expectedTitle": "Pasta al ajillo",
+      "expectedIngredients": [
+        { "name": "espaguetis", "quantity": 200, "unit": "g" },
+        { "name": "ajo", "quantity": 2.5, "unit": "unidad" },
+        { "name": "aceite de oliva", "quantity": 1.5, "unit": "cucharada" },
+        { "name": "guindilla", "quantity": 1, "unit": "unidad" }
+      ],
+      "expectedSteps": [
+        "Cocer la pasta.",
+        "Dorar el ajo y la guindilla en el aceite.",
+        "Mezclar con la pasta."
+      ]
+    },
+    {
+      "id": "pasos-antes-que-ingredientes",
+      "origen": "sintético",
+      "nota": "Los pasos ('Paso 1:') van antes que los ingredientes y las raciones como 'Raciones: 2'.",
+      "rawText": "Pollo al horno\nRaciones: 2\nElaboración\nPaso 1: Precalentar el horno a 200 ºC.\nPaso 2: Colocar el pollo en una bandeja con las patatas.\nPaso 3: Hornear 45 minutos.\nIngredientes\n1 pollo troceado\n3 patatas",
+      "expectedTitle": "Pollo al horno",
+      "expectedIngredients": [
+        { "name": "pollo troceado", "quantity": 1, "unit": "unidad" },
+        { "name": "patatas", "quantity": 3, "unit": "unidad" }
+      ],
+      "expectedSteps": [
+        "Precalentar el horno a 200 ºC.",
+        "Colocar el pollo en una bandeja con las patatas.",
+        "Hornear 45 minutos."
+      ]
+    },
+    {
+      "id": "pasos-en-varias-lineas",
+      "origen": "sintético",
+      "nota": "Pasos sin numerar partidos en varias líneas que continúan en minúscula.",
+      "rawText": "Bizcocho de limón\nIngredientes\n3 huevos\n200 g de azúcar\n1 yogur de limón\nPreparación\nBatir los huevos con el azúcar hasta\nque blanqueen y doblen su volumen.\nAñadir el yogur y la ralladura\nde un limón, y mezclar bien.\nHornear 40 minutos a 180 ºC.",
+      "expectedTitle": "Bizcocho de limón",
+      "expectedIngredients": [
+        { "name": "huevos", "quantity": 3, "unit": "unidad" },
+        { "name": "azúcar", "quantity": 200, "unit": "g" },
+        { "name": "yogur de limón", "quantity": 1, "unit": "unidad" }
+      ],
+      "expectedSteps": [
+        "Batir los huevos con el azúcar hasta que blanqueen y doblen su volumen.",
+        "Añadir el yogur y la ralladura de un limón, y mezclar bien.",
+        "Hornear 40 minutos a 180 ºC."
+      ]
+    },
+    {
+      "id": "sin-titulo",
+      "origen": "sintético",
+      "nota": "La foto empieza directamente en 'Ingredientes' (sin título).",
+      "rawText": "Ingredientes\n400 g de garbanzos cocidos\n2 cucharadas de tahini\n1 limón\n1 diente de ajo\nPreparación\nTriturar todos los ingredientes con un chorrito de agua.\nServir con pimentón y aceite.",
+      "expectedTitle": null,
+      "expectedIngredients": [
+        { "name": "garbanzos cocidos", "quantity": 400, "unit": "g" },
+        { "name": "tahini", "quantity": 2, "unit": "cucharada" },
+        { "name": "limón", "quantity": 1, "unit": "unidad" },
+        { "name": "ajo", "quantity": 1, "unit": "unidad" }
+      ],
+      "expectedSteps": [
+        "Triturar todos los ingredientes con un chorrito de agua.",
+        "Servir con pimentón y aceite."
+      ]
+    },
+    {
+      "id": "sin-cantidades",
+      "origen": "sintético",
+      "nota": "Ningún ingrediente lleva cantidad y hay un paso de una sola palabra ('Aliñar.').",
+      "rawText": "Ensalada verde\nIngredientes\nLechuga\nPepino\nAceite de oliva virgen extra\nVinagre de Módena\nSal\nPreparación\nLavar la lechuga.\nCortar el pepino.\nAliñar.",
+      "expectedTitle": "Ensalada verde",
+      "expectedIngredients": [
+        { "name": "Lechuga", "quantity": null, "unit": null },
+        { "name": "Pepino", "quantity": null, "unit": null },
+        { "name": "Aceite de oliva virgen extra", "quantity": null, "unit": null },
+        { "name": "Vinagre de Módena", "quantity": null, "unit": null },
+        { "name": "Sal", "quantity": null, "unit": null }
+      ],
+      "expectedSteps": [
+        "Lavar la lechuga.",
+        "Cortar el pepino.",
+        "Aliñar."
+      ]
+    },
+    {
+      "id": "mayusculas-y-vinetas-redondas",
+      "origen": "sintético",
+      "nota": "Título en mayúsculas, viñetas '•' también en los pasos y encabezado 'Modo de preparación'.",
+      "rawText": "MACARRONES CON TOMATE\n• 400 g macarrones\n• 1 lata de tomate triturado\n• 1 cebolla\n• 100 g queso rallado\nMODO DE PREPARACIÓN\n• Cocer los macarrones.\n• Sofreír la cebolla y añadir el tomate.\n• Mezclar, cubrir con el queso y gratinar.",
+      "expectedTitle": "MACARRONES CON TOMATE",
+      "expectedIngredients": [
+        { "name": "macarrones", "quantity": 400, "unit": "g" },
+        { "name": "lata de tomate triturado", "quantity": 1, "unit": "unidad" },
+        { "name": "cebolla", "quantity": 1, "unit": "unidad" },
+        { "name": "queso rallado", "quantity": 100, "unit": "g" }
+      ],
+      "expectedSteps": [
+        "Cocer los macarrones.",
+        "Sofreír la cebolla y añadir el tomate.",
+        "Mezclar, cubrir con el queso y gratinar."
+      ]
+    }
+  ]
+}

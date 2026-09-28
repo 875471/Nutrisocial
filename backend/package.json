@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "eval:ocr-segmentacion": "node eval/ocrSegmentation.eval.js",
+    "eval:macros": "node eval/macroAccuracy.eval.js",
+    "eval:despensa": "node eval/pantrySearch.eval.js",
+    "eval:recomendador": "node eval/recommenderSimulation.eval.js"
   },
   "keywords": [],
   "author": "",
