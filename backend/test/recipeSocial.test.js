@@ -72,6 +72,7 @@ function fakePrisma() {
   ];
   const likes = [];
   const comments = [];
+  const saves = [];
   let clock = Date.parse('2026-09-10');
   const now = () => new Date((clock += 1000));
 
@@ -96,12 +97,15 @@ function fakePrisma() {
       out.likes = recipeLikes.sort(newestFirst).slice(0, spec.likes.take).map((l) => ({ user: { name: users[l.userId] } }));
     }
     if (spec.comments) out.comments = recipeComments.slice(0, spec.comments.take).map(withAuthor);
+    // savedByMe: solo el guardado del usuario que pregunta.
+    if (spec.saves) out.saves = saves.filter((s) => s.recipeId === recipe.id && s.userId === spec.saves.where.userId);
     return out;
   }
 
   return {
     likes,
     comments,
+    saves,
     recipes,
     // Añade un comentario directamente, sin pasar por la API.
     addComment: (userId, recipeId, text) => {
@@ -137,6 +141,30 @@ function fakePrisma() {
           if (likes[i].userId === where.userId && likes[i].recipeId === where.recipeId) likes.splice(i, 1);
         }
         return { count: before - likes.length };
+      },
+    },
+    savedRecipe: {
+      upsert: async ({ where: { userId_recipeId: key }, create }) => {
+        let save = saves.find((s) => s.userId === key.userId && s.recipeId === key.recipeId);
+        if (!save) saves.push((save = { id: saves.length + 1, ...create, createdAt: now() }));
+        return save;
+      },
+      deleteMany: async ({ where }) => {
+        const before = saves.length;
+        for (let i = saves.length - 1; i >= 0; i--) {
+          if (saves[i].userId === where.userId && saves[i].recipeId === where.recipeId) saves.splice(i, 1);
+        }
+        return { count: before - saves.length };
+      },
+      findUnique: async ({ where: { userId_recipeId: key } }) =>
+        saves.find((s) => s.userId === key.userId && s.recipeId === key.recipeId) ?? null,
+      findMany: async ({ where, take, cursor, skip = 0, select }) => {
+        const sorted = saves.filter((s) => s.userId === where.userId).sort(newestFirst);
+        const start = cursor
+          ? sorted.findIndex((s) => s.userId === cursor.userId_recipeId.userId && s.recipeId === cursor.userId_recipeId.recipeId)
+          : 0;
+        return sorted.slice(start + skip, start + skip + take)
+          .map((s) => ({ recipe: shape(recipes.find((r) => r.id === s.recipeId), { select: select.recipe.select }) }));
       },
     },
     comment: {
@@ -384,6 +412,79 @@ test('feed y detalle: commentsCount, commentsPreview y likersPreview', async () 
     const after = (await api.ana('GET', '/recipes/feed')).body.recipes.find((r) => r.id === 10);
     assert.equal(after.commentsCount, 4);
     assert.deepEqual(after.commentsPreview.map((c) => c.text), ['Cuarto', 'Tercero']);
+  } finally {
+    await api.close();
+  }
+});
+
+test('GET /recipes/search: busca en todas las recetas, ordena por tiempo y trae los datos de la tarjeta', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    await api.marta('POST', '/recipes/11/like');
+    // Recetas de cualquier autor, por título y sin tildes ni mayúsculas.
+    const found = await api.ana('GET', '/recipes/search?q=TORTÍLLA');
+    assert.equal(found.status, 200);
+    assert.deepEqual(found.body.recipes.map((r) => r.id), [11]);
+    assert.equal(found.body.total, 1);
+    const tortilla = found.body.recipes[0];
+    assert.equal(tortilla.authorName, 'Luis');
+    assert.equal(tortilla.likesCount, 1);
+    assert.deepEqual(tortilla.likersPreview, ['Marta']);
+    assert.equal(tortilla.kcalPerServing, 400);
+
+    // Sin texto, todas; por tiempo ascendente, la receta sin tiempo al final.
+    const byTime = await api.ana('GET', '/recipes/search?sortBy=prepMinutes&order=asc');
+    assert.deepEqual(byTime.body.recipes.map((r) => r.id), [10, 12, 11]);
+    const pageOne = await api.ana('GET', '/recipes/search?limit=2');
+    assert.deepEqual(pageOne.body.recipes.map((r) => r.id), [12, 11]);
+    const pageTwo = await api.ana('GET', `/recipes/search?limit=2&cursor=${pageOne.body.nextCursor}`);
+    assert.deepEqual(pageTwo.body.recipes.map((r) => r.id), [10]);
+    assert.equal(pageTwo.body.nextCursor, null);
+
+    assert.equal((await api.ana('GET', '/recipes/search?sortBy=likes')).status, 400);
+  } finally {
+    await api.close();
+  }
+});
+
+test('recetas guardadas: guardar, savedByMe en feed/detalle/búsqueda, lista paginada y quitar', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    // Ana guarda dos recetas de Luis (11 y 12) y una suya (10), en ese orden.
+    assert.deepEqual((await api.ana('POST', '/recipes/11/save')).body, { savedByMe: true });
+    // Guardar dos veces no duplica.
+    await api.ana('POST', '/recipes/11/save');
+    await api.ana('POST', '/recipes/12/save');
+    await api.ana('POST', '/recipes/10/save');
+    assert.equal(db.saves.length, 3);
+    assert.equal((await api.ana('POST', '/recipes/99/save')).status, 404);
+
+    // savedByMe es de quien pregunta: para Luis, ninguna está guardada.
+    const feedAna = (await api.ana('GET', '/recipes/feed')).body.recipes;
+    assert.ok(feedAna.every((r) => r.savedByMe));
+    const feedLuis = (await api.luis('GET', '/recipes/feed')).body.recipes;
+    assert.ok(feedLuis.every((r) => !r.savedByMe));
+    assert.equal((await api.ana('GET', '/recipes/11')).body.savedByMe, true);
+    assert.equal((await api.luis('GET', '/recipes/11')).body.savedByMe, false);
+    assert.equal((await api.ana('GET', '/recipes/search?q=pisto')).body.recipes[0].savedByMe, true);
+
+    // Lista de guardadas: de la guardada más recientemente a la más antigua, de 2 en 2.
+    const first = (await api.ana('GET', '/recipes/saved?limit=2')).body;
+    assert.deepEqual(first.recipes.map((r) => r.id), [10, 12]);
+    assert.equal(first.recipes[0].title, 'Crema de calabaza');
+    assert.equal(first.nextCursor, 12);
+    const second = (await api.ana('GET', `/recipes/saved?limit=2&cursor=${first.nextCursor}`)).body;
+    assert.deepEqual(second.recipes.map((r) => r.id), [11]);
+    assert.equal(second.nextCursor, null);
+    assert.deepEqual((await api.luis('GET', '/recipes/saved')).body.recipes, []);
+
+    // Quitar el guardado (dos veces no es un error) y un cursor que ya no está guardado.
+    assert.deepEqual((await api.ana('DELETE', '/recipes/12/save')).body, { savedByMe: false });
+    assert.equal((await api.ana('DELETE', '/recipes/12/save')).status, 200);
+    assert.deepEqual((await api.ana('GET', '/recipes/saved')).body.recipes.map((r) => r.id), [10, 11]);
+    assert.equal((await api.ana('GET', '/recipes/saved?cursor=12')).status, 400);
   } finally {
     await api.close();
   }

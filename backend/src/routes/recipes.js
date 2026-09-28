@@ -5,6 +5,7 @@ const { UNITS } = require('../nutrition/unitConversion');
 const { resolveIngredients, nutritionSummary } = require('../nutrition/calculate');
 const { matchFood } = require('../nutrition/matchFood');
 const { parseRecipeText } = require('../ocr/parseRecipeText');
+const { estimatePrepMinutes } = require('../ocr/estimatePrepTime');
 const { matchRecipesToPantry } = require('../nutrition/pantryMatch');
 const {
   validateImageBase64, likeFields, likeSummary, socialFields, socialSummary, canEditRecipe,
@@ -13,6 +14,7 @@ const {
   COMMENTS_PAGE_SIZE, COMMENTS_MAX_PAGE_SIZE, NEWEST_FIRST, validateCommentText, COMMENT_SELECT,
   toCommentResponse, commentsPreviewField, toCommentsPreview, likersSelect, likersByRecipe,
 } = require('../social/comments');
+const { parseSearchQuery, searchRecipes } = require('../social/recipeSearch');
 
 const MAX_OCR_TEXT = 20000;
 const MAX_DESCRIPTION = 1000;
@@ -99,6 +101,23 @@ function toFeedItem(recipe, likers) {
     likersPreview: likers.get(recipe.id) ?? [],
     createdAt: recipe.createdAt,
   };
+}
+
+// `select` de una tarjeta del feed (lo que usa toFeedItem), con lo social visto por `userId`.
+// Lo comparten el feed, el buscador y las recetas guardadas.
+function feedSelect(userId) {
+  return {
+    id: true, title: true, description: true, imageBase64: true, authorId: true, servings: true,
+    prepMinutes: true, kcal: true, protein: true, steps: true, createdAt: true,
+    ingredients: { orderBy: { position: 'asc' }, select: { name: true, quantity: true, unit: true } },
+    ...AUTHOR_NAME, ...socialFields(userId), ...commentsPreviewField(),
+  };
+}
+
+// Tarjetas del feed para una lista de recetas cargadas con feedSelect, en el mismo orden.
+async function toFeedItems(recipes) {
+  const likers = await likersPreview(recipes.map((r) => r.id));
+  return recipes.map((r) => toFeedItem(r, likers));
 }
 
 function parseId(value) {
@@ -283,6 +302,12 @@ router.post('/parse-ocr', async (req, res) => {
     servings: parsed.servings,
     ingredients,
     steps: parsed.steps,
+    // ESTIMACIÓN a partir del número de pasos e ingredientes (ver ocr/estimatePrepTime.js), no un
+    // tiempo leído de la foto: la app la propone en el formulario como valor editable. null si
+    // no se ha reconocido ningún paso ni ingrediente (no hay de qué estimar).
+    prepMinutesEstimated: parsed.steps.length + parsed.ingredients.length > 0
+      ? estimatePrepMinutes(parsed.steps.length, parsed.ingredients.length)
+      : null,
     // Clasificación de cada línea: no la usa la app, sirve para evaluar la heurística.
     lines: parsed.lines,
   });
@@ -310,18 +335,64 @@ router.get('/feed', async (req, res) => {
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: limit + 1,
     ...(cursor != null && { cursor: { id: cursor }, skip: 1 }),
-    select: {
-      id: true, title: true, description: true, imageBase64: true, authorId: true, servings: true,
-      prepMinutes: true, kcal: true, protein: true, steps: true, createdAt: true,
-      ingredients: { orderBy: { position: 'asc' }, select: { name: true, quantity: true, unit: true } },
-      ...AUTHOR_NAME, ...socialFields(req.userId), ...commentsPreviewField(),
-    },
+    select: feedSelect(req.userId),
   });
   const page = recipes.slice(0, limit);
-  const likers = await likersPreview(page.map((r) => r.id));
   res.json({
-    recipes: page.map((r) => toFeedItem(r, likers)),
+    recipes: await toFeedItems(page),
     nextCursor: recipes.length > limit ? page[page.length - 1].id : null,
+  });
+});
+
+// Buscador de recetas de cualquier autor por texto libre sobre el título y los ingredientes,
+// sin depender de tildes ni mayúsculas (ver social/recipeSearch.js). Sin `q`, todas. Se ordena
+// por fecha (por defecto, las más recientes primero) o por tiempo de preparación, y se pagina
+// con el mismo cursor que el feed. La búsqueda se hace en memoria sobre los títulos y los
+// nombres de ingredientes de todas las recetas (sin fotos): PostgreSQL no quita las tildes
+// sin la extensión unaccent. Después solo se carga completa la página pedida.
+router.get('/search', async (req, res) => {
+  const search = parseSearchQuery(req.query);
+  if (search.error) return res.status(400).json({ error: search.error });
+  const pageQuery = parsePage(req.query, FEED_PAGE_SIZE, FEED_MAX_PAGE_SIZE);
+  if (pageQuery.error) return res.status(400).json({ error: pageQuery.error });
+
+  const candidates = await prisma.recipe.findMany({
+    select: { id: true, title: true, prepMinutes: true, createdAt: true, ingredients: { select: { name: true } } },
+  });
+  const result = searchRecipes(candidates, { ...search, ...pageQuery });
+  if (result.error) return res.status(400).json({ error: result.error });
+
+  const rows = await prisma.recipe.findMany({ where: { id: { in: result.ids } }, select: feedSelect(req.userId) });
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  // findMany no respeta el orden de `in`: se recoloca según la búsqueda.
+  const page = result.ids.map((id) => byId.get(id)).filter(Boolean);
+  res.json({ recipes: await toFeedItems(page), nextCursor: result.nextCursor, total: result.total });
+});
+
+// Recetas guardadas por el usuario, de la guardada más recientemente a la más antigua, con la
+// misma tarjeta que el feed. El cursor es el id de la última receta recibida (como en el feed),
+// y se localiza por el par (usuario, receta) del guardado.
+router.get('/saved', async (req, res) => {
+  const pageQuery = parsePage(req.query, FEED_PAGE_SIZE, FEED_MAX_PAGE_SIZE);
+  if (pageQuery.error) return res.status(400).json({ error: pageQuery.error });
+  const { cursor, limit } = pageQuery;
+
+  const cursorKey = cursor != null && { userId_recipeId: { userId: req.userId, recipeId: cursor } };
+  // Si la receta del cursor se ha dejado de guardar entre una página y otra, no se sabe dónde seguir.
+  if (cursorKey && !(await prisma.savedRecipe.findUnique({ where: cursorKey, select: { id: true } }))) {
+    return res.status(400).json({ error: 'Cursor no válido: vuelve a cargar tus guardadas' });
+  }
+  const saves = await prisma.savedRecipe.findMany({
+    where: { userId: req.userId },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: limit + 1,
+    ...(cursorKey && { cursor: cursorKey, skip: 1 }),
+    select: { recipe: { select: feedSelect(req.userId) } },
+  });
+  const page = saves.slice(0, limit).map((s) => s.recipe);
+  res.json({
+    recipes: await toFeedItems(page),
+    nextCursor: saves.length > limit ? page[page.length - 1].id : null,
   });
 });
 
@@ -452,6 +523,26 @@ router.delete('/:id/like', async (req, res) => {
   // deleteMany: quitar un like que no existe no es un error.
   await prisma.recipeLike.deleteMany({ where: { userId: req.userId, recipeId: id } });
   res.json(await likeState(id, req.userId));
+});
+
+// Guardar y dejar de guardar una receta (de cualquier autor, también la propia). Igual que los
+// likes, las dos operaciones son idempotentes y devuelven el estado final.
+router.post('/:id/save', async (req, res) => {
+  const id = await findRecipeId(req, res);
+  if (id == null) return;
+  await prisma.savedRecipe.upsert({
+    where: { userId_recipeId: { userId: req.userId, recipeId: id } },
+    create: { userId: req.userId, recipeId: id },
+    update: {},
+  });
+  res.json({ savedByMe: true });
+});
+
+router.delete('/:id/save', async (req, res) => {
+  const id = await findRecipeId(req, res);
+  if (id == null) return;
+  await prisma.savedRecipe.deleteMany({ where: { userId: req.userId, recipeId: id } });
+  res.json({ savedByMe: false });
 });
 
 // Comentarios de una receta, del más reciente al más antiguo, paginados igual que el feed.

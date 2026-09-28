@@ -5,6 +5,8 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
 import com.example.nutrisocial.ui.recipes.InlineEmptyState
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.painterResource
+import com.example.nutrisocial.R
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -98,7 +100,14 @@ data class LogActions(
     val onRetryRecommendations: () -> Unit,
     val add: AddEntryActions,
     // Abre el detalle de una receta (recomendada o ya registrada), como en el resto de listas.
-    val onOpenRecipe: (Int) -> Unit = {}
+    val onOpenRecipe: (Int) -> Unit = {},
+    // Vista de mes (calendario nutricional).
+    val onShowMonth: () -> Unit = {},
+    val onShowDay: () -> Unit = {},
+    val onPreviousMonth: () -> Unit = {},
+    val onNextMonth: () -> Unit = {},
+    val onCalendarDayClick: (String) -> Unit = {},
+    val onRetryCalendar: () -> Unit = {}
 )
 
 /** Pestaña "Diario": registro de lo que se ha comido cada día frente al objetivo calórico. */
@@ -112,7 +121,10 @@ fun LogScreen(
     addState: AddEntryState?,
     recipesState: RecipeListUiState,
     message: String?,
-    actions: LogActions
+    actions: LogActions,
+    viewMode: LogViewMode = LogViewMode.DAY,
+    month: String = "",
+    calendarState: CalendarUiState = CalendarUiState.Loading
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(message) {
@@ -128,13 +140,26 @@ fun LogScreen(
             TopAppBar(
                 title = { Text("Diario") },
                 actions = {
-                    if (date != todayIso()) TextButton(onClick = actions.onToday) { Text("Hoy") }
+                    if (viewMode == LogViewMode.DAY && date != todayIso()) {
+                        TextButton(onClick = actions.onToday) { Text("Hoy") }
+                    }
+                    // Alterna entre la vista del día y el calendario del mes.
+                    if (viewMode == LogViewMode.DAY) {
+                        IconButton(onClick = actions.onShowMonth) {
+                            Icon(painterResource(R.drawable.ic_calendar_month), contentDescription = "Ver el mes")
+                        }
+                    } else {
+                        IconButton(onClick = actions.onShowDay) {
+                            Icon(painterResource(R.drawable.ic_today), contentDescription = "Ver el día")
+                        }
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            // Se añade siempre al día seleccionado: en la vista de mes no está claro cuál es.
+            if (viewMode == LogViewMode.DAY) ExtendedFloatingActionButton(
                 onClick = actions.add.onOpen,
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text("Añadir") },
@@ -145,7 +170,20 @@ fun LogScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        if (viewMode == LogViewMode.MONTH) {
+            Column(modifier = Modifier.padding(padding)) {
+                MonthCalendarContent(
+                    month = month,
+                    state = calendarState,
+                    selectedDate = date,
+                    onPreviousMonth = actions.onPreviousMonth,
+                    onNextMonth = actions.onNextMonth,
+                    onDayClick = actions.onCalendarDayClick,
+                    onRetry = actions.onRetryCalendar,
+                    onOpenProfile = actions.onOpenProfile
+                )
+            }
+        } else Column(modifier = Modifier.padding(padding)) {
             DateSelector(
                 date = date,
                 onPrevious = actions.onPreviousDay,

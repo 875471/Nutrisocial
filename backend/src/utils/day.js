@@ -16,9 +16,24 @@ function parseDay(text) {
   return date;
 }
 
+const MONTH_RE = /^(\d{4})-(\d{2})$/;
+
+/**
+ * "2026-09" → { start, end }: las 00:00 UTC del día 1 de ese mes y del siguiente (end no
+ * incluido), o null si el texto no es un mes válido.
+ */
+function parseMonth(text) {
+  if (typeof text !== 'string') return null;
+  const m = text.match(MONTH_RE);
+  if (!m) return null;
+  const [year, month] = [Number(m[1]), Number(m[2])];
+  if (month < 1 || month > 12) return null;
+  return { start: new Date(Date.UTC(year, month - 1, 1)), end: new Date(Date.UTC(year, month, 1)) };
+}
+
 /** Date → "YYYY-MM-DD" (en UTC, coherente con parseDay). */
 function formatDay(date) {
   return date.toISOString().slice(0, 10);
 }
 
-module.exports = { parseDay, formatDay };
+module.exports = { parseDay, parseMonth, formatDay };

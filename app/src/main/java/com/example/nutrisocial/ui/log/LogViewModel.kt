@@ -3,6 +3,7 @@ package com.example.nutrisocial.ui.log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nutrisocial.data.ApiResult
+import com.example.nutrisocial.data.CalendarMonth
 import com.example.nutrisocial.data.DailyLog
 import com.example.nutrisocial.data.DailyRecommendations
 import com.example.nutrisocial.data.FoodSuggestion
@@ -12,7 +13,9 @@ import com.example.nutrisocial.data.RecipeRecommendation
 import com.example.nutrisocial.data.RecipeRepository
 import com.example.nutrisocial.ui.home.decimalInput
 import com.example.nutrisocial.ui.home.parseDecimal
+import com.example.nutrisocial.ui.monthOf
 import com.example.nutrisocial.ui.shiftDay
+import com.example.nutrisocial.ui.shiftMonth
 import com.example.nutrisocial.ui.todayIso
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -33,6 +36,15 @@ sealed interface RecommendationsUiState {
     data class Success(val data: DailyRecommendations) : RecommendationsUiState
     data class Error(val message: String) : RecommendationsUiState
 }
+
+sealed interface CalendarUiState {
+    data object Loading : CalendarUiState
+    data class Success(val data: CalendarMonth) : CalendarUiState
+    data class Error(val message: String) : CalendarUiState
+}
+
+/** Vista de la pestaña Diario: un día (con sus entradas) o el calendario del mes. */
+enum class LogViewMode { DAY, MONTH }
 
 enum class AddSource { RECIPE, FOOD }
 
@@ -107,7 +119,18 @@ class LogViewModel(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
+    private val _viewMode = MutableStateFlow(LogViewMode.DAY)
+    val viewMode: StateFlow<LogViewMode> = _viewMode.asStateFlow()
+
+    // Mes que enseña el calendario ("AAAA-MM"). Al abrirlo, el del día seleccionado.
+    private val _month = MutableStateFlow(monthOf(todayIso()))
+    val month: StateFlow<String> = _month.asStateFlow()
+
+    private val _calendarState = MutableStateFlow<CalendarUiState>(CalendarUiState.Loading)
+    val calendarState: StateFlow<CalendarUiState> = _calendarState.asStateFlow()
+
     private var loadJob: Job? = null
+    private var calendarJob: Job? = null
     private var searchJob: Job? = null
     private var recommendationsJob: Job? = null
 
@@ -127,6 +150,60 @@ class LogViewModel(
         _dayState.value = DayUiState.Loading
         _recommendationsState.value = RecommendationsUiState.Loading
         loadDay()
+    }
+
+    /** Al entrar en la pestaña: el objetivo o las entradas pueden haber cambiado desde fuera. */
+    fun onScreenShown() {
+        loadDay()
+        if (_viewMode.value == LogViewMode.MONTH) loadCalendar()
+    }
+
+    // ---- Calendario mensual ----
+
+    /** Pasa a la vista de mes, empezando por el mes del día que se estaba viendo. */
+    fun showMonth() {
+        _viewMode.value = LogViewMode.MONTH
+        val month = monthOf(_date.value)
+        if (month != _month.value) {
+            _month.value = month
+            _calendarState.value = CalendarUiState.Loading
+        }
+        // Se recarga siempre: desde la última vez se pueden haber añadido o quitado entradas.
+        loadCalendar()
+    }
+
+    fun showDay() {
+        _viewMode.value = LogViewMode.DAY
+    }
+
+    fun previousMonth() = selectMonth(shiftMonth(_month.value, -1))
+    fun nextMonth() = selectMonth(shiftMonth(_month.value, 1))
+
+    private fun selectMonth(month: String) {
+        _month.value = month
+        _calendarState.value = CalendarUiState.Loading
+        loadCalendar()
+    }
+
+    fun loadCalendar() {
+        val month = _month.value
+        calendarJob?.cancel()
+        calendarJob = viewModelScope.launch {
+            when (val result = logRepository.getCalendar(month)) {
+                is ApiResult.Success -> _calendarState.value = CalendarUiState.Success(result.data)
+                is ApiResult.Error -> if (_calendarState.value !is CalendarUiState.Success) {
+                    _calendarState.value = CalendarUiState.Error(result.message)
+                } else {
+                    _message.value = result.message
+                }
+            }
+        }
+    }
+
+    /** Al tocar un día del calendario se abre la vista de ese día. */
+    fun openCalendarDay(date: String) {
+        _viewMode.value = LogViewMode.DAY
+        selectDate(date)
     }
 
     /** Recarga el día actual; los datos visibles se mantienen mientras llega la respuesta. */

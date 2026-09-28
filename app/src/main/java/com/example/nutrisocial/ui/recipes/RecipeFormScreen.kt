@@ -159,6 +159,9 @@ fun RecipeFormScreen(
                     onValueChange = onPrepMinutesChange,
                     label = { Text("Tiempo (opcional)") },
                     suffix = { Text("min") },
+                    supportingText = if (state.prepMinutesEstimated) {
+                        { Text("Estimado según pasos e ingredientes") }
+                    } else null,
                     singleLine = true,
                     enabled = enabled,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),

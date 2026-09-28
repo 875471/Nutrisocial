@@ -6,6 +6,7 @@ import com.example.nutrisocial.data.ApiResult
 import com.example.nutrisocial.data.Comment
 import com.example.nutrisocial.data.CommentPreview
 import com.example.nutrisocial.data.CommentRepository
+import com.example.nutrisocial.data.FeedPage
 import com.example.nutrisocial.data.FeedRecipe
 import com.example.nutrisocial.data.FeedRepository
 import com.example.nutrisocial.data.Recipe
@@ -32,17 +33,26 @@ data class FeedUiState(
     val error: String? = null,
     val message: String? = null,
     // Lo escrito en el campo de comentario de cada tarjeta, por id de receta.
-    val commentDrafts: Map<Int, CommentDraft> = emptyMap()
+    val commentDrafts: Map<Int, CommentDraft> = emptyMap(),
+    // Número de resultados (solo en el buscador).
+    val total: Int? = null
 ) {
     fun draftFor(recipeId: Int): CommentDraft = commentDrafts[recipeId] ?: CommentDraft()
 
     val canLoadMore: Boolean get() = nextCursor != null
 }
 
-class FeedViewModel(
-    private val feedRepository: FeedRepository = FeedRepository(),
+/**
+ * Lista paginada de tarjetas de receta con "me gusta" y comentarios desde la propia tarjeta. Es
+ * el feed de Inicio y la base del buscador y de las guardadas, que solo cambian de dónde sale
+ * cada página ([fetchPage]). Las subclases pasan [loadOnInit] = false y cargan en su propio
+ * `init`, cuando sus propiedades ya están inicializadas.
+ */
+open class FeedViewModel(
+    protected val feedRepository: FeedRepository = FeedRepository(),
     private val recipeRepository: RecipeRepository = RecipeRepository(),
-    private val commentRepository: CommentRepository = CommentRepository()
+    private val commentRepository: CommentRepository = CommentRepository(),
+    loadOnInit: Boolean = true
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedUiState())
@@ -51,6 +61,16 @@ class FeedViewModel(
     private var pageJob: Job? = null
 
     init {
+        if (loadOnInit) refresh()
+    }
+
+    /** Página a partir de [cursor] (null para la primera). Por defecto, el feed de Inicio. */
+    protected open suspend fun fetchPage(cursor: Int?): ApiResult<FeedPage> = feedRepository.getFeed(cursor)
+
+    /** Empieza de cero, sin enseñar lo anterior (p. ej. al cambiar la búsqueda). */
+    protected fun restart() {
+        pageJob?.cancel()
+        _state.update { FeedUiState(commentDrafts = it.commentDrafts) }
         refresh()
     }
 
@@ -62,11 +82,12 @@ class FeedViewModel(
             else it.copy(isRefreshing = true, isLoadingMore = false)
         }
         pageJob = viewModelScope.launch {
-            when (val result = feedRepository.getFeed()) {
+            when (val result = fetchPage(null)) {
                 is ApiResult.Success -> _state.update {
                     it.copy(
                         recipes = result.data.recipes,
                         nextCursor = result.data.nextCursor,
+                        total = result.data.total,
                         isLoading = false,
                         isRefreshing = false,
                         error = null
@@ -87,7 +108,7 @@ class FeedViewModel(
         if (current.isLoadingMore || current.isRefreshing || current.isLoading) return
         _state.update { it.copy(isLoadingMore = true) }
         pageJob = viewModelScope.launch {
-            when (val result = feedRepository.getFeed(cursor)) {
+            when (val result = fetchPage(cursor)) {
                 is ApiResult.Success -> _state.update { state ->
                     // Si entre medias se publicó otra receta, podría repetirse alguna: se filtran.
                     val known = state.recipes.map { it.id }.toSet()
@@ -129,6 +150,33 @@ class FeedViewModel(
                     // Sin conexión o error del servidor: el corazón vuelve a como estaba.
                     updateRecipe(recipeId) { it.copy(likedByMe = recipe.likedByMe, likesCount = recipe.likesCount) }
                     _state.update { it.copy(message = "No se pudo guardar el me gusta: ${result.message}") }
+                }
+            }
+        }
+    }
+
+    private val pendingSaves = mutableSetOf<Int>()
+
+    /** Guardar o quitar de "Guardadas", con el mismo cambio inmediato que el "me gusta". */
+    fun toggleSave(recipeId: Int) {
+        val recipe = _state.value.recipes.find { it.id == recipeId } ?: return
+        if (!pendingSaves.add(recipeId)) return
+        val saved = !recipe.savedByMe
+        updateRecipe(recipeId) { it.copy(savedByMe = saved) }
+        viewModelScope.launch {
+            val result = recipeRepository.setSaved(recipeId, saved)
+            pendingSaves.remove(recipeId)
+            when (result) {
+                is ApiResult.Success -> {
+                    updateRecipe(recipeId) { it.copy(savedByMe = result.data.savedByMe) }
+                    _state.update { it.copy(message = if (saved) "Guardada en tus recetas guardadas" else "Quitada de guardadas") }
+                }
+                is ApiResult.Error -> if (result.code == 404) {
+                    removeRecipe(recipeId)
+                    _state.update { it.copy(message = result.message) }
+                } else {
+                    updateRecipe(recipeId) { it.copy(savedByMe = recipe.savedByMe) }
+                    _state.update { it.copy(message = "No se pudo guardar la receta: ${result.message}") }
                 }
             }
         }
@@ -199,7 +247,8 @@ class FeedViewModel(
             steps = recipe.steps,
             likesCount = recipe.likesCount,
             likedByMe = recipe.likedByMe,
-            likersPreview = recipe.likersPreview
+            likersPreview = recipe.likersPreview,
+            savedByMe = recipe.savedByMe
         )
     }
 

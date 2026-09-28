@@ -235,7 +235,8 @@ data class RecipeDetailActions(
     val onDelete: () -> Unit,
     val onOpenComments: () -> Unit = {},
     val onCommentDraftChange: (String) -> Unit = {},
-    val onSendComment: () -> Unit = {}
+    val onSendComment: () -> Unit = {},
+    val onToggleSave: () -> Unit = {}
 ) {
     companion object {
         val Noop = RecipeDetailActions({}, {}, {}, {}, {}, {})
@@ -274,7 +275,8 @@ private fun RecipeDetailContent(
                 onToggleLike = actions.onToggleLike,
                 onOpenComments = actions.onOpenComments,
                 onDraftChange = actions.onCommentDraftChange,
-                onSendComment = actions.onSendComment
+                onSendComment = actions.onSendComment,
+                onToggleSave = actions.onToggleSave
             ),
             expandLists = true,
             showCommentsPreview = false

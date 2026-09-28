@@ -38,6 +38,12 @@ val OnErrorLight = Color(0xFFFFFFFF)
 val ErrorContainerLight = Color(0xFFFFDAD6)
 val OnErrorContainerLight = Color(0xFF410002)
 
+// Estados del calendario nutricional: verde (adecuado), rojo (excesivo) y azul (insuficiente).
+val StatusAdequateLight = Color(0xFF2E7D32)
+val StatusExcessLight = Color(0xFFC62828)
+val StatusInsufficientLight = Color(0xFF1565C0)
+val OnStatusLight = Color(0xFFFFFFFF)
+
 // ---- Tema oscuro ----
 val GreenPrimaryDark = Color(0xFF8FD48A)
 val OnGreenPrimaryDark = Color(0xFF00390A)
@@ -65,6 +71,11 @@ val SoilContainerLow = Color(0xFF1F1B16)
 val SoilContainer = Color(0xFF231F1A)
 val SoilContainerHigh = Color(0xFF2E2924)
 val SoilContainerHighest = Color(0xFF39342E)
+
+val StatusAdequateDark = Color(0xFF81C784)
+val StatusExcessDark = Color(0xFFEF9A9A)
+val StatusInsufficientDark = Color(0xFF90CAF9)
+val OnStatusDark = Color(0xFF10140F)
 
 val ErrorDark = Color(0xFFFFB4AB)
 val OnErrorDark = Color(0xFF690005)

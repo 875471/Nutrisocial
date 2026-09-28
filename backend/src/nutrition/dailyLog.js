@@ -55,4 +55,37 @@ function compareWithGoal(consumedKcal, dailyCalorieGoal) {
   };
 }
 
-module.exports = { LOG_LIMITS, macrosFromRecipe, macrosFromFood, sumTotals, compareWithGoal };
+// Margen del calendario mensual: un día es "adecuado" si sus kcal quedan a ±10 % del objetivo.
+const CALENDAR_TOLERANCE = 0.1;
+
+/**
+ * Estado de un día del calendario: "adecuado" (dentro de ±10 % del objetivo), "excesivo" (más
+ * del 110 %) o "insuficiente" (menos del 90 %). null si no hay objetivo (perfil incompleto).
+ */
+function dayStatus(kcal, dailyCalorieGoal) {
+  if (dailyCalorieGoal == null || !(dailyCalorieGoal > 0)) return null;
+  if (kcal > dailyCalorieGoal * (1 + CALENDAR_TOLERANCE)) return 'excesivo';
+  if (kcal < dailyCalorieGoal * (1 - CALENDAR_TOLERANCE)) return 'insuficiente';
+  return 'adecuado';
+}
+
+/**
+ * Días del calendario a partir de las entradas de un mes ([{ date, kcal }]): uno por cada día
+ * con alguna entrada, en orden, con sus kcal totales y su estado frente al objetivo. Los días
+ * sin entradas no aparecen.
+ */
+function calendarDays(entries, dailyCalorieGoal, formatDay) {
+  const byDay = new Map();
+  for (const entry of entries) {
+    const day = formatDay(entry.date);
+    byDay.set(day, (byDay.get(day) ?? 0) + entry.kcal);
+  }
+  return [...byDay.keys()].sort().map((date) => {
+    const kcal = Math.round(byDay.get(date));
+    return { date, kcal, status: dayStatus(kcal, dailyCalorieGoal) };
+  });
+}
+
+module.exports = {
+  LOG_LIMITS, CALENDAR_TOLERANCE, macrosFromRecipe, macrosFromFood, sumTotals, compareWithGoal, dayStatus, calendarDays,
+};

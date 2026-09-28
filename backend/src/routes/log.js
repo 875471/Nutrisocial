@@ -4,10 +4,10 @@ const requireAuth = require('../middleware/auth');
 const { findFoodById } = require('../nutrition/matchFood');
 const { calculateCalorieGoal } = require('../nutrition/calorieGoal');
 const {
-  LOG_LIMITS, macrosFromRecipe, macrosFromFood, sumTotals, compareWithGoal,
+  LOG_LIMITS, macrosFromRecipe, macrosFromFood, sumTotals, compareWithGoal, calendarDays,
 } = require('../nutrition/dailyLog');
 const { recommendRecipes } = require('../nutrition/recommend');
-const { parseDay, formatDay } = require('../utils/day');
+const { parseDay, parseMonth, formatDay } = require('../utils/day');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -131,6 +131,31 @@ router.get('/recommendations', async (req, res) => {
     recommendations,
     ...(reason && { reason }),
     ...(missingFields && { missingProfileFields: missingFields }),
+  });
+});
+
+// Calendario de un mes (?month=AAAA-MM): kcal de cada día con alguna entrada y su estado frente
+// al objetivo calórico. Se compara con el objetivo ACTUAL del perfil, no con el que tuviera el
+// usuario ese día: no se guarda un histórico de objetivos (ver informe 16).
+router.get('/calendar', async (req, res) => {
+  const month = parseMonth(req.query.month);
+  if (!month) return res.status(400).json({ error: 'Indica el mes con ?month=AAAA-MM' });
+
+  const [user, entries] = await Promise.all([
+    prisma.user.findUnique({ where: { id: req.userId } }),
+    prisma.logEntry.findMany({
+      where: { userId: req.userId, date: { gte: month.start, lt: month.end } },
+      select: { date: true, kcal: true },
+    }),
+  ]);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  const { dailyCalorieGoal, missingFields } = calculateCalorieGoal(user);
+  res.json({
+    month: req.query.month,
+    dailyCalorieGoal,
+    days: calendarDays(entries, dailyCalorieGoal, formatDay),
+    missingProfileFields: missingFields,
   });
 });
 

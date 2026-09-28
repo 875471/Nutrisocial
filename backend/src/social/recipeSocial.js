@@ -58,15 +58,24 @@ function likeSummary(recipe) {
   };
 }
 
-// Como likeFields, contando además los comentarios de la receta.
+// Como likeFields, contando además los comentarios de la receta y con, como mucho, el guardado
+// del propio usuario (para savedByMe).
 function socialFields(userId) {
   const fields = likeFields(userId);
-  return { ...fields, _count: { select: { ...fields._count.select, comments: true } } };
+  return {
+    ...fields,
+    _count: { select: { ...fields._count.select, comments: true } },
+    saves: { where: { userId }, select: { id: true }, take: 1 },
+  };
 }
 
-// Traduce lo cargado con socialFields: likesCount, likedByMe y commentsCount.
+// Traduce lo cargado con socialFields: likesCount, likedByMe, commentsCount y savedByMe.
 function socialSummary(recipe) {
-  return { ...likeSummary(recipe), commentsCount: recipe._count?.comments ?? 0 };
+  return {
+    ...likeSummary(recipe),
+    commentsCount: recipe._count?.comments ?? 0,
+    savedByMe: (recipe.saves?.length ?? 0) > 0,
+  };
 }
 
 // Solo el autor puede cambiar la foto de su receta.

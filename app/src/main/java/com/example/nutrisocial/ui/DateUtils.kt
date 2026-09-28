@@ -32,6 +32,51 @@ fun shiftDay(iso: String, days: Int): String {
     return isoFormat().format(calendar.time)
 }
 
+// ---- Meses ("AAAA-MM") para el calendario mensual del diario ----
+
+private fun parseMonth(month: String): Calendar? = try {
+    val format = SimpleDateFormat("yyyy-MM", Locale.ROOT).apply { isLenient = false }
+    Calendar.getInstance().apply {
+        time = format.parse(month)!!
+        set(Calendar.DAY_OF_MONTH, 1)
+    }
+} catch (e: Exception) {
+    null
+}
+
+private fun formatMonth(calendar: Calendar): String =
+    SimpleDateFormat("yyyy-MM", Locale.ROOT).format(calendar.time)
+
+/** Mes de un día: "2026-09-27" → "2026-09". */
+fun monthOf(iso: String): String = iso.take(7)
+
+/** El mes [month] desplazado [months] meses (negativo hacia atrás). */
+fun shiftMonth(month: String, months: Int): String {
+    val calendar = parseMonth(month) ?: Calendar.getInstance().apply { set(Calendar.DAY_OF_MONTH, 1) }
+    calendar.add(Calendar.MONTH, months)
+    return formatMonth(calendar)
+}
+
+/** "2026-09" → "Septiembre 2026". */
+fun monthLabel(month: String): String =
+    parseMonth(month)?.let { calendar ->
+        // "LLLL": nombre del mes en su forma independiente ("septiembre", no "de septiembre").
+        SimpleDateFormat("LLLL yyyy", SpanishLocale).format(calendar.time).replaceFirstChar { it.uppercase() }
+    } ?: month
+
+/**
+ * Casillas del mes para una rejilla de 7 columnas que empieza en lunes: `null` para los huecos
+ * anteriores al día 1 y, después, cada día como "AAAA-MM-DD".
+ */
+fun monthGrid(month: String): List<String?> {
+    val calendar = parseMonth(month) ?: return emptyList()
+    // DAY_OF_WEEK va de domingo (1) a sábado (7); con la semana en lunes, el lunes es la columna 0.
+    val leadingBlanks = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7
+    val days = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+    val prefix = formatMonth(calendar)
+    return List(leadingBlanks) { null } + (1..days).map { day -> "$prefix-${day.toString().padStart(2, '0')}" }
+}
+
 // El DatePicker de Material 3 trabaja con milisegundos a las 00:00 UTC del día elegido.
 fun isoToPickerMillis(iso: String): Long? = parseIso(iso, TimeZone.getTimeZone("UTC"))?.timeInMillis
 

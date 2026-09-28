@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -55,7 +57,8 @@ data class FeedActions(
     val onMessageShown: () -> Unit,
     val onOpenComments: (Int) -> Unit,
     val onCommentDraftChange: (Int, String) -> Unit,
-    val onSendComment: (Int) -> Unit
+    val onSendComment: (Int) -> Unit,
+    val onToggleSave: (Int) -> Unit = {}
 ) {
     companion object {
         val Noop = FeedActions({}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {})
@@ -107,49 +110,64 @@ fun HomeTabScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 item(key = "header") { FeedHeader(userName) }
-                when {
-                    state.isLoading -> item(key = "loading") { LoadingBox(Modifier.fillParentMaxSize(0.6f)) }
-
-                    state.error != null -> item(key = "error") {
-                        CenteredMessage(
-                            icon = rememberVectorPainter(Icons.Filled.Warning),
-                            isError = true,
-                            title = "No se pudo cargar el inicio",
-                            message = state.error,
-                            actionLabel = "Reintentar",
-                            onAction = actions.onRefresh,
-                            modifier = Modifier.fillParentMaxSize(0.6f)
-                        )
-                    }
-
-                    state.recipes.isEmpty() -> item(key = "empty") {
-                        CenteredMessage(
-                            icon = painterResource(R.drawable.ic_brand_plate),
-                            title = "Todavía no hay recetas",
-                            message = "Sé la primera persona en compartir una: pulsa «Nueva receta».",
-                            modifier = Modifier.fillParentMaxSize(0.6f)
-                        )
-                    }
-
-                    else -> {
-                        items(state.recipes, key = { it.id }) { recipe ->
-                            RecipeFeedCard(
-                                recipe = recipe.toCardData(),
-                                currentUserName = userName,
-                                draft = state.draftFor(recipe.id),
-                                actions = RecipeCardActions(
-                                    onOpen = { actions.onRecipeClick(recipe.id) },
-                                    onToggleLike = { actions.onToggleLike(recipe.id) },
-                                    onOpenComments = { actions.onOpenComments(recipe.id) },
-                                    onDraftChange = { actions.onCommentDraftChange(recipe.id, it) },
-                                    onSendComment = { actions.onSendComment(recipe.id) }
-                                )
-                            )
-                        }
-                        item(key = "footer") { FeedFooter(state = state, onLoadMore = actions.onLoadMore) }
-                    }
+                feedCardItems(state = state, userName = userName, actions = actions, errorTitle = "No se pudo cargar el inicio") {
+                    CenteredMessage(
+                        icon = painterResource(R.drawable.ic_brand_plate),
+                        title = "Todavía no hay recetas",
+                        message = "Sé la primera persona en compartir una: pulsa «Nueva receta».",
+                        modifier = Modifier.fillParentMaxSize(0.6f)
+                    )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Tarjetas de receta de una lista paginada ([FeedUiState]) con "Cargar más" al final o, en su
+ * lugar, la carga, el error o [empty]. La usan el feed, el buscador y las recetas guardadas.
+ */
+fun LazyListScope.feedCardItems(
+    state: FeedUiState,
+    userName: String,
+    actions: FeedActions,
+    errorTitle: String,
+    empty: @Composable LazyItemScope.() -> Unit
+) {
+    when {
+        state.isLoading -> item(key = "loading") { LoadingBox(Modifier.fillParentMaxSize(0.6f)) }
+
+        state.error != null -> item(key = "error") {
+            CenteredMessage(
+                icon = rememberVectorPainter(Icons.Filled.Warning),
+                isError = true,
+                title = errorTitle,
+                message = state.error,
+                actionLabel = "Reintentar",
+                onAction = actions.onRefresh,
+                modifier = Modifier.fillParentMaxSize(0.6f)
+            )
+        }
+
+        state.recipes.isEmpty() -> item(key = "empty") { empty() }
+
+        else -> {
+            items(state.recipes, key = { it.id }) { recipe ->
+                RecipeFeedCard(
+                    recipe = recipe.toCardData(),
+                    currentUserName = userName,
+                    draft = state.draftFor(recipe.id),
+                    actions = RecipeCardActions(
+                        onOpen = { actions.onRecipeClick(recipe.id) },
+                        onToggleLike = { actions.onToggleLike(recipe.id) },
+                        onOpenComments = { actions.onOpenComments(recipe.id) },
+                        onDraftChange = { actions.onCommentDraftChange(recipe.id, it) },
+                        onSendComment = { actions.onSendComment(recipe.id) },
+                        onToggleSave = { actions.onToggleSave(recipe.id) }
+                    )
+                )
+            }
+            item(key = "footer") { FeedFooter(state = state, onLoadMore = actions.onLoadMore) }
         }
     }
 }

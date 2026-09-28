@@ -70,6 +70,8 @@ data class RecipeFormState(
     val suggestions: List<FoodSuggestion> = emptyList(),
     // true si el contenido viene de escanear una foto y el usuario aún debe revisarlo.
     val fromOcr: Boolean = false,
+    // true mientras [prepMinutes] sea la estimación del escaneo, sin tocar por el usuario.
+    val prepMinutesEstimated: Boolean = false,
     // Id de la receta que se está editando; null al crear una nueva.
     val editingRecipeId: Int? = null,
     // Foto que tenía la receta al empezar a editarla, para saber si ha cambiado.
@@ -261,6 +263,36 @@ class RecipeViewModel(
         }
     }
 
+    private val pendingSaves = mutableSetOf<Int>()
+
+    /** Guarda o quita de "Guardadas" la receta del detalle, con cambio inmediato como el like. */
+    fun toggleSave() {
+        val recipe = (_detailState.value as? RecipeDetailUiState.Success)?.recipe ?: return
+        if (!pendingSaves.add(recipe.id)) return
+        val saved = !recipe.savedByMe
+        replaceRecipe(recipe.copy(savedByMe = saved))
+
+        viewModelScope.launch {
+            val result = repository.setSaved(recipe.id, saved)
+            pendingSaves.remove(recipe.id)
+            val current = currentRecipe(recipe.id) ?: return@launch
+            when (result) {
+                is ApiResult.Success -> {
+                    replaceRecipe(current.copy(savedByMe = result.data.savedByMe))
+                    _detailActionState.update {
+                        it.copy(message = if (saved) "Guardada en tus recetas guardadas" else "Quitada de guardadas")
+                    }
+                }
+                is ApiResult.Error -> if (result.code == 404) {
+                    onRecipeGone(recipe.id)
+                } else {
+                    replaceRecipe(current.copy(savedByMe = recipe.savedByMe))
+                    _detailActionState.update { it.copy(message = "No se pudo guardar la receta: ${result.message}") }
+                }
+            }
+        }
+    }
+
     /** Pone, cambia o (con null) quita la foto de una receta propia. */
     fun updatePhoto(imageBase64: String?) {
         val recipe = (_detailState.value as? RecipeDetailUiState.Success)?.recipe ?: return
@@ -382,7 +414,7 @@ class RecipeViewModel(
         _formState.update { it.copy(servings = value.filter(Char::isDigit).take(3), error = null) }
 
     fun onPrepMinutesChange(value: String) =
-        _formState.update { it.copy(prepMinutes = value.filter(Char::isDigit).take(4), error = null) }
+        _formState.update { it.copy(prepMinutes = value.filter(Char::isDigit).take(4), prepMinutesEstimated = false, error = null) }
 
     // -- Ingredientes --
 
@@ -581,6 +613,9 @@ class RecipeViewModel(
             ingredients = ingredients.ifEmpty { listOf(IngredientFormItem()) },
             steps = proposal.steps.ifEmpty { listOf("") },
             servings = proposal.servings?.toString().orEmpty(),
+            // Estimación editable, igual que los demás campos: se avisa de que no viene de la foto.
+            prepMinutes = proposal.prepMinutesEstimated?.toString().orEmpty(),
+            prepMinutesEstimated = proposal.prepMinutesEstimated != null,
             fromOcr = true
         )
     }

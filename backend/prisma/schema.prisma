@@ -41,6 +41,7 @@ model User {
   pantryItems               PantryItem[]
   recipeLikes               RecipeLike[]
   comments                  Comment[]
+  savedRecipes              SavedRecipe[]
 }
 
 model Recipe {
@@ -68,6 +69,7 @@ model Recipe {
   logEntries       LogEntry[]
   likes            RecipeLike[]
   comments         Comment[]
+  saves            SavedRecipe[]
   createdAt        DateTime           @default(now())
 
   @@index([authorId])
@@ -174,4 +176,19 @@ model Comment {
   createdAt DateTime @default(now())
 
   @@index([recipeId, createdAt])
+}
+
+// Receta guardada por un usuario para encontrarla después ("Guardadas"). Es una lista personal,
+// distinta del "me gusta" (que es una señal social visible para los demás). Como mucho una por
+// usuario y receta; se borra con la receta o con la cuenta.
+model SavedRecipe {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipeId  Int
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, recipeId])
+  @@index([userId, createdAt])
 }

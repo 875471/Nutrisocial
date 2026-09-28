@@ -42,6 +42,31 @@ data class CreateLogEntryRequest(
     val grams: Double? = null
 )
 
+/** Día del calendario mensual con alguna entrada: kcal totales y estado frente al objetivo. */
+data class CalendarDay(
+    val date: String,
+    val kcal: Int = 0,
+    // [STATUS_ADEQUATE], [STATUS_EXCESS], [STATUS_INSUFFICIENT] o null si el perfil está incompleto.
+    val status: String? = null
+) {
+    companion object {
+        const val STATUS_ADEQUATE = "adecuado"
+        const val STATUS_EXCESS = "excesivo"
+        const val STATUS_INSUFFICIENT = "insuficiente"
+    }
+}
+
+/**
+ * Respuesta de GET /log/calendar?month=AAAA-MM. Solo trae los días con entradas; el estado se
+ * calcula con el objetivo actual del perfil, no con el que hubiera ese día.
+ */
+data class CalendarMonth(
+    val month: String,
+    val dailyCalorieGoal: Int? = null,
+    val days: List<CalendarDay> = emptyList(),
+    val missingProfileFields: List<String> = emptyList()
+)
+
 /** Lo que queda del día frente al objetivo calórico y al reparto de macros; nunca negativo. */
 data class RemainingMacros(
     val kcal: Int = 0,

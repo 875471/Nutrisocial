@@ -96,7 +96,8 @@ data class RecipeCardData(
     val likedByMe: Boolean,
     val likersPreview: List<String>,
     val commentsCount: Int,
-    val commentsPreview: List<CommentPreview>
+    val commentsPreview: List<CommentPreview>,
+    val savedByMe: Boolean = false
 )
 
 /** Ingrediente del carrusel: "200 g · Harina de trigo" y, en el detalle, un aviso del cálculo. */
@@ -123,7 +124,8 @@ fun FeedRecipe.toCardData() = RecipeCardData(
     likedByMe = likedByMe,
     likersPreview = likersPreview,
     commentsCount = commentsCount,
-    commentsPreview = commentsPreview
+    commentsPreview = commentsPreview,
+    savedByMe = savedByMe
 )
 
 /** [ingredientNote] añade a cada ingrediente lo que haya que saber de su cálculo nutricional. */
@@ -145,7 +147,8 @@ fun Recipe.toCardData(ingredientNote: (RecipeIngredient) -> String? = { null }) 
     likersPreview = likersPreview,
     commentsCount = commentsCount,
     // El detalle no trae vista previa: se enlaza a la lista completa.
-    commentsPreview = emptyList()
+    commentsPreview = emptyList(),
+    savedByMe = savedByMe
 )
 
 /** Texto del campo de comentario de una tarjeta y si se está enviando. */
@@ -159,7 +162,8 @@ class RecipeCardActions(
     val onToggleLike: () -> Unit,
     val onOpenComments: () -> Unit,
     val onDraftChange: (String) -> Unit,
-    val onSendComment: () -> Unit
+    val onSendComment: () -> Unit,
+    val onToggleSave: () -> Unit = {}
 ) {
     companion object {
         val Noop = RecipeCardActions(null, {}, {}, {}, {})
@@ -512,7 +516,7 @@ private fun PagerDots(current: Int, count: Int, modifier: Modifier = Modifier) {
     }
 }
 
-/** Me gusta (el corazón animado de siempre), comentarios y compartir. */
+/** Me gusta (el corazón animado de siempre), comentarios, guardar y compartir. */
 @Composable
 private fun RecipeActionsRow(recipe: RecipeCardData, actions: RecipeCardActions, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -537,6 +541,13 @@ private fun RecipeActionsRow(recipe: RecipeCardData, actions: RecipeCardActions,
             )
         }
         Box(modifier = Modifier.weight(1f))
+        IconButton(onClick = actions.onToggleSave) {
+            Icon(
+                painter = painterResource(if (recipe.savedByMe) R.drawable.ic_bookmark else R.drawable.ic_bookmark_border),
+                contentDescription = if (recipe.savedByMe) "Quitar de guardadas" else "Guardar receta",
+                tint = if (recipe.savedByMe) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         IconButton(onClick = {
             // No hay enlaces a recetas concretas: se comparte el título como texto.
             val send = Intent(Intent.ACTION_SEND).apply {

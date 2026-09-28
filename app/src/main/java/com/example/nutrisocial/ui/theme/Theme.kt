@@ -5,6 +5,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
     primary = GreenPrimary,
@@ -70,16 +75,40 @@ private val DarkColorScheme = darkColorScheme(
     onErrorContainer = OnErrorContainerDark
 )
 
+/**
+ * Colores de los estados del calendario nutricional, que Material 3 no tiene: el "error" del
+ * esquema no vale para el rojo porque haría falta además un verde y un azul equivalentes.
+ */
+@Immutable
+data class NutritionStatusColors(
+    val adequate: Color,
+    val excess: Color,
+    val insufficient: Color,
+    // Texto sobre cualquiera de los tres.
+    val onStatus: Color
+)
+
+private val LightStatusColors = NutritionStatusColors(StatusAdequateLight, StatusExcessLight, StatusInsufficientLight, OnStatusLight)
+private val DarkStatusColors = NutritionStatusColors(StatusAdequateDark, StatusExcessDark, StatusInsufficientDark, OnStatusDark)
+
+private val LocalNutritionStatusColors = staticCompositionLocalOf { LightStatusColors }
+
+/** Colores de estado del tema actual (claro u oscuro). */
+val MaterialTheme.statusColors: NutritionStatusColors
+    @Composable @ReadOnlyComposable get() = LocalNutritionStatusColors.current
+
 // Sin color dinámico (Material You): la app mantiene siempre su propia identidad visual.
 @Composable
 fun NutriSocialTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
-        typography = Typography,
-        shapes = AppShapes,
-        content = content
-    )
+    CompositionLocalProvider(LocalNutritionStatusColors provides if (darkTheme) DarkStatusColors else LightStatusColors) {
+        MaterialTheme(
+            colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+            typography = Typography,
+            shapes = AppShapes,
+            content = content
+        )
+    }
 }

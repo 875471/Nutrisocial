@@ -14,6 +14,10 @@ class LogRepository(
     suspend fun getRecommendations(date: String): ApiResult<DailyRecommendations> =
         safeApiCall { api.getRecommendations(date) }
 
+    /** Kcal y estado de cada día con entradas del mes [month] ("AAAA-MM"). */
+    suspend fun getCalendar(month: String): ApiResult<CalendarMonth> =
+        safeApiCall { api.getCalendar(month) }
+
     suspend fun addRecipe(date: String, recipeId: Int, servings: Double): ApiResult<LogEntry> =
         safeApiCall { api.createLogEntry(CreateLogEntryRequest(date = date, recipeId = recipeId, servings = servings)) }
 

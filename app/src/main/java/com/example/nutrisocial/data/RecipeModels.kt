@@ -19,7 +19,9 @@ data class Recipe(
     val description: String? = null,
     val commentsCount: Int = 0,
     // Nombres de quienes dieron los últimos "me gusta" (como mucho 3, el más reciente primero).
-    val likersPreview: List<String> = emptyList()
+    val likersPreview: List<String> = emptyList(),
+    // Si el usuario la tiene en "Guardadas".
+    val savedByMe: Boolean = false
 )
 
 /** Ingrediente guardado: cantidad tal como se escribió, peso estimado y alimento asociado (BEDCA u Open Food Facts). */
@@ -103,7 +105,10 @@ data class OcrRecipeProposal(
     val title: String? = null,
     val servings: Int? = null,
     val ingredients: List<OcrIngredient> = emptyList(),
-    val steps: List<String> = emptyList()
+    val steps: List<String> = emptyList(),
+    // Tiempo ESTIMADO por el servidor a partir del número de pasos e ingredientes (la foto casi
+    // nunca lo trae); null si no había nada de lo que estimarlo.
+    val prepMinutesEstimated: Int? = null
 )
 
 data class OcrIngredient(
@@ -139,17 +144,25 @@ data class FeedRecipe(
     val commentsCount: Int = 0,
     // Los 2 comentarios más recientes y los nombres de los últimos 3 "me gusta".
     val commentsPreview: List<CommentPreview> = emptyList(),
-    val likersPreview: List<String> = emptyList()
+    val likersPreview: List<String> = emptyList(),
+    val savedByMe: Boolean = false
 )
 
-/** Página del feed. [nextCursor] es el id que hay que pedir después, o null si no hay más. */
+/**
+ * Página del feed, del buscador o de las guardadas. [nextCursor] es el id que hay que pedir
+ * después, o null si no hay más. [total] solo lo trae el buscador (número de resultados).
+ */
 data class FeedPage(
     val recipes: List<FeedRecipe> = emptyList(),
-    val nextCursor: Int? = null
+    val nextCursor: Int? = null,
+    val total: Int? = null
 )
 
 /** Respuesta de POST/DELETE /recipes/{id}/like. */
 data class LikeState(val likesCount: Int, val likedByMe: Boolean)
+
+/** Respuesta de POST/DELETE /recipes/{id}/save. */
+data class SaveState(val savedByMe: Boolean)
 
 /** Respuesta de DELETE /recipes/{id}: cuántas entradas del diario propias se han quedado sin receta. */
 data class DeleteRecipeResponse(

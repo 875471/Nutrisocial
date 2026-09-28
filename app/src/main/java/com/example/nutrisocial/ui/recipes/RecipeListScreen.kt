@@ -1,6 +1,9 @@
 package com.example.nutrisocial.ui.recipes
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.filled.Warning
@@ -36,6 +39,19 @@ import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
 
+/** Segmentos de la pestaña Recetas. */
+enum class RecipesTab(val label: String) {
+    MINE("Mis recetas"),
+    EXPLORE("Explorar"),
+    SAVED("Guardadas")
+}
+
+/**
+ * Pestaña Recetas: las propias ("Mis recetas"), el buscador de todas ("Explorar") y las que el
+ * usuario ha guardado de cualquier autor ("Guardadas"). El contenido
+ * de los segmentos que no son "Mis recetas" lo pone quien llama, con su propio ViewModel; recibe
+ * el [SnackbarHostState] de la pantalla para sus avisos.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeListScreen(
@@ -48,7 +64,11 @@ fun RecipeListScreen(
     message: String? = null,
     onMessageShown: () -> Unit = {},
     isRefreshing: Boolean = false,
-    onRefresh: () -> Unit = {}
+    onRefresh: () -> Unit = {},
+    selectedTab: RecipesTab = RecipesTab.MINE,
+    onTabSelected: (RecipesTab) -> Unit = {},
+    exploreContent: @Composable (SnackbarHostState) -> Unit = {},
+    savedContent: @Composable (SnackbarHostState) -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(message) {
@@ -61,7 +81,7 @@ fun RecipeListScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Mis recetas") },
+                title = { Text("Recetas") },
                 actions = {
                     TextButton(onClick = onScanRecipe) {
                         Icon(
@@ -78,7 +98,8 @@ fun RecipeListScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            // Crear es cosa de "Mis recetas"; en los demás segmentos taparía los resultados.
+            if (selectedTab == RecipesTab.MINE) ExtendedFloatingActionButton(
                 onClick = onCreateRecipe,
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text("Nueva receta") },
@@ -88,15 +109,31 @@ fun RecipeListScreen(
             )
         }
     ) { padding ->
-        // Como en el inicio: tirar hacia abajo recarga la lista, también desde un error o vacía.
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = onRefresh,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            RecipeListContent(state = state, onRecipeClick = onRecipeClick, onRetry = onRetry)
+        Column(modifier = Modifier.padding(padding)) {
+            PrimaryTabRow(
+                selectedTabIndex = selectedTab.ordinal,
+                containerColor = MaterialTheme.colorScheme.background
+            ) {
+                RecipesTab.entries.forEach { tab ->
+                    Tab(
+                        selected = tab == selectedTab,
+                        onClick = { onTabSelected(tab) },
+                        text = { Text(tab.label, maxLines = 1) }
+                    )
+                }
+            }
+            when (selectedTab) {
+                // Como en el inicio: tirar hacia abajo recarga la lista, también desde un error o vacía.
+                RecipesTab.MINE -> PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = onRefresh,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    RecipeListContent(state = state, onRecipeClick = onRecipeClick, onRetry = onRetry)
+                }
+                RecipesTab.EXPLORE -> exploreContent(snackbarHostState)
+                RecipesTab.SAVED -> savedContent(snackbarHostState)
+            }
         }
     }
 }

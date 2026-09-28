@@ -52,6 +52,10 @@ class RecipeRepository(
     /** Da ([liked] = true) o quita el "me gusta" y devuelve el recuento actualizado. */
     suspend fun setLiked(id: Int, liked: Boolean): ApiResult<LikeState> =
         safeApiCall { if (liked) api.likeRecipe(id) else api.unlikeRecipe(id) }
+
+    /** Guarda ([saved] = true) o quita la receta de "Guardadas". */
+    suspend fun setSaved(id: Int, saved: Boolean): ApiResult<SaveState> =
+        safeApiCall { if (saved) api.saveRecipe(id) else api.unsaveRecipe(id) }
 }
 
 /** Mensaje para una receta que ya no existe (borrada, quizá desde otro dispositivo). */

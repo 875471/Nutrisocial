@@ -1,6 +1,7 @@
 package com.example.nutrisocial
 
 import com.example.nutrisocial.data.AddPantryItemRequest
+import com.example.nutrisocial.data.CalendarMonth
 import com.example.nutrisocial.data.Comment
 import com.example.nutrisocial.data.CommentsPage
 import com.example.nutrisocial.data.CreateCommentRequest
@@ -26,6 +27,7 @@ import com.example.nutrisocial.data.Profile
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RegisterResponse
 import com.example.nutrisocial.data.ResetPasswordRequest
+import com.example.nutrisocial.data.SaveState
 import com.example.nutrisocial.data.RegisterRequest
 import com.example.nutrisocial.data.UpdateProfileRequest
 import com.example.nutrisocial.data.User
@@ -89,6 +91,16 @@ interface ApiService {
     @GET("recipes/feed")
     suspend fun getFeed(@Query("cursor") cursor: Int?, @Query("limit") limit: Int): Response<FeedPage>
 
+    // Buscador de recetas de cualquier autor por texto libre, ordenadas por fecha o por tiempo.
+    @GET("recipes/search")
+    suspend fun searchRecipes(
+        @Query("q") query: String?,
+        @Query("sortBy") sortBy: String,
+        @Query("order") order: String,
+        @Query("cursor") cursor: Int?,
+        @Query("limit") limit: Int
+    ): Response<FeedPage>
+
     // Cuerpo JSON escrito a mano: Gson omite los null y para quitar la foto hay que mandar
     // {"imageBase64": null} explícitamente (ver RecipeRepository.updateImage).
     @PUT("recipes/{id}/image")
@@ -99,6 +111,17 @@ interface ApiService {
 
     @DELETE("recipes/{id}/like")
     suspend fun unlikeRecipe(@Path("id") id: Int): Response<LikeState>
+
+    // Guardar y dejar de guardar (idempotentes): devuelven el estado final.
+    @POST("recipes/{id}/save")
+    suspend fun saveRecipe(@Path("id") id: Int): Response<SaveState>
+
+    @DELETE("recipes/{id}/save")
+    suspend fun unsaveRecipe(@Path("id") id: Int): Response<SaveState>
+
+    // Recetas guardadas, de la guardada más recientemente a la más antigua, de 20 en 20.
+    @GET("recipes/saved")
+    suspend fun getSavedRecipes(@Query("cursor") cursor: Int?, @Query("limit") limit: Int): Response<FeedPage>
 
     // Comentarios de una receta, del más reciente al más antiguo, de 20 en 20.
     @GET("recipes/{id}/comments")
@@ -129,6 +152,10 @@ interface ApiService {
 
     @GET("log")
     suspend fun getDailyLog(@Query("date") date: String): Response<DailyLog>
+
+    // Solo los días del mes con alguna entrada.
+    @GET("log/calendar")
+    suspend fun getCalendar(@Query("month") month: String): Response<CalendarMonth>
 
     @GET("log/recommendations")
     suspend fun getRecommendations(@Query("date") date: String): Response<DailyRecommendations>

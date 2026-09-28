@@ -267,3 +267,18 @@ test('sin encabezados: la numeración con forma de ingrediente va a ingredientes
   assert.deepEqual(salsa.ingredients, []);
   assert.equal(salsa.steps.length, 2);
 });
+
+// ---- Estimación del tiempo de preparación ----
+
+const { estimatePrepMinutes } = require('../src/ocr/estimatePrepTime');
+
+test('estimatePrepMinutes: 10 + 5·pasos + 2·ingredientes, en múltiplos de 5 y entre 10 y 180', () => {
+  // Tortilla de patatas: 4 pasos y 5 ingredientes → 10 + 20 + 10 = 40.
+  assert.equal(estimatePrepMinutes(4, 5), 40);
+  // 3 pasos y 4 ingredientes → 33, redondeado a 35.
+  assert.equal(estimatePrepMinutes(3, 4), 35);
+  // Receta mínima: nunca por debajo de 10.
+  assert.equal(estimatePrepMinutes(0, 0), 10);
+  // Receta enorme: se acota a 3 horas.
+  assert.equal(estimatePrepMinutes(40, 30), 180);
+});
