@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,9 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -35,20 +32,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.nutrisocial.data.CommentPreview
 import com.example.nutrisocial.data.FeedRecipe
+import com.example.nutrisocial.ui.recipes.RecipeCardActions
+import com.example.nutrisocial.ui.recipes.RecipeFeedCard
+import com.example.nutrisocial.ui.recipes.toCardData
 import com.example.nutrisocial.ui.recipes.CenteredMessage
-import com.example.nutrisocial.ui.recipes.InfoPill
-import com.example.nutrisocial.ui.recipes.LikeButton
 import com.example.nutrisocial.ui.recipes.LoadingBox
-import com.example.nutrisocial.ui.recipes.RecipeThumbnail
-import com.example.nutrisocial.ui.recipes.formatNumber
-import com.example.nutrisocial.ui.recipes.prepTimeLabel
 import com.example.nutrisocial.ui.theme.ButtonShape
-import com.example.nutrisocial.ui.theme.CardElevation
-import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
 
@@ -59,10 +52,13 @@ data class FeedActions(
     val onToggleLike: (Int) -> Unit,
     val onRecipeClick: (Int) -> Unit,
     val onCreateRecipe: () -> Unit,
-    val onMessageShown: () -> Unit
+    val onMessageShown: () -> Unit,
+    val onOpenComments: (Int) -> Unit,
+    val onCommentDraftChange: (Int, String) -> Unit,
+    val onSendComment: (Int) -> Unit
 ) {
     companion object {
-        val Noop = FeedActions({}, {}, {}, {}, {}, {})
+        val Noop = FeedActions({}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {})
     }
 }
 
@@ -71,7 +67,6 @@ data class FeedActions(
 @Composable
 fun HomeTabScreen(
     userName: String,
-    currentUserId: Int?,
     state: FeedUiState,
     actions: FeedActions
 ) {
@@ -138,11 +133,17 @@ fun HomeTabScreen(
 
                     else -> {
                         items(state.recipes, key = { it.id }) { recipe ->
-                            FeedRecipeCard(
-                                recipe = recipe,
-                                isOwn = recipe.authorId == currentUserId,
-                                onClick = { actions.onRecipeClick(recipe.id) },
-                                onToggleLike = { actions.onToggleLike(recipe.id) }
+                            RecipeFeedCard(
+                                recipe = recipe.toCardData(),
+                                currentUserName = userName,
+                                draft = state.draftFor(recipe.id),
+                                actions = RecipeCardActions(
+                                    onOpen = { actions.onRecipeClick(recipe.id) },
+                                    onToggleLike = { actions.onToggleLike(recipe.id) },
+                                    onOpenComments = { actions.onOpenComments(recipe.id) },
+                                    onDraftChange = { actions.onCommentDraftChange(recipe.id, it) },
+                                    onSendComment = { actions.onSendComment(recipe.id) }
+                                )
                             )
                         }
                         item(key = "footer") { FeedFooter(state = state, onLoadMore = actions.onLoadMore) }
@@ -184,78 +185,22 @@ private fun FeedFooter(state: FeedUiState, onLoadMore: () -> Unit) {
     }
 }
 
-/** Misma estructura que [com.example.nutrisocial.ui.recipes.RecipeCard], con autor y "me gusta". */
-@Composable
-private fun FeedRecipeCard(recipe: FeedRecipe, isOwn: Boolean, onClick: () -> Unit, onToggleLike: () -> Unit) {
-    ElevatedCard(
-        onClick = onClick,
-        shape = CardShape,
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardElevation),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(start = Spacing.md, top = Spacing.md, bottom = Spacing.md),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            RecipeThumbnail(title = recipe.title, imageBase64 = recipe.imageBase64, size = 72.dp)
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = Spacing.md),
-                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-            ) {
-                Text(
-                    text = recipe.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = if (isOwn) "Receta tuya" else "Por ${recipe.authorName.ifBlank { "otro usuario" }}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                    modifier = Modifier.padding(top = Spacing.xs)
-                ) {
-                    if (recipe.kcalPerServing > 0) {
-                        InfoPill(
-                            text = "${formatNumber(recipe.kcalPerServing)} kcal/ración",
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                    }
-                    recipe.prepMinutes?.let {
-                        InfoPill(
-                            text = prepTimeLabel(it),
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-                }
-            }
-            LikeButton(liked = recipe.likedByMe, count = recipe.likesCount, onToggle = onToggleLike)
-        }
-    }
-}
-
 @Preview(showBackground = true, heightDp = 700)
 @Composable
 private fun HomeTabScreenPreview() {
     NutriSocialTheme {
         HomeTabScreen(
             userName = "Ana",
-            currentUserId = 1,
             state = FeedUiState(
                 isLoading = false,
                 recipes = listOf(
-                    FeedRecipe(3, "Tortilla de patatas", authorId = 2, authorName = "Luis", kcalPerServing = 410.0, prepMinutes = 40, likesCount = 5, likedByMe = true),
-                    FeedRecipe(2, "Crema de calabaza", authorId = 1, authorName = "Ana", kcalPerServing = 140.0, likesCount = 2),
-                    FeedRecipe(1, "Ensalada de garbanzos con atún y huevo duro", authorId = 3, authorName = "Marta", kcalPerServing = 380.0, prepMinutes = 15)
+                    FeedRecipe(
+                        3, "Tortilla de patatas", authorId = 2, authorName = "Luis", kcalPerServing = 410.0,
+                        proteinPerServing = 14.5, prepMinutes = 40, likesCount = 5, likedByMe = true,
+                        likersPreview = listOf("Marta"), steps = listOf("Pelar y freír las patatas.", "Batir los huevos y cuajar."),
+                        commentsCount = 1, commentsPreview = listOf(CommentPreview(1, "¡Con cebolla, por favor!", "Marta"))
+                    ),
+                    FeedRecipe(2, "Crema de calabaza", authorId = 1, authorName = "Ana", kcalPerServing = 140.0, likesCount = 2)
                 ),
                 nextCursor = 1
             ),
@@ -268,6 +213,6 @@ private fun HomeTabScreenPreview() {
 @Composable
 private fun HomeTabEmptyPreview() {
     NutriSocialTheme {
-        HomeTabScreen(userName = "Ana", currentUserId = 1, state = FeedUiState(isLoading = false), actions = FeedActions.Noop)
+        HomeTabScreen(userName = "Ana", state = FeedUiState(isLoading = false), actions = FeedActions.Noop)
     }
 }

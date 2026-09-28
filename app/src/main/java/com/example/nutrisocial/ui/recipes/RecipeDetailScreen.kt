@@ -2,18 +2,14 @@ package com.example.nutrisocial.ui.recipes
 
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -51,7 +47,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -85,7 +80,9 @@ fun RecipeDetailScreen(
     // Para saber si la receta es propia (solo el autor puede cambiar la foto).
     currentUserId: Int? = null,
     actions: RecipeDetailActions = RecipeDetailActions.Noop,
-    actionState: RecipeDetailActionState = RecipeDetailActionState()
+    actionState: RecipeDetailActionState = RecipeDetailActionState(),
+    currentUserName: String = "",
+    commentDraft: CommentDraft = CommentDraft()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(quickAddState.message) {
@@ -167,6 +164,8 @@ fun RecipeDetailScreen(
             is RecipeDetailUiState.Success -> RecipeDetailContent(
                 recipe = state.recipe,
                 isOwner = currentUserId != null && state.recipe.authorId == currentUserId,
+                currentUserName = currentUserName,
+                commentDraft = commentDraft,
                 actions = actions,
                 actionState = actionState,
                 modifier = contentModifier
@@ -226,24 +225,33 @@ private fun AddToDiaryDialog(recipe: Recipe, onConfirm: (Double) -> Unit, onDism
     )
 }
 
-/** Acciones del detalle: "me gusta" y, solo para el autor, foto, editar y eliminar. */
+/** Acciones del detalle: "me gusta", comentarios y, solo para el autor, foto, editar y eliminar. */
 data class RecipeDetailActions(
     val onToggleLike: () -> Unit,
     val onUpdatePhoto: (String?) -> Unit,
     val onMessage: (String) -> Unit,
     val onMessageShown: () -> Unit,
     val onEdit: () -> Unit,
-    val onDelete: () -> Unit
+    val onDelete: () -> Unit,
+    val onOpenComments: () -> Unit = {},
+    val onCommentDraftChange: (String) -> Unit = {},
+    val onSendComment: () -> Unit = {}
 ) {
     companion object {
         val Noop = RecipeDetailActions({}, {}, {}, {}, {}, {})
     }
 }
 
+/**
+ * La misma tarjeta que en el feed, con ingredientes y pasos ya desplegados, y debajo lo que
+ * solo tiene sentido aquí: las acciones del autor y la información nutricional completa.
+ */
 @Composable
 private fun RecipeDetailContent(
     recipe: Recipe,
     isOwner: Boolean,
+    currentUserName: String,
+    commentDraft: CommentDraft,
     actions: RecipeDetailActions,
     actionState: RecipeDetailActionState,
     modifier: Modifier = Modifier
@@ -253,35 +261,27 @@ private fun RecipeDetailContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Spacing.md)
-            // Hueco para que el botón flotante no tape el último paso.
+            // Hueco para que el botón flotante no tape la información nutricional.
             .padding(bottom = 72.dp),
         verticalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
-        // Sin foto no se reserva hueco: la receta empieza por el título, como antes.
-        recipe.imageBase64?.let { photo ->
-            Base64Image(
-                base64 = photo,
-                contentDescription = "Foto de ${recipe.title}",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(4f / 3f)
-                    .clip(CardShape)
-            )
-        }
+        RecipeFeedCard(
+            recipe = recipe.toCardData(::ingredientNote),
+            currentUserName = currentUserName,
+            draft = commentDraft,
+            actions = RecipeCardActions(
+                onOpen = null,
+                onToggleLike = actions.onToggleLike,
+                onOpenComments = actions.onOpenComments,
+                onDraftChange = actions.onCommentDraftChange,
+                onSendComment = actions.onSendComment
+            ),
+            expandLists = true,
+            showCommentsPreview = false
+        )
 
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-            Text(text = recipe.title, style = MaterialTheme.typography.headlineMedium)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = if (isOwner) "Receta tuya" else "Por ${recipe.authorName.ifBlank { "otro usuario" }}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f)
-                )
-                LikeButton(liked = recipe.likedByMe, count = recipe.likesCount, onToggle = actions.onToggleLike)
-            }
-            RecipeInfoRow(servings = recipe.servings, prepMinutes = recipe.prepMinutes)
-            if (isOwner) {
+        if (isOwner) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 OwnerPhotoActions(
                     hasPhoto = recipe.imageBase64 != null,
                     isUpdating = actionState.isUpdatingPhoto,
@@ -297,51 +297,6 @@ private fun RecipeDetailContent(
         }
 
         NutritionSection(recipe)
-
-        DetailSection(title = "Ingredientes") {
-            recipe.ingredients.forEach { ingredient ->
-                Row {
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 10.dp)
-                            .size(Spacing.sm)
-                            .background(MaterialTheme.colorScheme.primary, CircleShape)
-                    )
-                    Column(modifier = Modifier.padding(start = Spacing.md)) {
-                        Text(text = ingredient.name, style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            text = ingredientDetail(ingredient),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-
-        DetailSection(title = "Preparación") {
-            recipe.steps.forEachIndexed { index, step ->
-                Row {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.size(Spacing.xl)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(text = "${index + 1}", style = MaterialTheme.typography.labelLarge)
-                        }
-                    }
-                    Text(
-                        text = step,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = Spacing.md, top = Spacing.xs)
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -439,14 +394,17 @@ private fun OwnerEditActions(title: String, isDeleting: Boolean, enabled: Boolea
     }
 }
 
-/** Cantidad, peso estimado y avisos de un ingrediente, en una línea secundaria. */
-private fun ingredientDetail(ingredient: RecipeIngredient): String {
+/**
+ * Peso estimado y avisos del cálculo de un ingrediente, en una línea secundaria bajo
+ * "cantidad · nombre" (la cantidad ya la pone la tarjeta). null si no hay nada que añadir.
+ */
+private fun ingredientNote(ingredient: RecipeIngredient): String? {
     val quantity = ingredient.quantity
     val amount = when {
         quantity == null -> "Sin cantidad"
-        ingredient.unit in listOf("g", "ml") -> "${formatNumber(quantity)} ${ingredient.unit}"
-        ingredient.grams != null -> "${quantityLabel(quantity, ingredient.unit)} (≈ ${formatNumber(ingredient.grams)} g)"
-        else -> quantityLabel(quantity, ingredient.unit)
+        ingredient.unit in listOf("g", "ml") -> null
+        ingredient.grams != null -> "≈ ${formatNumber(ingredient.grams)} g"
+        else -> null
     }
     val food = ingredient.food
     val note = when {
@@ -459,18 +417,7 @@ private fun ingredientDetail(ingredient: RecipeIngredient): String {
     }
     // Los datos de Open Food Facts son menos fiables que los de BEDCA: se indica siempre.
     val source = if (ingredient.grams != null && isOpenFoodFacts(food?.source)) "datos de Open Food Facts" else null
-    return listOfNotNull(amount, note, source).joinToString(" · ")
-}
-
-private fun quantityLabel(quantity: Double, unit: String?): String {
-    val plural = quantity != 1.0 && unit in listOf("unidad", "cucharada", "cucharadita", "taza", "pizca")
-    val unitText = when {
-        unit == null -> ""
-        plural && unit == "unidad" -> "unidades"
-        plural -> unit + "s"
-        else -> unit
-    }
-    return "${formatNumber(quantity)} $unitText".trim()
+    return listOfNotNull(amount, note, source).joinToString(" · ").ifEmpty { null }
 }
 
 @Composable

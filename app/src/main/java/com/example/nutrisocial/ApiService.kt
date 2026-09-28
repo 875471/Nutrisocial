@@ -1,6 +1,9 @@
 package com.example.nutrisocial
 
 import com.example.nutrisocial.data.AddPantryItemRequest
+import com.example.nutrisocial.data.Comment
+import com.example.nutrisocial.data.CommentsPage
+import com.example.nutrisocial.data.CreateCommentRequest
 import com.example.nutrisocial.data.CreateLogEntryRequest
 import com.example.nutrisocial.data.CreateRecipeRequest
 import com.example.nutrisocial.data.DailyLog
@@ -96,6 +99,21 @@ interface ApiService {
 
     @DELETE("recipes/{id}/like")
     suspend fun unlikeRecipe(@Path("id") id: Int): Response<LikeState>
+
+    // Comentarios de una receta, del más reciente al más antiguo, de 20 en 20.
+    @GET("recipes/{id}/comments")
+    suspend fun getComments(
+        @Path("id") recipeId: Int,
+        @Query("cursor") cursor: Int?,
+        @Query("limit") limit: Int
+    ): Response<CommentsPage>
+
+    @POST("recipes/{id}/comments")
+    suspend fun addComment(@Path("id") recipeId: Int, @Body request: CreateCommentRequest): Response<Comment>
+
+    // Solo el autor del comentario (403 si no).
+    @DELETE("comments/{id}")
+    suspend fun deleteComment(@Path("id") id: Int): Response<Map<String, Boolean>>
 
     @GET("foods/search")
     suspend fun searchFoods(@Query("q") query: String): Response<List<FoodSuggestion>>

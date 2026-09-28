@@ -53,3 +53,33 @@ fun dayLabel(iso: String): String {
 /** "1996-09-27" → "27/09/1996". */
 fun displayDate(iso: String): String =
     parseIso(iso)?.let { SimpleDateFormat("dd/MM/yyyy", SpanishLocale).format(it.time) } ?: iso
+
+// Instantes que envía el servidor (createdAt): ISO 8601 en UTC, como "2026-09-27T14:19:15.860Z".
+private fun parseServerInstant(iso: String): Long? = listOf("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'")
+    .firstNotNullOfOrNull { pattern ->
+        try {
+            SimpleDateFormat(pattern, Locale.ROOT).apply { timeZone = TimeZone.getTimeZone("UTC") }.parse(iso)?.time
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+/**
+ * Tiempo transcurrido desde [createdAt] en lenguaje natural: "ahora mismo", "hace 5 minutos",
+ * "hace 2 horas", "hace 3 días", "hace 2 semanas"... Vacío si la fecha no se entiende. Si el
+ * reloj del móvil va por detrás del servidor, una fecha "futura" también es "ahora mismo".
+ */
+fun formatRelativeTime(createdAt: String, now: Long = System.currentTimeMillis()): String {
+    val then = parseServerInstant(createdAt) ?: return ""
+    val minutes = (now - then) / 60_000
+    fun ago(amount: Long, singular: String, plural: String) = "hace $amount ${if (amount == 1L) singular else plural}"
+    return when {
+        minutes < 1 -> "ahora mismo"
+        minutes < 60 -> ago(minutes, "minuto", "minutos")
+        minutes < 60 * 24 -> ago(minutes / 60, "hora", "horas")
+        minutes < 60 * 24 * 7 -> ago(minutes / (60 * 24), "día", "días")
+        minutes < 60 * 24 * 30 -> ago(minutes / (60 * 24 * 7), "semana", "semanas")
+        minutes < 60 * 24 * 365 -> ago(minutes / (60 * 24 * 30), "mes", "meses")
+        else -> ago(minutes / (60 * 24 * 365), "año", "años")
+    }
+}

@@ -76,7 +76,8 @@ fun RecipeFormScreen(
     onSaved: () -> Unit,
     onBack: () -> Unit,
     onDismissOcrNotice: () -> Unit = {},
-    onPhotoChange: (String?) -> Unit = {}
+    onPhotoChange: (String?) -> Unit = {},
+    onDescriptionChange: (String) -> Unit = {}
 ) {
     LaunchedEffect(state.saved) {
         if (state.saved) onSaved()
@@ -127,6 +128,19 @@ fun RecipeFormScreen(
                     capitalization = KeyboardCapitalization.Sentences,
                     imeAction = ImeAction.Next
                 ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Lo que acompaña al título en el inicio, como el texto de una publicación.
+            OutlinedTextField(
+                value = state.description,
+                onValueChange = onDescriptionChange,
+                label = { Text("Descripción (opcional)") },
+                placeholder = { Text("Cuéntale a la comunidad algo de esta receta") },
+                minLines = 2,
+                maxLines = 5,
+                enabled = enabled,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 modifier = Modifier.fillMaxWidth()
             )
 

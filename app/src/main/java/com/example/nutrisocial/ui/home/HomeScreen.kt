@@ -32,6 +32,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.nutrisocial.data.User
+import com.example.nutrisocial.data.toPreview
+import com.example.nutrisocial.ui.comments.CommentsActions
+import com.example.nutrisocial.ui.comments.CommentsScreen
+import com.example.nutrisocial.ui.comments.CommentsViewModel
 import com.example.nutrisocial.ui.log.AddEntryActions
 import com.example.nutrisocial.ui.log.LogActions
 import com.example.nutrisocial.ui.log.LogScreen
@@ -60,6 +64,8 @@ private object HomeRoutes {
     const val ESCANEAR_RECETA = "recetas/escanear"
     const val DETALLE_RECETA = "recetas/detalle/{id}"
     fun detalleReceta(id: Int) = "recetas/detalle/$id"
+    const val COMENTARIOS = "recetas/comentarios/{id}"
+    fun comentarios(id: Int) = "recetas/comentarios/$id"
 }
 
 private enum class HomeTab(val route: String, val label: String, val icon: ImageVector) {
@@ -123,7 +129,6 @@ fun HomeScreen(
                 val feedState by feedViewModel.state.collectAsStateWithLifecycle()
                 HomeTabScreen(
                     userName = user?.name.orEmpty(),
-                    currentUserId = user?.id,
                     state = feedState,
                     actions = remember(feedViewModel) {
                         FeedActions(
@@ -135,7 +140,10 @@ fun HomeScreen(
                                 recipeViewModel.resetForm()
                                 navController.navigate(HomeRoutes.NUEVA_RECETA)
                             },
-                            onMessageShown = feedViewModel::onMessageShown
+                            onMessageShown = feedViewModel::onMessageShown,
+                            onOpenComments = { id -> navController.navigate(HomeRoutes.comentarios(id)) },
+                            onCommentDraftChange = feedViewModel::onCommentDraftChange,
+                            onSendComment = feedViewModel::sendComment
                         )
                     }
                 )
@@ -345,6 +353,14 @@ fun HomeScreen(
                 LaunchedEffect(detailState) {
                     (detailState as? RecipeDetailUiState.Success)?.let { feedViewModel.syncRecipe(it.recipe) }
                 }
+                // Un comentario publicado desde el detalle también aparece en la tarjeta del feed.
+                val postedComment by recipeViewModel.postedComment.collectAsStateWithLifecycle()
+                LaunchedEffect(postedComment) {
+                    val (recipeId, comment) = postedComment ?: return@LaunchedEffect
+                    feedViewModel.onCommentPosted(recipeId, comment)
+                    recipeViewModel.onPostedCommentHandled()
+                }
+                val commentDraft by recipeViewModel.commentDraft.collectAsStateWithLifecycle()
                 // El LogViewModel compartido: al añadir la receta hoy, el diario se actualiza.
                 val quickAddState by logViewModel.quickAddState.collectAsStateWithLifecycle()
                 RecipeDetailScreen(
@@ -365,10 +381,49 @@ fun HomeScreen(
                                 recipeViewModel.startEditing()
                                 navController.navigate(HomeRoutes.EDITAR_RECETA)
                             },
-                            onDelete = recipeViewModel::deleteRecipe
+                            onDelete = recipeViewModel::deleteRecipe,
+                            onOpenComments = { navController.navigate(HomeRoutes.comentarios(id)) },
+                            onCommentDraftChange = recipeViewModel::onCommentDraftChange,
+                            onSendComment = recipeViewModel::sendComment
                         )
                     },
-                    actionState = detailActionState
+                    actionState = detailActionState,
+                    currentUserName = user?.name.orEmpty(),
+                    commentDraft = commentDraft
+                )
+            }
+
+            composable(
+                route = HomeRoutes.COMENTARIOS,
+                arguments = listOf(navArgument("id") { type = NavType.IntType })
+            ) { entry ->
+                val id = entry.arguments?.getInt("id") ?: return@composable
+                // Con ámbito en esta pantalla: al salir se descarta la lista cargada.
+                val commentsViewModel: CommentsViewModel = viewModel()
+                LaunchedEffect(id) { commentsViewModel.load(id) }
+                val commentsState by commentsViewModel.state.collectAsStateWithLifecycle()
+                // El recuento y los últimos comentarios se copian a la tarjeta del feed y al detalle.
+                val latest = commentsState.comments.take(2)
+                LaunchedEffect(commentsState.loaded, commentsState.total, latest) {
+                    if (!commentsState.loaded) return@LaunchedEffect
+                    feedViewModel.syncComments(id, commentsState.total, latest.map { it.toPreview() })
+                    recipeViewModel.syncCommentsCount(id, commentsState.total)
+                }
+                CommentsScreen(
+                    state = commentsState,
+                    currentUserId = user?.id,
+                    currentUserName = user?.name.orEmpty(),
+                    actions = remember(commentsViewModel) {
+                        CommentsActions(
+                            onBack = { navController.popBackStack() },
+                            onRetry = commentsViewModel::retry,
+                            onLoadMore = commentsViewModel::loadMore,
+                            onDraftChange = commentsViewModel::onDraftChange,
+                            onSend = commentsViewModel::send,
+                            onDelete = commentsViewModel::delete,
+                            onMessageShown = commentsViewModel::onMessageShown
+                        )
+                    }
                 )
             }
         }
@@ -382,6 +437,7 @@ private fun RecipeFormDestination(recipeViewModel: RecipeViewModel, onSaved: () 
     RecipeFormScreen(
         state = formState,
         onTitleChange = recipeViewModel::onTitleChange,
+        onDescriptionChange = recipeViewModel::onDescriptionChange,
         onServingsChange = recipeViewModel::onServingsChange,
         onPrepMinutesChange = recipeViewModel::onPrepMinutesChange,
         ingredientActions = remember(recipeViewModel) {

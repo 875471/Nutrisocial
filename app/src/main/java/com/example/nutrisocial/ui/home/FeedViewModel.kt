@@ -3,10 +3,15 @@ package com.example.nutrisocial.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nutrisocial.data.ApiResult
+import com.example.nutrisocial.data.Comment
+import com.example.nutrisocial.data.CommentPreview
+import com.example.nutrisocial.data.CommentRepository
 import com.example.nutrisocial.data.FeedRecipe
 import com.example.nutrisocial.data.FeedRepository
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RecipeRepository
+import com.example.nutrisocial.data.toPreview
+import com.example.nutrisocial.ui.recipes.CommentDraft
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,14 +30,19 @@ data class FeedUiState(
     val isRefreshing: Boolean = false,
     val isLoadingMore: Boolean = false,
     val error: String? = null,
-    val message: String? = null
+    val message: String? = null,
+    // Lo escrito en el campo de comentario de cada tarjeta, por id de receta.
+    val commentDrafts: Map<Int, CommentDraft> = emptyMap()
 ) {
+    fun draftFor(recipeId: Int): CommentDraft = commentDrafts[recipeId] ?: CommentDraft()
+
     val canLoadMore: Boolean get() = nextCursor != null
 }
 
 class FeedViewModel(
     private val feedRepository: FeedRepository = FeedRepository(),
-    private val recipeRepository: RecipeRepository = RecipeRepository()
+    private val recipeRepository: RecipeRepository = RecipeRepository(),
+    private val commentRepository: CommentRepository = CommentRepository()
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedUiState())
@@ -124,20 +134,72 @@ class FeedViewModel(
         }
     }
 
+    // ---- Comentarios desde la tarjeta ----
+
+    fun onCommentDraftChange(recipeId: Int, text: String) = updateDraft(recipeId) { it.copy(text = text) }
+
+    /** Publica lo escrito en la tarjeta. Si falla, el texto se queda en el campo para reintentar. */
+    fun sendComment(recipeId: Int) {
+        val draft = _state.value.draftFor(recipeId)
+        val text = draft.text.trim()
+        if (text.isEmpty() || draft.isSending) return
+        updateDraft(recipeId) { it.copy(isSending = true) }
+        viewModelScope.launch {
+            when (val result = commentRepository.addComment(recipeId, text)) {
+                is ApiResult.Success -> {
+                    _state.update { it.copy(commentDrafts = it.commentDrafts - recipeId) }
+                    onCommentPosted(recipeId, result.data)
+                }
+                is ApiResult.Error -> {
+                    updateDraft(recipeId) { it.copy(isSending = false) }
+                    if (result.code == 404) {
+                        removeRecipe(recipeId)
+                        _state.update { it.copy(message = result.message) }
+                    } else {
+                        _state.update { it.copy(message = "No se pudo publicar el comentario: ${result.message}") }
+                    }
+                }
+            }
+        }
+    }
+
+    /** Un comentario nuevo (desde la tarjeta o desde el detalle) pasa a ser el primero de la vista previa. */
+    fun onCommentPosted(recipeId: Int, comment: Comment) = updateRecipe(recipeId) {
+        it.copy(
+            commentsCount = it.commentsCount + 1,
+            commentsPreview = (listOf(comment.toPreview()) + it.commentsPreview).take(COMMENTS_PREVIEW)
+        )
+    }
+
+    /** Recuento y últimos comentarios tal como los ha dejado la pantalla de comentarios. */
+    fun syncComments(recipeId: Int, total: Int, latest: List<CommentPreview>) = updateRecipe(recipeId) {
+        it.copy(commentsCount = total, commentsPreview = latest.take(COMMENTS_PREVIEW))
+    }
+
+    private fun updateDraft(recipeId: Int, transform: (CommentDraft) -> CommentDraft) = _state.update {
+        it.copy(commentDrafts = it.commentDrafts + (recipeId to transform(it.draftFor(recipeId))))
+    }
+
     /**
-     * Copia en la tarjeta del feed lo que haya cambiado en el detalle de una receta (likes o
-     * foto), para que al volver se vea igual en las dos pantallas.
+     * Copia en la tarjeta del feed lo que haya cambiado en el detalle de una receta (likes, foto
+     * o edición), para que al volver se vea igual en las dos pantallas. Los comentarios no: se
+     * sincronizan aparte (onCommentPosted, syncComments) para no contarlos dos veces.
      */
     fun syncRecipe(recipe: Recipe) = updateRecipe(recipe.id) {
         it.copy(
             title = recipe.title,
+            description = recipe.description,
             imageBase64 = recipe.imageBase64,
-            // Al editar la receta cambian sus raciones, tiempo y kcal.
+            // Al editar la receta cambian sus raciones, tiempo, valores, ingredientes y pasos.
             servings = recipe.servings,
             prepMinutes = recipe.prepMinutes,
             kcalPerServing = recipe.nutrition.perServing.kcal,
+            proteinPerServing = recipe.nutrition.perServing.protein,
+            ingredients = recipe.ingredients,
+            steps = recipe.steps,
             likesCount = recipe.likesCount,
-            likedByMe = recipe.likedByMe
+            likedByMe = recipe.likedByMe,
+            likersPreview = recipe.likersPreview
         )
     }
 
@@ -147,6 +209,11 @@ class FeedViewModel(
     }
 
     fun onMessageShown() = _state.update { it.copy(message = null) }
+
+    private companion object {
+        // Los mismos que devuelve el servidor en commentsPreview.
+        const val COMMENTS_PREVIEW = 2
+    }
 
     private fun updateRecipe(id: Int, transform: (FeedRecipe) -> FeedRecipe) = _state.update { state ->
         if (state.recipes.none { it.id == id }) state

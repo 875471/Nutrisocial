@@ -14,7 +14,12 @@ data class Recipe(
     val imageBase64: String? = null,
     val authorName: String = "",
     val likesCount: Int = 0,
-    val likedByMe: Boolean = false
+    val likedByMe: Boolean = false,
+    // Texto corto opcional que acompaña al título.
+    val description: String? = null,
+    val commentsCount: Int = 0,
+    // Nombres de quienes dieron los últimos "me gusta" (como mucho 3, el más reciente primero).
+    val likersPreview: List<String> = emptyList()
 )
 
 /** Ingrediente guardado: cantidad tal como se escribió, peso estimado y alimento asociado (BEDCA u Open Food Facts). */
@@ -59,7 +64,9 @@ data class CreateRecipeRequest(
     // Gson omite los null, así que si no se indica no se envía el campo.
     val prepMinutes: Int?,
     // Foto ya comprimida en el móvil (ver ui/ImageUtils.kt); null si no hay.
-    val imageBase64: String? = null
+    val imageBase64: String? = null,
+    // Opcional; como Gson omite los null, al editar vaciarla la borra.
+    val description: String? = null
 )
 
 /** Ingrediente enviado al crear una receta. Sin cantidad ("sal al gusto") no suma en el cálculo. */
@@ -109,7 +116,10 @@ data class OcrIngredient(
     val foodSource: String? = null
 )
 
-/** Receta en el feed social (GET /recipes/feed): lo justo para la tarjeta. */
+/**
+ * Receta en el feed social (GET /recipes/feed): lo que enseña la tarjeta, incluido el carrusel
+ * (ingredientes con su cantidad, sin peso ni alimento asociado, y pasos) y las vistas previas.
+ */
 data class FeedRecipe(
     val id: Int,
     val title: String,
@@ -121,7 +131,15 @@ data class FeedRecipe(
     val kcalPerServing: Double = 0.0,
     val likesCount: Int = 0,
     val likedByMe: Boolean = false,
-    val createdAt: String = ""
+    val createdAt: String = "",
+    val description: String? = null,
+    val proteinPerServing: Double = 0.0,
+    val ingredients: List<RecipeIngredient> = emptyList(),
+    val steps: List<String> = emptyList(),
+    val commentsCount: Int = 0,
+    // Los 2 comentarios más recientes y los nombres de los últimos 3 "me gusta".
+    val commentsPreview: List<CommentPreview> = emptyList(),
+    val likersPreview: List<String> = emptyList()
 )
 
 /** Página del feed. [nextCursor] es el id que hay que pedir después, o null si no hay más. */

@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nutrisocial.data.ApiResult
+import com.example.nutrisocial.data.Comment
+import com.example.nutrisocial.data.CommentRepository
 import com.example.nutrisocial.data.CreateRecipeRequest
 import com.example.nutrisocial.data.FoodRef
 import com.example.nutrisocial.data.FoodSuggestion
@@ -56,6 +58,7 @@ data class IngredientFormItem(
 /** Contenido del formulario de creación. Los números se guardan como texto tal cual se escriben. */
 data class RecipeFormState(
     val title: String = "",
+    val description: String = "",
     val ingredients: List<IngredientFormItem> = listOf(IngredientFormItem()),
     val steps: List<String> = listOf(""),
     val servings: String = "",
@@ -79,7 +82,8 @@ data class RecipeFormState(
 }
 
 class RecipeViewModel(
-    private val repository: RecipeRepository = RecipeRepository()
+    private val repository: RecipeRepository = RecipeRepository(),
+    private val commentRepository: CommentRepository = CommentRepository()
 ) : ViewModel() {
 
     private val _listState = MutableStateFlow<RecipeListUiState>(RecipeListUiState.Loading)
@@ -97,6 +101,15 @@ class RecipeViewModel(
     // "Tirar para refrescar" en Mis recetas.
     private val _isRefreshingList = MutableStateFlow(false)
     val isRefreshingList: StateFlow<Boolean> = _isRefreshingList.asStateFlow()
+
+    // Campo de comentario de la tarjeta del detalle. Va aparte de detailActionState, que se
+    // sustituye entero en otras acciones y se llevaría por delante lo escrito.
+    private val _commentDraft = MutableStateFlow(CommentDraft())
+    val commentDraft: StateFlow<CommentDraft> = _commentDraft.asStateFlow()
+
+    // Comentario recién publicado desde el detalle, para que HomeScreen lo pase al feed.
+    private val _postedComment = MutableStateFlow<Pair<Int, Comment>?>(null)
+    val postedComment: StateFlow<Pair<Int, Comment>?> = _postedComment.asStateFlow()
 
     // Aviso para la lista de "Mis recetas" (p. ej. tras borrar una receta).
     private val _listMessage = MutableStateFlow<String?>(null)
@@ -149,8 +162,12 @@ class RecipeViewModel(
         val sameRecipe = currentRecipe(id)
         val cached = sameRecipe ?: (_listState.value as? RecipeListUiState.Success)?.recipes?.find { it.id == id }
         _detailState.value = cached?.let { RecipeDetailUiState.Success(it) } ?: RecipeDetailUiState.Loading
-        // Al volver a la misma receta se conservan sus avisos pendientes ("Cambios guardados").
-        if (sameRecipe == null) _detailActionState.value = RecipeDetailActionState()
+        // Al volver a la misma receta se conservan sus avisos pendientes ("Cambios guardados")
+        // y lo que se estuviera escribiendo en el comentario.
+        if (sameRecipe == null) {
+            _detailActionState.value = RecipeDetailActionState()
+            if (!_commentDraft.value.isSending) _commentDraft.value = CommentDraft()
+        }
 
         viewModelScope.launch {
             when (val result = repository.getRecipe(id)) {
@@ -268,6 +285,46 @@ class RecipeViewModel(
         }
     }
 
+    // -- Comentarios desde el detalle --
+
+    fun onCommentDraftChange(text: String) = _commentDraft.update { it.copy(text = text) }
+
+    /** Publica lo escrito en la tarjeta del detalle; si falla, el texto se conserva. */
+    fun sendComment() {
+        val recipe = (_detailState.value as? RecipeDetailUiState.Success)?.recipe ?: return
+        val draft = _commentDraft.value
+        val text = draft.text.trim()
+        if (text.isEmpty() || draft.isSending) return
+        _commentDraft.value = draft.copy(isSending = true)
+        viewModelScope.launch {
+            when (val result = commentRepository.addComment(recipe.id, text)) {
+                is ApiResult.Success -> {
+                    _commentDraft.value = CommentDraft()
+                    currentRecipe(recipe.id)?.let { replaceRecipe(it.copy(commentsCount = it.commentsCount + 1)) }
+                    _postedComment.value = recipe.id to result.data
+                    _detailActionState.update { it.copy(message = "Comentario publicado") }
+                }
+                is ApiResult.Error -> {
+                    _commentDraft.update { it.copy(isSending = false) }
+                    if (result.code == 404) {
+                        onRecipeGone(recipe.id)
+                    } else {
+                        _detailActionState.update { it.copy(message = "No se pudo publicar el comentario: ${result.message}") }
+                    }
+                }
+            }
+        }
+    }
+
+    fun onPostedCommentHandled() {
+        _postedComment.value = null
+    }
+
+    /** Recuento que ha dejado la pantalla de comentarios, para que el detalle lo muestre igual. */
+    fun syncCommentsCount(recipeId: Int, total: Int) {
+        currentRecipe(recipeId)?.takeIf { it.commentsCount != total }?.let { replaceRecipe(it.copy(commentsCount = total)) }
+    }
+
     fun showDetailMessage(message: String) = _detailActionState.update { it.copy(message = message) }
 
     fun onDetailMessageShown() = _detailActionState.update { it.copy(message = null) }
@@ -295,6 +352,7 @@ class RecipeViewModel(
         searchJob?.cancel()
         _formState.value = RecipeFormState(
             title = recipe.title,
+            description = recipe.description.orEmpty(),
             ingredients = recipe.ingredients.map { ing ->
                 IngredientFormItem(
                     name = ing.name,
@@ -316,6 +374,9 @@ class RecipeViewModel(
     fun onPhotoChange(photoBase64: String?) = _formState.update { it.copy(photoBase64 = photoBase64, error = null) }
 
     fun onTitleChange(value: String) = _formState.update { it.copy(title = value, error = null) }
+
+    fun onDescriptionChange(value: String) =
+        _formState.update { it.copy(description = value.take(MAX_DESCRIPTION_LENGTH), error = null) }
 
     fun onServingsChange(value: String) =
         _formState.update { it.copy(servings = value.filter(Char::isDigit).take(3), error = null) }
@@ -415,6 +476,7 @@ class RecipeViewModel(
         if (form.isSaving) return
 
         val title = form.title.trim()
+        val description = form.description.trim().ifEmpty { null }
         val filledIngredients = form.ingredients.filter { it.name.isNotBlank() }
         val badQuantity = filledIngredients.firstOrNull { it.quantity.isNotEmpty() && parseQuantity(it.quantity) == null }
         val ingredients = filledIngredients.map { item ->
@@ -449,13 +511,13 @@ class RecipeViewModel(
         if (editingId != null) {
             // La foto no va en el PUT: si ha cambiado se guarda después con PUT /image, que
             // además permite quitarla (Gson no enviaría un null en el cuerpo).
-            val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes)
+            val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes, description = description)
             viewModelScope.launch { saveEdit(editingId, request, form) }
             return
         }
         logPhoto("Creando receta", form.photoBase64)
         viewModelScope.launch {
-            val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes, form.photoBase64)
+            val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes, form.photoBase64, description)
             when (val result = repository.createRecipe(request)) {
                 is ApiResult.Success -> {
                     logPhoto("Receta ${result.data.id} creada", result.data.imageBase64)
@@ -537,6 +599,11 @@ class RecipeViewModel(
 
     private fun parseQuantity(text: String): Double? =
         text.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 }
+
+    companion object {
+        /** Máximo que admite el servidor para la descripción (ver backend/src/routes/recipes.js). */
+        const val MAX_DESCRIPTION_LENGTH = 1000
+    }
 
     /** Deja el formulario vacío para la próxima receta (tras guardar o al abrirlo de nuevo). */
     fun resetForm() {

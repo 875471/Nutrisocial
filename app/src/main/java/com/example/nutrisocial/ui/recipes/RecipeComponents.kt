@@ -91,6 +91,18 @@ fun formatNumber(value: Double): String =
     if (value % 1.0 == 0.0) value.toLong().toString()
     else String.format(java.util.Locale("es", "ES"), "%.1f", value)
 
+/** 2 unidad → "2 unidades", 1 cucharada → "1 cucharada", 200 g → "200 g". */
+fun quantityLabel(quantity: Double, unit: String?): String {
+    val plural = quantity != 1.0 && unit in listOf("unidad", "cucharada", "cucharadita", "taza", "pizca")
+    val unitText = when {
+        unit == null -> ""
+        plural && unit == "unidad" -> "unidades"
+        plural -> unit + "s"
+        else -> unit
+    }
+    return "${formatNumber(quantity)} $unitText".trim()
+}
+
 fun prepTimeLabel(minutes: Int): String = when {
     minutes < 60 -> "$minutes min"
     minutes % 60 == 0 -> "${minutes / 60} h"
