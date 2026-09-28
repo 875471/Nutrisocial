@@ -58,9 +58,22 @@ function likeSummary(recipe) {
   };
 }
 
+// Como likeFields, contando además los comentarios de la receta.
+function socialFields(userId) {
+  const fields = likeFields(userId);
+  return { ...fields, _count: { select: { ...fields._count.select, comments: true } } };
+}
+
+// Traduce lo cargado con socialFields: likesCount, likedByMe y commentsCount.
+function socialSummary(recipe) {
+  return { ...likeSummary(recipe), commentsCount: recipe._count?.comments ?? 0 };
+}
+
 // Solo el autor puede cambiar la foto de su receta.
 function canEditRecipe(recipe, userId) {
   return recipe.authorId === userId;
 }
 
-module.exports = { MAX_IMAGE_BYTES, validateImageBase64, likeFields, likeSummary, canEditRecipe };
+module.exports = {
+  MAX_IMAGE_BYTES, validateImageBase64, likeFields, likeSummary, socialFields, socialSummary, canEditRecipe,
+};

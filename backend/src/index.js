@@ -22,12 +22,14 @@ const foodRoutes = require('./routes/foods');
 const profileRoutes = require('./routes/profile');
 const logRoutes = require('./routes/log');
 const pantryRoutes = require('./routes/pantry');
+const commentRoutes = require('./routes/comments');
 app.use('/auth', authRoutes);
 app.use('/recipes', recipeRoutes);
 app.use('/foods', foodRoutes);
 app.use('/profile', profileRoutes);
 app.use('/log', logRoutes);
 app.use('/pantry', pantryRoutes);
+app.use('/comments', commentRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 

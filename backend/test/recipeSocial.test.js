@@ -1,4 +1,4 @@
-// Pruebas de las fotos de receta y de los "me gusta". Las rutas se prueban de verdad (Express +
+// Pruebas de las fotos de receta, los "me gusta" y los comentarios. Las rutas se prueban de verdad (Express +
 // JWT) con un cliente de Prisma en memoria que imita las consultas que usan.
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -6,6 +6,7 @@ const path = require('node:path');
 const jwt = require('jsonwebtoken');
 
 const { validateImageBase64, likeSummary, likeFields, MAX_IMAGE_BYTES } = require('../src/social/recipeSocial');
+const { validateCommentText, MAX_COMMENT_LENGTH } = require('../src/social/comments');
 
 // Cabeceras mínimas de cada formato, rellenadas hasta el tamaño pedido.
 const JPEG_HEAD = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1]);
@@ -47,40 +48,74 @@ test('validateImageBase64: rechaza lo que no es una imagen o pasa de 2 MB', () =
   assert.match(validateImageBase64(image(JPEG_HEAD, MAX_IMAGE_BYTES + 1)).error, /máximo es 2 MB/);
 });
 
+test('validateCommentText: recorta, rechaza vacíos y textos demasiado largos', () => {
+  assert.deepEqual(validateCommentText('  ¡Qué buena pinta!  '), { value: '¡Qué buena pinta!' });
+  assert.match(validateCommentText('   ').error, /vacío/);
+  assert.match(validateCommentText(undefined).error, /texto/);
+  assert.ok(validateCommentText('a'.repeat(MAX_COMMENT_LENGTH)).value);
+  assert.match(validateCommentText('a'.repeat(MAX_COMMENT_LENGTH + 1)).error, /máximo es 500/);
+});
+
 // ---- Rutas ----
 
-// Base de datos en memoria: usuarios 1 (Ana) y 2 (Luis); la receta 10 es de Ana.
+// Lo más reciente primero, con el id como desempate (como NEWEST_FIRST en las rutas).
+const newestFirst = (a, b) => b.createdAt - a.createdAt || b.id - a.id;
+
+// Base de datos en memoria: usuarios 1 (Ana), 2 (Luis), 3 (Marta) y 4 (Pablo); la receta 10
+// es de Ana. Los likes y comentarios llevan una fecha creciente para que el orden sea estable.
 function fakePrisma() {
-  const users = { 1: 'Ana', 2: 'Luis' };
+  const users = { 1: 'Ana', 2: 'Luis', 3: 'Marta', 4: 'Pablo' };
   const recipes = [
     { id: 10, title: 'Crema de calabaza', authorId: 1, servings: 4, prepMinutes: 30, kcal: 560, protein: 12, carbs: 58, fat: 31, totalWeightGrams: null, steps: '["Cocer"]', imageBase64: null, createdAt: new Date('2026-09-01') },
     { id: 11, title: 'Tortilla', authorId: 2, servings: 2, prepMinutes: null, kcal: 800, protein: 30, carbs: 50, fat: 50, totalWeightGrams: null, steps: '["Batir"]', imageBase64: null, createdAt: new Date('2026-09-02') },
     { id: 12, title: 'Pisto', authorId: 2, servings: 3, prepMinutes: 40, kcal: 450, protein: 9, carbs: 40, fat: 27, totalWeightGrams: null, steps: '["Pochar"]', imageBase64: null, createdAt: new Date('2026-09-03') },
   ];
   const likes = [];
+  const comments = [];
+  let clock = Date.parse('2026-09-10');
+  const now = () => new Date((clock += 1000));
+
+  const withAuthor = (c) => ({ ...c, user: { name: users[c.userId] } });
 
   // Devuelve la receta con las relaciones que pide la consulta (include o select).
   function shape(recipe, query = {}) {
     const spec = query.include ?? query.select ?? {};
     const out = { ...recipe, author: { name: users[recipe.authorId] }, ingredients: [] };
-    if (spec._count) out._count = { likes: likes.filter((l) => l.recipeId === recipe.id).length };
-    if (spec.likes) {
-      const userId = spec.likes.where.userId;
-      out.likes = likes.filter((l) => l.recipeId === recipe.id && l.userId === userId).map((l) => ({ id: l.id }));
+    const recipeLikes = likes.filter((l) => l.recipeId === recipe.id);
+    const recipeComments = comments.filter((c) => c.recipeId === recipe.id).sort(newestFirst);
+    if (spec._count) {
+      out._count = { likes: recipeLikes.length };
+      if (spec._count.select.comments) out._count.comments = recipeComments.length;
     }
+    if (spec.likes?.where) {
+      // likedByMe: solo el like del usuario que pregunta.
+      const userId = spec.likes.where.userId;
+      out.likes = recipeLikes.filter((l) => l.userId === userId).map((l) => ({ id: l.id }));
+    } else if (spec.likes) {
+      // likersPreview: los últimos likes con el nombre de quien los dio.
+      out.likes = recipeLikes.sort(newestFirst).slice(0, spec.likes.take).map((l) => ({ user: { name: users[l.userId] } }));
+    }
+    if (spec.comments) out.comments = recipeComments.slice(0, spec.comments.take).map(withAuthor);
     return out;
   }
 
   return {
     likes,
+    comments,
     recipes,
+    // Añade un comentario directamente, sin pasar por la API.
+    addComment: (userId, recipeId, text) => {
+      const comment = { id: comments.length + 1, userId, recipeId, text, createdAt: now() };
+      comments.push(comment);
+      return comment;
+    },
     recipe: {
       findUnique: async ({ where, ...query }) => {
         const recipe = recipes.find((r) => r.id === where.id);
         return recipe ? shape(recipe, query) : null;
       },
-      findMany: async ({ take, cursor, skip = 0, ...query }) => {
-        const sorted = [...recipes].sort((a, b) => b.createdAt - a.createdAt || b.id - a.id);
+      findMany: async ({ where, take = Infinity, cursor, skip = 0, ...query }) => {
+        const sorted = recipes.filter((r) => !where?.id?.in || where.id.in.includes(r.id)).sort(newestFirst);
         const start = cursor ? sorted.findIndex((r) => r.id === cursor.id) : 0;
         return sorted.slice(start + skip, start + skip + take).map((r) => shape(r, query));
       },
@@ -93,7 +128,7 @@ function fakePrisma() {
     recipeLike: {
       upsert: async ({ where: { userId_recipeId: key }, create }) => {
         let like = likes.find((l) => l.userId === key.userId && l.recipeId === key.recipeId);
-        if (!like) likes.push((like = { id: likes.length + 1, ...create }));
+        if (!like) likes.push((like = { id: likes.length + 1, ...create, createdAt: now() }));
         return like;
       },
       deleteMany: async ({ where }) => {
@@ -104,6 +139,20 @@ function fakePrisma() {
         return { count: before - likes.length };
       },
     },
+    comment: {
+      findMany: async ({ where, take, cursor, skip = 0 }) => {
+        const sorted = comments.filter((c) => c.recipeId === where.recipeId).sort(newestFirst);
+        const start = cursor ? sorted.findIndex((c) => c.id === cursor.id) : 0;
+        return sorted.slice(start + skip, start + skip + take).map(withAuthor);
+      },
+      create: async ({ data }) => {
+        const comment = { id: comments.length + 1, ...data, createdAt: now() };
+        comments.push(comment);
+        return withAuthor(comment);
+      },
+      findUnique: async ({ where }) => comments.find((c) => c.id === where.id) ?? null,
+      delete: async ({ where }) => comments.splice(comments.findIndex((c) => c.id === where.id), 1)[0],
+    },
   };
 }
 
@@ -112,13 +161,16 @@ async function startApi(db) {
   process.env.JWT_SECRET = 'secreto-de-prueba';
   const prismaPath = path.resolve(__dirname, '../src/prismaClient.js');
   const recipesPath = require.resolve('../src/routes/recipes');
+  const commentsPath = require.resolve('../src/routes/comments');
   require.cache[prismaPath] = { id: prismaPath, filename: prismaPath, loaded: true, exports: db };
   delete require.cache[recipesPath];
+  delete require.cache[commentsPath];
 
   const express = require('express');
   const app = express();
   app.use(express.json({ limit: '3mb' }));
   app.use('/recipes', require(recipesPath));
+  app.use('/comments', require(commentsPath));
   const server = await new Promise((resolve) => { const s = app.listen(0, () => resolve(s)); });
   const base = `http://127.0.0.1:${server.address().port}`;
 
@@ -130,7 +182,7 @@ async function startApi(db) {
     });
     return { status: res.status, body: await res.json() };
   };
-  return { ana: as(1), luis: as(2), close: () => new Promise((resolve) => server.close(resolve)) };
+  return { ana: as(1), luis: as(2), marta: as(3), pablo: as(4), close: () => new Promise((resolve) => server.close(resolve)) };
 }
 
 test('PUT /recipes/:id/image: solo el autor puede poner o quitar la foto', async () => {
@@ -212,6 +264,124 @@ test('GET /recipes/feed: recetas de todos, de la más nueva a la más antigua, p
 
     assert.equal((await api.ana('GET', '/recipes/feed?cursor=abc')).status, 400);
     assert.equal((await api.ana('GET', '/recipes/feed?limit=0')).status, 400);
+  } finally {
+    await api.close();
+  }
+});
+
+test('GET /recipes/:id/comments: del más reciente al más antiguo, por páginas de 20', async () => {
+  const db = fakePrisma();
+  for (let i = 1; i <= 25; i++) db.addComment(i % 2 ? 1 : 2, 10, `Comentario ${i}`);
+  db.addComment(1, 11, 'En otra receta');
+  const api = await startApi(db);
+  try {
+    const first = await api.luis('GET', '/recipes/10/comments');
+    assert.equal(first.status, 200);
+    assert.equal(first.body.comments.length, 20);
+    assert.equal(first.body.comments[0].text, 'Comentario 25');
+    assert.deepEqual(
+      { authorId: first.body.comments[0].authorId, authorName: first.body.comments[0].authorName },
+      { authorId: 1, authorName: 'Ana' },
+    );
+    assert.equal(first.body.nextCursor, first.body.comments[19].id);
+
+    const second = await api.luis('GET', `/recipes/10/comments?cursor=${first.body.nextCursor}`);
+    assert.deepEqual(second.body.comments.map((c) => c.text), [5, 4, 3, 2, 1].map((n) => `Comentario ${n}`));
+    assert.equal(second.body.nextCursor, null);
+
+    const small = await api.luis('GET', '/recipes/10/comments?limit=2');
+    assert.deepEqual(small.body.comments.map((c) => c.text), ['Comentario 25', 'Comentario 24']);
+
+    assert.equal((await api.luis('GET', '/recipes/10/comments?cursor=abc')).status, 400);
+    assert.equal((await api.luis('GET', '/recipes/999/comments')).status, 404);
+  } finally {
+    await api.close();
+  }
+});
+
+test('POST /recipes/:id/comments: valida el texto y el autor es quien comenta', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    const created = await api.luis('POST', '/recipes/10/comments', { text: '  Me ha salido genial  ' });
+    assert.equal(created.status, 201);
+    assert.equal(created.body.text, 'Me ha salido genial');
+    assert.deepEqual({ authorId: created.body.authorId, authorName: created.body.authorName }, { authorId: 2, authorName: 'Luis' });
+    assert.equal(db.comments.length, 1);
+
+    assert.equal((await api.luis('POST', '/recipes/10/comments', { text: '   ' })).status, 400);
+    assert.equal((await api.luis('POST', '/recipes/10/comments', { text: 'a'.repeat(501) })).status, 400);
+    assert.equal((await api.luis('POST', '/recipes/10/comments', {})).status, 400);
+    assert.equal((await api.luis('POST', '/recipes/999/comments', { text: 'Hola' })).status, 404);
+    assert.equal(db.comments.length, 1);
+  } finally {
+    await api.close();
+  }
+});
+
+test('DELETE /comments/:id: solo el autor del comentario puede borrarlo', async () => {
+  const db = fakePrisma();
+  // Luis comenta en la receta de Ana: ni siquiera la autora de la receta puede borrarlo.
+  const comment = db.addComment(2, 10, 'Le pondría más sal');
+  const api = await startApi(db);
+  try {
+    const forbidden = await api.ana('DELETE', `/comments/${comment.id}`);
+    assert.equal(forbidden.status, 403);
+    assert.equal(db.comments.length, 1);
+
+    const ok = await api.luis('DELETE', `/comments/${comment.id}`);
+    assert.equal(ok.status, 200);
+    assert.deepEqual(ok.body, { deleted: true });
+    assert.equal(db.comments.length, 0);
+
+    assert.equal((await api.luis('DELETE', `/comments/${comment.id}`)).status, 404);
+    assert.equal((await api.luis('DELETE', '/comments/abc')).status, 400);
+  } finally {
+    await api.close();
+  }
+});
+
+test('feed y detalle: commentsCount, commentsPreview y likersPreview', async () => {
+  const db = fakePrisma();
+  db.addComment(2, 10, 'Primero');
+  db.addComment(3, 10, 'Segundo');
+  db.addComment(4, 10, 'Tercero');
+  const api = await startApi(db);
+  try {
+    // Cuatro likes: la vista previa se queda con los tres últimos, del más reciente al más antiguo.
+    await api.ana('POST', '/recipes/10/like');
+    await api.luis('POST', '/recipes/10/like');
+    await api.marta('POST', '/recipes/10/like');
+    await api.pablo('POST', '/recipes/10/like');
+    await api.marta('POST', '/recipes/12/like');
+
+    const feed = (await api.ana('GET', '/recipes/feed')).body.recipes;
+    const crema = feed.find((r) => r.id === 10);
+    assert.equal(crema.commentsCount, 3);
+    assert.deepEqual(crema.commentsPreview.map((c) => [c.authorName, c.text]), [['Pablo', 'Tercero'], ['Marta', 'Segundo']]);
+    assert.equal(crema.likesCount, 4);
+    assert.deepEqual(crema.likersPreview, ['Pablo', 'Marta', 'Luis']);
+    assert.equal(crema.likedByMe, true);
+    assert.equal(crema.authorId, 1);
+    assert.deepEqual(crema.steps, ['Cocer']);
+    assert.equal(crema.proteinPerServing, 3);
+
+    const pisto = feed.find((r) => r.id === 12);
+    assert.deepEqual({ commentsCount: pisto.commentsCount, commentsPreview: pisto.commentsPreview }, { commentsCount: 0, commentsPreview: [] });
+    assert.deepEqual(pisto.likersPreview, ['Marta']);
+    assert.deepEqual(feed.find((r) => r.id === 11).likersPreview, []);
+
+    // El detalle trae los contadores y los likers, pero no la vista previa de comentarios.
+    const detail = (await api.luis('GET', '/recipes/10')).body;
+    assert.equal(detail.commentsCount, 3);
+    assert.deepEqual(detail.likersPreview, ['Pablo', 'Marta', 'Luis']);
+    assert.equal(detail.commentsPreview, undefined);
+
+    // Tras comentar, el siguiente feed ya lo refleja.
+    await api.luis('POST', '/recipes/10/comments', { text: 'Cuarto' });
+    const after = (await api.ana('GET', '/recipes/feed')).body.recipes.find((r) => r.id === 10);
+    assert.equal(after.commentsCount, 4);
+    assert.deepEqual(after.commentsPreview.map((c) => c.text), ['Cuarto', 'Tercero']);
   } finally {
     await api.close();
   }

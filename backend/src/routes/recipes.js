@@ -6,9 +6,16 @@ const { resolveIngredients, nutritionSummary } = require('../nutrition/calculate
 const { matchFood } = require('../nutrition/matchFood');
 const { parseRecipeText } = require('../ocr/parseRecipeText');
 const { matchRecipesToPantry } = require('../nutrition/pantryMatch');
-const { validateImageBase64, likeFields, likeSummary, canEditRecipe } = require('../social/recipeSocial');
+const {
+  validateImageBase64, likeFields, likeSummary, socialFields, socialSummary, canEditRecipe,
+} = require('../social/recipeSocial');
+const {
+  COMMENTS_PAGE_SIZE, COMMENTS_MAX_PAGE_SIZE, NEWEST_FIRST, validateCommentText, COMMENT_SELECT,
+  toCommentResponse, commentsPreviewField, toCommentsPreview, likersSelect, likersByRecipe,
+} = require('../social/comments');
 
 const MAX_OCR_TEXT = 20000;
+const MAX_DESCRIPTION = 1000;
 const FEED_PAGE_SIZE = 20;
 const FEED_MAX_PAGE_SIZE = 50;
 
@@ -22,7 +29,21 @@ const AUTHOR_NAME = { author: { select: { name: true } } };
 
 // Todo lo que necesita toRecipeResponse, con los likes vistos por el usuario `userId`.
 function recipeInclude(userId) {
-  return { ...INCLUDE_INGREDIENTS, ...AUTHOR_NAME, ...likeFields(userId) };
+  return { ...INCLUDE_INGREDIENTS, ...AUTHOR_NAME, ...socialFields(userId) };
+}
+
+// Nombres de quienes dieron los últimos likes a cada receta, para "Le gusta a X y a otras N
+// personas". Una sola consulta para todas las recetas pedidas.
+async function likersPreview(recipeIds) {
+  if (recipeIds.length === 0) return new Map();
+  const rows = await prisma.recipe.findMany({ where: { id: { in: recipeIds } }, select: likersSelect() });
+  return likersByRecipe(rows);
+}
+
+// Receta completa con likersPreview: para el detalle y las ediciones que se hacen desde él.
+async function toDetailResponse(recipe) {
+  const likers = await likersPreview([recipe.id]);
+  return { ...toRecipeResponse(recipe), likersPreview: likers.get(recipe.id) ?? [] };
 }
 
 // Los pasos se guardan como JSON en texto; al responder se devuelven como array.
@@ -31,6 +52,7 @@ function toRecipeResponse(recipe) {
   return {
     id: recipe.id,
     title: recipe.title,
+    description: recipe.description,
     ingredients: recipe.ingredients.map((ing) => ({
       name: ing.name,
       quantity: ing.quantity,
@@ -45,23 +67,30 @@ function toRecipeResponse(recipe) {
     imageBase64: recipe.imageBase64,
     authorId: recipe.authorId,
     authorName: recipe.author.name,
-    ...likeSummary(recipe),
+    ...socialSummary(recipe),
     createdAt: recipe.createdAt,
   };
 }
 
-// Tarjeta del feed: lo justo para la lista, sin ingredientes ni pasos.
-function toFeedItem(recipe) {
+// Tarjeta del feed: cabecera, estadísticas por ración, lo que enseña el carrusel (ingredientes
+// con su cantidad y pasos, sin el desglose nutricional) y la parte social con sus vistas previas.
+function toFeedItem(recipe, likers) {
   return {
     id: recipe.id,
     title: recipe.title,
+    description: recipe.description,
     imageBase64: recipe.imageBase64,
     authorId: recipe.authorId,
     authorName: recipe.author.name,
     servings: recipe.servings,
     prepMinutes: recipe.prepMinutes,
     kcalPerServing: Math.round(recipe.kcal / recipe.servings),
-    ...likeSummary(recipe),
+    proteinPerServing: Math.round((recipe.protein / recipe.servings) * 10) / 10,
+    ingredients: recipe.ingredients,
+    steps: JSON.parse(recipe.steps),
+    ...socialSummary(recipe),
+    commentsPreview: toCommentsPreview(recipe.comments),
+    likersPreview: likers.get(recipe.id) ?? [],
     createdAt: recipe.createdAt,
   };
 }
@@ -69,6 +98,34 @@ function toFeedItem(recipe) {
 function parseId(value) {
   const id = Number(value);
   return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+// Lee `cursor` (id del último elemento recibido) y `limit` de la query de una lista paginada.
+// Devuelve { cursor, limit } o { error } para un 400.
+function parsePage(query, defaultSize, maxSize) {
+  let cursor = null;
+  if (query.cursor != null && query.cursor !== '') {
+    cursor = parseId(query.cursor);
+    if (cursor == null) return { error: 'Cursor no válido' };
+  }
+  const requested = query.limit == null || query.limit === '' ? defaultSize : parseId(query.limit);
+  if (requested == null) return { error: 'El límite debe ser un número entero positivo' };
+  return { cursor, limit: Math.min(requested, maxSize) };
+}
+
+// Id de la ruta si es válido y la receta existe. Si no, responde 400/404 y devuelve null.
+async function findRecipeId(req, res) {
+  const id = parseId(req.params.id);
+  if (id == null) {
+    res.status(400).json({ error: 'Id de receta no válido' });
+    return null;
+  }
+  const exists = await prisma.recipe.findUnique({ where: { id }, select: { id: true } });
+  if (!exists) {
+    res.status(404).json({ error: 'Esta receta ya no existe' });
+    return null;
+  }
+  return id;
 }
 
 // Devuelve el array sin elementos vacíos, o null si no es un array de strings.
@@ -114,10 +171,17 @@ function cleanIngredients(value) {
  * contra la tabla Food, o { error } para un 400. La foto se valida aparte (validateImageBase64).
  */
 async function buildRecipeData(body) {
-  const { title, ingredients, steps, servings, prepMinutes } = body;
+  const { title, description, ingredients, steps, servings, prepMinutes } = body;
 
   const cleanTitle = typeof title === 'string' ? title.trim() : '';
   if (!cleanTitle) return { error: 'El título no puede estar vacío' };
+  if (description != null && typeof description !== 'string') {
+    return { error: 'La descripción debe ser un texto' };
+  }
+  const cleanDescription = description?.trim() || null;
+  if (cleanDescription && cleanDescription.length > MAX_DESCRIPTION) {
+    return { error: `La descripción no puede pasar de ${MAX_DESCRIPTION} caracteres` };
+  }
   const parsedIngredients = cleanIngredients(ingredients);
   if (parsedIngredients.error) return { error: parsedIngredients.error };
   const cleanSteps = cleanStringList(steps);
@@ -135,6 +199,7 @@ async function buildRecipeData(body) {
   return {
     fields: {
       title: cleanTitle,
+      description: cleanDescription,
       steps: JSON.stringify(cleanSteps),
       servings,
       prepMinutes: prepMinutes ?? null,
@@ -229,14 +294,9 @@ router.get('/mine', async (req, res) => {
 // Paginación por cursor: `cursor` es el id de la última receta recibida y la respuesta
 // trae `nextCursor` (null si no hay más).
 router.get('/feed', async (req, res) => {
-  let cursor = null;
-  if (req.query.cursor != null && req.query.cursor !== '') {
-    cursor = parseId(req.query.cursor);
-    if (cursor == null) return res.status(400).json({ error: 'Cursor no válido' });
-  }
-  const requested = req.query.limit == null || req.query.limit === '' ? FEED_PAGE_SIZE : parseId(req.query.limit);
-  if (requested == null) return res.status(400).json({ error: 'El límite debe ser un número entero positivo' });
-  const limit = Math.min(requested, FEED_MAX_PAGE_SIZE);
+  const pageQuery = parsePage(req.query, FEED_PAGE_SIZE, FEED_MAX_PAGE_SIZE);
+  if (pageQuery.error) return res.status(400).json({ error: pageQuery.error });
+  const { cursor, limit } = pageQuery;
 
   // Se pide una de más para saber si hay página siguiente sin otra consulta.
   const recipes = await prisma.recipe.findMany({
@@ -244,13 +304,16 @@ router.get('/feed', async (req, res) => {
     take: limit + 1,
     ...(cursor != null && { cursor: { id: cursor }, skip: 1 }),
     select: {
-      id: true, title: true, imageBase64: true, authorId: true, servings: true, prepMinutes: true,
-      kcal: true, createdAt: true, ...AUTHOR_NAME, ...likeFields(req.userId),
+      id: true, title: true, description: true, imageBase64: true, authorId: true, servings: true,
+      prepMinutes: true, kcal: true, protein: true, steps: true, createdAt: true,
+      ingredients: { orderBy: { position: 'asc' }, select: { name: true, quantity: true, unit: true } },
+      ...AUTHOR_NAME, ...socialFields(req.userId), ...commentsPreviewField(),
     },
   });
   const page = recipes.slice(0, limit);
+  const likers = await likersPreview(page.map((r) => r.id));
   res.json({
-    recipes: page.map(toFeedItem),
+    recipes: page.map((r) => toFeedItem(r, likers)),
     nextCursor: recipes.length > limit ? page[page.length - 1].id : null,
   });
 });
@@ -292,7 +355,7 @@ router.get('/:id', async (req, res) => {
   if (!recipe) {
     return res.status(404).json({ error: 'Esta receta ya no existe' });
   }
-  res.json(toRecipeResponse(recipe));
+  res.json(await toDetailResponse(recipe));
 });
 
 // Edita una receta propia con los mismos campos que POST /recipes. Los ingredientes se
@@ -320,7 +383,7 @@ router.put('/:id', async (req, res) => {
     },
     include: recipeInclude(req.userId),
   });
-  res.json(toRecipeResponse(updated));
+  res.json(await toDetailResponse(updated));
 });
 
 // Borra una receta propia (sus ingredientes y likes se borran en cascada). Las entradas del
@@ -355,7 +418,7 @@ router.put('/:id/image', async (req, res) => {
     data: { imageBase64: image.value },
     include: recipeInclude(req.userId),
   });
-  res.json(toRecipeResponse(updated));
+  res.json(await toDetailResponse(updated));
 });
 
 // Número de likes y si el usuario ha dado el suyo, tras darlo o quitarlo.
@@ -365,14 +428,8 @@ async function likeState(recipeId, userId) {
 }
 
 router.post('/:id/like', async (req, res) => {
-  const id = parseId(req.params.id);
-  if (id == null) {
-    return res.status(400).json({ error: 'Id de receta no válido' });
-  }
-  const exists = await prisma.recipe.findUnique({ where: { id }, select: { id: true } });
-  if (!exists) {
-    return res.status(404).json({ error: 'Esta receta ya no existe' });
-  }
+  const id = await findRecipeId(req, res);
+  if (id == null) return;
   // upsert: dar like dos veces no duplica ni choca con el índice único.
   await prisma.recipeLike.upsert({
     where: { userId_recipeId: { userId: req.userId, recipeId: id } },
@@ -383,17 +440,46 @@ router.post('/:id/like', async (req, res) => {
 });
 
 router.delete('/:id/like', async (req, res) => {
-  const id = parseId(req.params.id);
-  if (id == null) {
-    return res.status(400).json({ error: 'Id de receta no válido' });
-  }
-  const exists = await prisma.recipe.findUnique({ where: { id }, select: { id: true } });
-  if (!exists) {
-    return res.status(404).json({ error: 'Esta receta ya no existe' });
-  }
+  const id = await findRecipeId(req, res);
+  if (id == null) return;
   // deleteMany: quitar un like que no existe no es un error.
   await prisma.recipeLike.deleteMany({ where: { userId: req.userId, recipeId: id } });
   res.json(await likeState(id, req.userId));
+});
+
+// Comentarios de una receta, del más reciente al más antiguo, paginados igual que el feed.
+router.get('/:id/comments', async (req, res) => {
+  const pageQuery = parsePage(req.query, COMMENTS_PAGE_SIZE, COMMENTS_MAX_PAGE_SIZE);
+  if (pageQuery.error) return res.status(400).json({ error: pageQuery.error });
+  const { cursor, limit } = pageQuery;
+  const id = await findRecipeId(req, res);
+  if (id == null) return;
+
+  const comments = await prisma.comment.findMany({
+    where: { recipeId: id },
+    orderBy: NEWEST_FIRST,
+    take: limit + 1,
+    ...(cursor != null && { cursor: { id: cursor }, skip: 1 }),
+    select: COMMENT_SELECT,
+  });
+  const page = comments.slice(0, limit);
+  res.json({
+    comments: page.map(toCommentResponse),
+    nextCursor: comments.length > limit ? page[page.length - 1].id : null,
+  });
+});
+
+router.post('/:id/comments', async (req, res) => {
+  const text = validateCommentText(req.body?.text);
+  if (text.error) return res.status(400).json({ error: text.error });
+  const id = await findRecipeId(req, res);
+  if (id == null) return;
+
+  const comment = await prisma.comment.create({
+    data: { text: text.value, userId: req.userId, recipeId: id },
+    select: COMMENT_SELECT,
+  });
+  res.status(201).json(toCommentResponse(comment));
 });
 
 module.exports = router;

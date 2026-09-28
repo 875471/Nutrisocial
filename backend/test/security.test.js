@@ -49,7 +49,7 @@ function fakePrisma() {
     const out = { ...recipe, ingredients: db.ingredients.filter((i) => i.recipeId === recipe.id).map((i) => ({ ...i, food: null })) };
     const author = db.users.find((u) => u.id === recipe.authorId);
     out.author = spec.author === true ? { ...author } : pick(author, spec.author?.select);
-    out._count = { likes: 0 };
+    out._count = { likes: 0, comments: 0 };
     out.likes = [];
     return out;
   }
@@ -80,6 +80,8 @@ function fakePrisma() {
         if (!recipe) return null;
         return query.select && !query.select.author ? pick(recipe, query.select) : shapeRecipe(recipe, query);
       },
+      // Solo la usa likersPreview (quién dio los últimos likes): aquí no hay likes.
+      findMany: async ({ where }) => db.recipes.filter((r) => where.id.in.includes(r.id)).map((r) => ({ id: r.id, likes: [] })),
       update: async ({ where, data, ...query }) => {
         const recipe = db.recipes.find((r) => r.id === where.id);
         const { ingredients, ...fields } = data;

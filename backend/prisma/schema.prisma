@@ -40,11 +40,14 @@ model User {
   logEntries                LogEntry[]
   pantryItems               PantryItem[]
   recipeLikes               RecipeLike[]
+  comments                  Comment[]
 }
 
 model Recipe {
   id               Int                @id @default(autoincrement())
   title            String
+  // Texto corto opcional que acompaña al título en el feed
+  description      String?            @db.Text
   // SQLite no tiene tipo lista: los pasos se guardan como JSON serializado (array de strings)
   steps            String
   servings         Int
@@ -64,6 +67,7 @@ model Recipe {
   ingredients      RecipeIngredient[]
   logEntries       LogEntry[]
   likes            RecipeLike[]
+  comments         Comment[]
   createdAt        DateTime           @default(now())
 
   @@index([authorId])
@@ -157,4 +161,17 @@ model RecipeLike {
 
   @@unique([userId, recipeId])
   @@index([recipeId])
+}
+
+// Comentario de un usuario en una receta. Solo su autor puede borrarlo; no se editan.
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipeId  Int
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([recipeId, createdAt])
 }
