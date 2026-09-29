@@ -124,7 +124,7 @@ data class OcrIngredient(
 )
 
 /**
- * Receta en el feed social (GET /recipes/feed): lo que enseña la tarjeta, incluido el carrusel
+ * Receta en una lista de tarjetas (Explorar, Amigos, Guardadas): lo que enseña la tarjeta, incluido el carrusel
  * (ingredientes con su cantidad, sin peso ni alimento asociado, y pasos) y las vistas previas.
  */
 data class FeedRecipe(

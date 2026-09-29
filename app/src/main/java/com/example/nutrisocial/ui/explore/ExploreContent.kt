@@ -1,5 +1,17 @@
 package com.example.nutrisocial.ui.explore
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +43,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -42,13 +56,16 @@ import com.example.nutrisocial.ui.home.FeedActions
 import com.example.nutrisocial.ui.home.FeedUiState
 import com.example.nutrisocial.ui.home.feedCardItems
 import com.example.nutrisocial.ui.recipes.CenteredMessage
+import com.example.nutrisocial.ui.recipes.listStateModifier
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
 
 /**
- * Segmento "Explorar" del inicio: campo de búsqueda con lupa, orden (recientes, más rápidas o
- * más elaboradas) y los resultados con la misma tarjeta que el feed. Sin texto, salen todas las
- * recetas de la comunidad, de la más reciente a la más antigua (el feed global).
+ * Segmento "Explorar" del inicio: orden (recientes, más rápidas o más elaboradas) y los resultados
+ * con la misma tarjeta que el feed. Sin texto, salen todas las recetas de la comunidad, de la más
+ * reciente a la más antigua (el feed global). El campo de búsqueda está plegado: lo despliega la
+ * lupa de la cabecera ([searchExpanded]) con el foco y el teclado ya puestos, y al plegarlo
+ * ([onCloseSearch]) se borra el texto y vuelve el listado sin búsqueda.
  */
 @Composable
 fun ExploreContent(
@@ -60,33 +77,41 @@ fun ExploreContent(
     onQueryChange: (String) -> Unit,
     onSortChange: (SearchSort) -> Unit,
     onSearch: () -> Unit,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    searchExpanded: Boolean = true,
+    onCloseSearch: () -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    // Al desplegarlo, el campo recibe el foco y se abre el teclado. Si ya estaba desplegado (al
+    // volver del detalle de una receta), no se fuerza el teclado otra vez.
+    var wasExpanded by rememberSaveable { mutableStateOf(searchExpanded) }
+    LaunchedEffect(searchExpanded) {
+        if (searchExpanded && !wasExpanded) {
+            // Espera un fotograma a que el campo esté en pantalla.
+            withFrameNanos { }
+            runCatching { focusRequester.requestFocus() }
+            keyboard?.show()
+        }
+        wasExpanded = searchExpanded
+    }
     Column(modifier = Modifier.fillMaxSize()) {
-        OutlinedTextField(
-            value = params.query,
-            onValueChange = onQueryChange,
-            placeholder = { Text("Buscar por nombre o ingrediente") },
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-            trailingIcon = {
-                if (params.query.isNotEmpty()) {
-                    IconButton(onClick = { onQueryChange("") }) {
-                        Icon(Icons.Filled.Clear, contentDescription = "Borrar la búsqueda")
-                    }
-                }
-            },
-            singleLine = true,
-            shape = MaterialTheme.shapes.extraLarge,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = {
-                onSearch()
-                focusManager.clearFocus()
-            }),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.md, vertical = Spacing.xs)
-        )
+        AnimatedVisibility(visible = searchExpanded, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            SearchField(
+                query = params.query,
+                onQueryChange = onQueryChange,
+                onSearch = {
+                    onSearch()
+                    focusManager.clearFocus()
+                },
+                onClose = {
+                    focusManager.clearFocus()
+                    onCloseSearch()
+                },
+                modifier = Modifier.focusRequester(focusRequester)
+            )
+        }
         Row(
             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
             modifier = Modifier
@@ -117,7 +142,7 @@ fun ExploreContent(
                 title = "Sin resultados",
                 message = if (params.query.isBlank()) "Todavía no hay recetas publicadas."
                 else "Ninguna receta tiene «${params.query.trim()}» en el nombre o en los ingredientes.",
-                modifier = Modifier.fillParentMaxSize(0.6f)
+                modifier = listStateModifier()
             )
         }
     }
@@ -160,9 +185,38 @@ fun FriendsFeedContent(
                 "nombre, o pulsa «Seguir» en una receta de «Explorar».",
             actionLabel = "Buscar personas",
             onAction = onFindPeople,
-            modifier = Modifier.fillParentMaxSize(0.6f)
+            modifier = listStateModifier()
         )
     }
+}
+
+/** Campo de búsqueda desplegable de "Explorar". La × borra el texto y pliega el buscador a la vez. */
+@Composable
+private fun SearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = { Text("Buscar por nombre o ingrediente") },
+        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+        trailingIcon = {
+            IconButton(onClick = onClose) {
+                Icon(Icons.Filled.Clear, contentDescription = "Cerrar la búsqueda")
+            }
+        },
+        singleLine = true,
+        shape = MaterialTheme.shapes.extraLarge,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.md, vertical = Spacing.xs)
+    )
 }
 
 /** Segmento "Guardadas" del perfil: las recetas que el usuario ha guardado con el marcador. */
@@ -186,7 +240,7 @@ fun SavedRecipesContent(
             icon = painterResource(R.drawable.ic_bookmark_border),
             title = "No has guardado ninguna receta",
             message = "Pulsa el marcador de una receta de «Explorar» o de «Amigos» para tenerla aquí a mano.",
-            modifier = Modifier.fillParentMaxSize(0.6f)
+            modifier = listStateModifier()
         )
     }
 }
@@ -261,7 +315,8 @@ private fun ExploreContentPreview() {
             onQueryChange = {},
             onSortChange = {},
             onSearch = {},
-            snackbarHostState = SnackbarHostState()
+            snackbarHostState = SnackbarHostState(),
+            searchExpanded = true
         )
     }
 }

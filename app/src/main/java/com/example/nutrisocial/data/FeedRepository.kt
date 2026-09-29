@@ -6,11 +6,10 @@ import com.example.nutrisocial.RetrofitClient
 class FeedRepository(
     private val api: ApiService = RetrofitClient.api
 ) {
-    /** Página del feed a partir de [cursor] (id de la última receta recibida; null para empezar). */
-    suspend fun getFeed(cursor: Int? = null, limit: Int = PAGE_SIZE): ApiResult<FeedPage> =
-        safeApiCall { api.getFeed(cursor, limit) }
-
-    /** Página del feed de "Amigos" (recetas de los usuarios que se siguen) a partir de [cursor]. */
+    /**
+     * Página del feed de "Amigos" (recetas de los usuarios que se siguen) a partir de [cursor]
+     * (id de la última receta recibida; null para empezar).
+     */
     suspend fun getFriendsFeed(cursor: Int? = null, limit: Int = PAGE_SIZE): ApiResult<FeedPage> =
         safeApiCall { api.getFriendsFeed(cursor, limit) }
 

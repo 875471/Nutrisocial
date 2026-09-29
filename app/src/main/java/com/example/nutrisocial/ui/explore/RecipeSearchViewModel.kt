@@ -25,7 +25,7 @@ data class SearchParams(val query: String = "", val sort: SearchSort = SearchSor
  * "Explorar": buscador de recetas de cualquier autor. Es un [FeedViewModel] cuyas páginas salen
  * del buscador, así que las tarjetas tienen los mismos "me gusta", guardados y comentarios.
  */
-class RecipeSearchViewModel : FeedViewModel(loadOnInit = false) {
+class RecipeSearchViewModel : FeedViewModel() {
 
     // Lo que se ve en el campo y en los filtros.
     private val _params = MutableStateFlow(SearchParams())
@@ -58,6 +58,13 @@ class RecipeSearchViewModel : FeedViewModel(loadOnInit = false) {
     fun onSortChange(sort: SearchSort) {
         if (sort == _params.value.sort) return
         _params.update { it.copy(sort = sort) }
+        search()
+    }
+
+    /** Borra el texto (al plegar el buscador) y vuelve al listado sin búsqueda, sin esperar. */
+    fun clearQuery() {
+        if (_params.value.query.isEmpty() && activeParams.query.isEmpty()) return
+        _params.update { it.copy(query = "") }
         search()
     }
 

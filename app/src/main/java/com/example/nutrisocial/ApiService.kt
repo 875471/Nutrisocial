@@ -20,12 +20,14 @@ import com.example.nutrisocial.data.LogEntry
 import com.example.nutrisocial.data.LoginRequest
 import com.example.nutrisocial.data.LoginResponse
 import com.example.nutrisocial.data.MessageResponse
+import com.example.nutrisocial.data.NotificationsPage
 import com.example.nutrisocial.data.OcrRecipeProposal
 import com.example.nutrisocial.data.PantryItem
 import com.example.nutrisocial.data.PantrySearchResult
 import com.example.nutrisocial.data.ParseOcrRequest
 import com.example.nutrisocial.data.Profile
 import com.example.nutrisocial.data.Recipe
+import com.example.nutrisocial.data.ReadAllResponse
 import com.example.nutrisocial.data.RegisterResponse
 import com.example.nutrisocial.data.ResetPasswordRequest
 import com.example.nutrisocial.data.SaveState
@@ -90,11 +92,8 @@ interface ApiService {
     @DELETE("recipes/{id}")
     suspend fun deleteRecipe(@Path("id") id: Int): Response<DeleteRecipeResponse>
 
-    // Recetas de todos los usuarios, de 20 en 20. Sin cursor, la primera página.
-    @GET("recipes/feed")
-    suspend fun getFeed(@Query("cursor") cursor: Int?, @Query("limit") limit: Int): Response<FeedPage>
-
-    // Como el feed, solo con recetas de los usuarios que sigue (vacío si no sigue a nadie).
+    // Recetas de los usuarios que sigue, de 20 en 20 (vacío si no sigue a nadie). El feed global
+    // es "Explorar" sin texto (recipes/search).
     @GET("recipes/feed/friends")
     suspend fun getFriendsFeed(@Query("cursor") cursor: Int?, @Query("limit") limit: Int): Response<FeedPage>
 
@@ -155,6 +154,13 @@ interface ApiService {
 
     @DELETE("users/{id}/follow")
     suspend fun unfollowUser(@Path("id") id: Int): Response<FollowState>
+
+    // Notificaciones del usuario, de 20 en 20; la primera página trae unreadCount.
+    @GET("notifications")
+    suspend fun getNotifications(@Query("cursor") cursor: Int?, @Query("limit") limit: Int): Response<NotificationsPage>
+
+    @POST("notifications/read-all")
+    suspend fun markAllNotificationsRead(): Response<ReadAllResponse>
 
     @GET("foods/search")
     suspend fun searchFoods(@Query("q") query: String): Response<List<FoodSuggestion>>

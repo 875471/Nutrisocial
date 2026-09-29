@@ -21,8 +21,6 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -31,6 +29,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.data.CommentPreview
@@ -40,6 +57,7 @@ import com.example.nutrisocial.ui.recipes.RecipeFeedCard
 import com.example.nutrisocial.ui.recipes.toCardData
 import com.example.nutrisocial.ui.recipes.CenteredMessage
 import com.example.nutrisocial.ui.recipes.LoadingBox
+import com.example.nutrisocial.ui.recipes.listStateModifier
 import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
@@ -71,22 +89,49 @@ enum class HomeFeedTab(val label: String) {
 }
 
 /**
- * Pestaña "Inicio": saludo y dos segmentos, "Explorar" (el buscador sobre las recetas de toda la
- * comunidad) y "Amigos" (las de la gente a la que se sigue). El contenido de cada segmento lo pone
- * quien llama, con su propio ViewModel; recibe el [SnackbarHostState] de la pantalla para sus avisos.
+ * Pestaña "Inicio", con la cabecera de Hevy: a la izquierda, el segmento activo ("Explorar" o
+ * "Amigos") con una flecha que despliega el otro; a la derecha, la lupa (solo en "Explorar", abre
+ * y cierra el buscador desplegable) y la campana de notificaciones, con un punto rojo si hay alguna sin leer. El
+ * contenido de cada segmento lo pone quien llama, con su propio ViewModel; recibe el
+ * [SnackbarHostState] de la pantalla para sus avisos.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTabScreen(
-    userName: String,
     selectedTab: HomeFeedTab,
     onTabSelected: (HomeFeedTab) -> Unit,
     onCreateRecipe: () -> Unit,
     exploreContent: @Composable (SnackbarHostState) -> Unit,
-    friendsContent: @Composable (SnackbarHostState) -> Unit
+    friendsContent: @Composable (SnackbarHostState) -> Unit,
+    unreadNotifications: Int = 0,
+    // Si el buscador de "Explorar" está desplegado: la lupa se ve entonces marcada.
+    searchExpanded: Boolean = false,
+    onSearchClick: () -> Unit = {},
+    onOpenNotifications: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { FeedTabSelector(selectedTab = selectedTab, onTabSelected = onTabSelected) },
+                actions = {
+                    if (selectedTab == HomeFeedTab.EXPLORE) {
+                        IconToggleButton(checked = searchExpanded, onCheckedChange = { onSearchClick() }) {
+                            Icon(Icons.Filled.Search, contentDescription = if (searchExpanded) "Cerrar la búsqueda" else "Buscar recetas")
+                        }
+                    }
+                    IconButton(onClick = onOpenNotifications) {
+                        BadgedBox(badge = { if (unreadNotifications > 0) Badge() }) {
+                            Icon(
+                                Icons.Filled.Notifications,
+                                contentDescription = if (unreadNotifications > 0) "Notificaciones, $unreadNotifications sin leer" else "Notificaciones"
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onCreateRecipe,
@@ -100,22 +145,39 @@ fun HomeTabScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            FeedHeader(userName, modifier = Modifier.padding(start = Spacing.md, end = Spacing.md, top = Spacing.lg, bottom = Spacing.sm))
-            PrimaryTabRow(
-                selectedTabIndex = selectedTab.ordinal,
-                containerColor = MaterialTheme.colorScheme.background
-            ) {
-                HomeFeedTab.entries.forEach { tab ->
-                    Tab(
-                        selected = tab == selectedTab,
-                        onClick = { onTabSelected(tab) },
-                        text = { Text(tab.label, maxLines = 1) }
-                    )
-                }
-            }
             when (selectedTab) {
                 HomeFeedTab.EXPLORE -> exploreContent(snackbarHostState)
                 HomeFeedTab.FRIENDS -> friendsContent(snackbarHostState)
+            }
+        }
+    }
+}
+
+/** Título pulsable con el segmento activo y una flecha; al pulsarlo, un menú con los dos segmentos. */
+@Composable
+private fun FeedTabSelector(selectedTab: HomeFeedTab, onTabSelected: (HomeFeedTab) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.small)
+                .clickable(onClickLabel = "Cambiar entre Explorar y Amigos") { expanded = true }
+                .padding(vertical = Spacing.xs)
+        ) {
+            Text(selectedTab.label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            HomeFeedTab.entries.forEach { tab ->
+                DropdownMenuItem(
+                    text = { Text(tab.label, fontWeight = if (tab == selectedTab) FontWeight.Bold else null) },
+                    trailingIcon = if (tab == selectedTab) ({ Icon(Icons.Filled.Check, contentDescription = "Seleccionado") }) else null,
+                    onClick = {
+                        expanded = false
+                        onTabSelected(tab)
+                    }
+                )
             }
         }
     }
@@ -135,7 +197,7 @@ fun LazyListScope.feedCardItems(
     empty: @Composable LazyItemScope.() -> Unit
 ) {
     when {
-        state.isLoading -> item(key = "loading") { LoadingBox(Modifier.fillParentMaxSize(0.6f)) }
+        state.isLoading -> item(key = "loading") { LoadingBox(listStateModifier()) }
 
         state.error != null -> item(key = "error") {
             CenteredMessage(
@@ -145,7 +207,7 @@ fun LazyListScope.feedCardItems(
                 message = state.error,
                 actionLabel = "Reintentar",
                 onAction = actions.onRefresh,
-                modifier = Modifier.fillParentMaxSize(0.6f)
+                modifier = listStateModifier()
             )
         }
 
@@ -174,21 +236,6 @@ fun LazyListScope.feedCardItems(
     }
 }
 
-@Composable
-private fun FeedHeader(userName: String, modifier: Modifier = Modifier) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs), modifier = modifier) {
-        Text(
-            text = if (userName.isBlank()) "Hola" else "Hola, $userName",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Text(
-            text = "Lo último que ha cocinado la comunidad",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
 /** "Cargar más" si quedan recetas, o un cierre discreto al llegar al final. */
 @Composable
 private fun FeedFooter(state: FeedUiState, onLoadMore: () -> Unit) {
@@ -210,10 +257,10 @@ private fun FeedFooter(state: FeedUiState, onLoadMore: () -> Unit) {
 private fun HomeTabScreenPreview() {
     NutriSocialTheme {
         HomeTabScreen(
-            userName = "Ana",
             selectedTab = HomeFeedTab.FRIENDS,
             onTabSelected = {},
             onCreateRecipe = {},
+            unreadNotifications = 2,
             exploreContent = {},
             friendsContent = {
                 LazyColumn(

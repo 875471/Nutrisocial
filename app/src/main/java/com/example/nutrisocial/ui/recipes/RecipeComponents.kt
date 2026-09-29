@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -207,6 +209,16 @@ fun InitialBadge(text: String, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/**
+ * Tamaño de un estado a pantalla (carga, error o vacío) dentro de una lista: todo el ancho y al
+ * menos [ListStateMinHeight] de alto, centrado en ese hueco. Es una altura mínima, no fija: si el
+ * texto no cabe, crece en lugar de recortar el botón. (`fillParentMaxSize(0.6f)` reducía también
+ * el ancho al 60 % y dejaba estos estados descentrados a la izquierda.)
+ */
+fun LazyItemScope.listStateModifier(): Modifier = Modifier.fillParentMaxWidth().heightIn(min = ListStateMinHeight)
+
+private val ListStateMinHeight = 400.dp
 
 @Composable
 fun LoadingBox(modifier: Modifier = Modifier) {

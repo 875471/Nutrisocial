@@ -221,8 +221,11 @@ test('DELETE /auth/me: con la contraseña correcta borra la cuenta y sus recetas
     assert.equal(db.recipes.length, 0);
     // Luis no se ve afectado.
     assert.ok(db.users.some((u) => u.id === 2));
-    // Un segundo intento con el mismo token: la cuenta ya no existe.
-    assert.equal((await api.request('DELETE', '/auth/me', { password: PASSWORD }, 1)).status, 404);
+    // El token de la cuenta borrada tiene firma válida, pero ya no sirve: 401, para que la app
+    // (u otro móvil con la sesión abierta) cierre la sesión sola.
+    const again = await api.request('DELETE', '/auth/me', { password: PASSWORD }, 1);
+    assert.equal(again.status, 401);
+    assert.match(again.body.error, /ya no existe/);
   } finally {
     await api.close();
   }

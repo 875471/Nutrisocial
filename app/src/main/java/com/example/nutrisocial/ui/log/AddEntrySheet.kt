@@ -20,6 +20,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -30,12 +31,15 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.nutrisocial.R
 import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.ui.home.formatKcal
+import com.example.nutrisocial.ui.recipes.InlineEmptyState
 import com.example.nutrisocial.ui.recipes.RecipeListUiState
 import com.example.nutrisocial.ui.recipes.formatNumber
 import com.example.nutrisocial.ui.recipes.suggestionDetail
@@ -53,7 +57,9 @@ data class AddEntryActions(
     val onFoodQueryChange: (String) -> Unit,
     val onFoodSelected: (FoodSuggestion?) -> Unit,
     val onGramsChange: (String) -> Unit,
-    val onSave: () -> Unit
+    val onSave: () -> Unit,
+    // Vuelve a pedir "Mis recetas" si no se pudieron cargar al abrir la hoja.
+    val onRetryRecipes: () -> Unit = {}
 )
 
 /** Hoja inferior para añadir al día una de mis recetas (por raciones) o un alimento (por gramos). */
@@ -118,13 +124,18 @@ fun AddEntrySheet(state: AddEntryState, recipesState: RecipeListUiState, actions
 @Composable
 private fun RecipePicker(state: AddEntryState, recipesState: RecipeListUiState, actions: AddEntryActions) {
     when (recipesState) {
-        RecipeListUiState.Loading -> Text("Cargando tus recetas…", style = MaterialTheme.typography.bodyMedium)
-        is RecipeListUiState.Error -> Text(recipesState.message, color = MaterialTheme.colorScheme.error)
+        RecipeListUiState.Loading -> Row(verticalAlignment = Alignment.CenterVertically) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            Text("Cargando tus recetas…", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = Spacing.sm))
+        }
+        is RecipeListUiState.Error -> Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Text(recipesState.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            OutlinedButton(onClick = actions.onRetryRecipes, shape = ButtonShape) { Text("Reintentar") }
+        }
         is RecipeListUiState.Success -> if (recipesState.recipes.isEmpty()) {
-            Text(
-                text = "Aún no tienes recetas. Crea una en «Mis recetas» o añade un alimento suelto.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            InlineEmptyState(
+                icon = painterResource(R.drawable.ic_brand_plate),
+                text = "Aún no tienes recetas. Crea una desde Perfil › «Mis recetas», o añade un alimento suelto."
             )
         } else {
             LazyColumn(

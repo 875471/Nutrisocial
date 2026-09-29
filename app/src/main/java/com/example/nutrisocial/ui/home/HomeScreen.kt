@@ -49,6 +49,9 @@ import com.example.nutrisocial.ui.log.AddEntryActions
 import com.example.nutrisocial.ui.log.LogActions
 import com.example.nutrisocial.ui.log.LogScreen
 import com.example.nutrisocial.ui.log.LogViewModel
+import com.example.nutrisocial.ui.notifications.NotificationsActions
+import com.example.nutrisocial.ui.notifications.NotificationsScreen
+import com.example.nutrisocial.ui.notifications.NotificationsViewModel
 import com.example.nutrisocial.ui.pantry.PantryActions
 import com.example.nutrisocial.ui.pantry.PantryScreen
 import com.example.nutrisocial.ui.pantry.PantryViewModel
@@ -74,6 +77,7 @@ private object HomeRoutes {
     const val PERFIL = "perfil"
     const val PERFIL_DATOS = "perfil/datos"
     const val BUSCAR_PERSONAS = "personas"
+    const val NOTIFICACIONES = "notificaciones"
     const val NUEVA_RECETA = "recetas/nueva"
     const val EDITAR_RECETA = "recetas/editar"
     const val ESCANEAR_RECETA = "recetas/escanear"
@@ -112,6 +116,8 @@ fun HomeScreen(
     friendsFeedViewModel: FriendsFeedViewModel = viewModel(),
     // "Guardadas" del perfil.
     savedRecipesViewModel: SavedRecipesViewModel = viewModel(),
+    // La campana de Inicio y su pantalla: el recuento se conserva al cambiar de pestaña.
+    notificationsViewModel: NotificationsViewModel = viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
     // Listas de tarjetas que deben reflejar lo que cambie en el detalle, en los comentarios o al
@@ -122,6 +128,8 @@ fun HomeScreen(
     // "Mis recetas" al crear o borrar una receta, aunque se estuviera en "Guardadas".
     var homeTab by rememberSaveable { mutableStateOf(HomeFeedTab.EXPLORE) }
     var profileTab by rememberSaveable { mutableStateOf(RecipesTab.MINE) }
+    // Buscador de "Explorar", plegado hasta que se pulsa la lupa de la cabecera.
+    var searchExpanded by rememberSaveable { mutableStateOf(false) }
     // Tras crear o borrar una receta: a "Mis recetas" del perfil, quitando lo que haya encima.
     fun showMyRecipes() {
         profileTab = RecipesTab.MINE
@@ -161,8 +169,19 @@ fun HomeScreen(
                 .consumeWindowInsets(padding)
         ) {
             composable(HomeRoutes.INICIO) {
+                // Al entrar en Inicio se actualiza el punto rojo de la campana.
+                LaunchedEffect(Unit) { notificationsViewModel.refreshUnreadCount() }
+                val notificationsState by notificationsViewModel.state.collectAsStateWithLifecycle()
+                // Plegar el buscador borra lo escrito: vuelve el listado con el orden elegido.
+                val closeSearch = {
+                    searchExpanded = false
+                    recipeSearchViewModel.clearQuery()
+                }
                 HomeTabScreen(
-                    userName = user?.name.orEmpty(),
+                    unreadNotifications = notificationsState.unreadCount,
+                    searchExpanded = searchExpanded,
+                    onSearchClick = { if (searchExpanded) closeSearch() else searchExpanded = true },
+                    onOpenNotifications = { navController.navigate(HomeRoutes.NOTIFICACIONES) },
                     selectedTab = homeTab,
                     onTabSelected = { homeTab = it },
                     onCreateRecipe = {
@@ -181,7 +200,9 @@ fun HomeScreen(
                             onQueryChange = recipeSearchViewModel::onQueryChange,
                             onSortChange = recipeSearchViewModel::onSortChange,
                             onSearch = recipeSearchViewModel::search,
-                            snackbarHostState = snackbarHostState
+                            snackbarHostState = snackbarHostState,
+                            searchExpanded = searchExpanded,
+                            onCloseSearch = closeSearch
                         )
                     },
                     friendsContent = { snackbarHostState ->
@@ -196,6 +217,23 @@ fun HomeScreen(
                             actions = remember(friendsFeedViewModel) { feedActions(friendsFeedViewModel, navController, onFollowChanged) },
                             onFindPeople = { navController.navigate(HomeRoutes.BUSCAR_PERSONAS) },
                             snackbarHostState = snackbarHostState
+                        )
+                    }
+                )
+            }
+
+            composable(HomeRoutes.NOTIFICACIONES) {
+                LaunchedEffect(Unit) { notificationsViewModel.open() }
+                val notificationsState by notificationsViewModel.state.collectAsStateWithLifecycle()
+                NotificationsScreen(
+                    state = notificationsState,
+                    actions = remember(notificationsViewModel) {
+                        NotificationsActions(
+                            onBack = { navController.popBackStack() },
+                            onRefresh = notificationsViewModel::refresh,
+                            onLoadMore = notificationsViewModel::loadMore,
+                            onOpenRecipe = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) },
+                            onMessageShown = notificationsViewModel::onMessageShown
                         )
                     }
                 )
@@ -290,7 +328,8 @@ fun HomeScreen(
                                 onFoodQueryChange = logViewModel::onFoodQueryChange,
                                 onFoodSelected = logViewModel::onFoodSelected,
                                 onGramsChange = logViewModel::onGramsChange,
-                                onSave = logViewModel::saveEntry
+                                onSave = logViewModel::saveEntry,
+                                onRetryRecipes = recipeViewModel::loadMyRecipes
                             ),
                             onOpenRecipe = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) },
                             onShowMonth = logViewModel::showMonth,

@@ -15,6 +15,7 @@ const {
   toCommentResponse, commentsPreviewField, toCommentsPreview, likersSelect, likersByRecipe,
 } = require('../social/comments');
 const { parseSearchQuery, searchRecipes } = require('../social/recipeSearch');
+const { notifyRecipeAuthor } = require('../social/notifications');
 
 const MAX_OCR_TEXT = 20000;
 const MAX_DESCRIPTION = 1000;
@@ -531,6 +532,7 @@ router.post('/:id/like', async (req, res) => {
     create: { userId: req.userId, recipeId: id },
     update: {},
   });
+  await notifyRecipeAuthor({ recipeId: id, type: 'like', actorId: req.userId });
   res.json(await likeState(id, req.userId));
 });
 
@@ -599,6 +601,7 @@ router.post('/:id/comments', async (req, res) => {
     data: { text: text.value, userId: req.userId, recipeId: id },
     select: COMMENT_SELECT,
   });
+  await notifyRecipeAuthor({ recipeId: id, type: 'comment', actorId: req.userId });
   res.status(201).json(toCommentResponse(comment));
 });
 

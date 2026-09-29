@@ -74,6 +74,7 @@ function fakePrisma() {
   const comments = [];
   const saves = [];
   const follows = [];
+  const notifications = [];
   let clock = Date.parse('2026-09-10');
   const now = () => new Date((clock += 1000));
 
@@ -115,6 +116,7 @@ function fakePrisma() {
     comments,
     saves,
     follows,
+    notifications,
     recipes,
     // Añade un comentario directamente, sin pasar por la API.
     addComment: (userId, recipeId, text) => {
@@ -179,6 +181,29 @@ function fakePrisma() {
           .map((s) => ({ recipe: shape(recipes.find((r) => r.id === s.recipeId), { select: select.recipe.select }) }));
       },
     },
+    notification: {
+      findFirst: async ({ where }) => notifications.find((n) => Object.entries(where).every(([k, v]) => n[k] === v)) ?? null,
+      create: async ({ data }) => {
+        const n = { id: notifications.length + 1, read: false, ...data, createdAt: now() };
+        notifications.push(n);
+        return n;
+      },
+      findMany: async ({ where, take, cursor, skip = 0 }) => {
+        const sorted = notifications.filter((n) => n.userId === where.userId).sort(newestFirst);
+        const start = cursor ? sorted.findIndex((n) => n.id === cursor.id) : 0;
+        return sorted.slice(start + skip, start + skip + take).map((n) => ({
+          ...n,
+          actor: { name: users[n.actorId] },
+          recipe: n.recipeId == null ? null : { title: recipes.find((r) => r.id === n.recipeId)?.title },
+        }));
+      },
+      count: async ({ where }) => notifications.filter((n) => n.userId === where.userId && n.read === where.read).length,
+      updateMany: async ({ where, data }) => {
+        const matching = notifications.filter((n) => n.userId === where.userId && n.read === where.read);
+        matching.forEach((n) => Object.assign(n, data));
+        return { count: matching.length };
+      },
+    },
     follow: {
       findMany: async ({ where }) => follows.filter((f) => f.followerId === where.followerId),
       upsert: async ({ where: { followerId_followingId: key }, create }) => {
@@ -236,10 +261,15 @@ async function startApi(db) {
   const recipesPath = require.resolve('../src/routes/recipes');
   const commentsPath = require.resolve('../src/routes/comments');
   const usersPath = require.resolve('../src/routes/users');
+  const notificationsPath = require.resolve('../src/routes/notifications');
+  // Lo usan las rutas para crear notificaciones: también tiene que ver la base simulada.
+  const notifySocialPath = require.resolve('../src/social/notifications');
   require.cache[prismaPath] = { id: prismaPath, filename: prismaPath, loaded: true, exports: db };
   delete require.cache[recipesPath];
   delete require.cache[commentsPath];
   delete require.cache[usersPath];
+  delete require.cache[notificationsPath];
+  delete require.cache[notifySocialPath];
 
   const express = require('express');
   const app = express();
@@ -247,6 +277,7 @@ async function startApi(db) {
   app.use('/recipes', require(recipesPath));
   app.use('/comments', require(commentsPath));
   app.use('/users', require(usersPath));
+  app.use('/notifications', require(notificationsPath));
   const server = await new Promise((resolve) => { const s = app.listen(0, () => resolve(s)); });
   const base = `http://127.0.0.1:${server.address().port}`;
 
@@ -630,6 +661,98 @@ test('GET /users/search: excluye a quien busca, sin tildes, con isFollowedByMe y
     assert.equal((await api.ana('GET', '/users/search?limit=2')).body.users.length, 2);
     assert.equal((await api.ana('GET', '/users/search?limit=0')).status, 400);
   } finally {
+    await api.close();
+  }
+});
+
+// ---- Notificaciones ----
+
+test('notificaciones: seguir, dar me gusta y comentar avisan al otro usuario, no a uno mismo', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    // Luis sigue a Ana, le da me gusta a su receta y la comenta.
+    await api.luis('POST', '/users/1/follow');
+    await api.luis('POST', '/recipes/10/like');
+    await api.luis('POST', '/recipes/10/comments', { text: '¡Qué rica!' });
+    // Lo propio no genera nada: Ana da me gusta y comenta su receta.
+    await api.ana('POST', '/recipes/10/like');
+    await api.ana('POST', '/recipes/10/comments', { text: 'Gracias' });
+
+    const page = await api.ana('GET', '/notifications');
+    assert.equal(page.status, 200);
+    assert.equal(page.body.unreadCount, 3);
+    assert.deepEqual(
+      page.body.notifications.map((n) => [n.type, n.actorId, n.actorName, n.recipeId, n.recipeTitle, n.read]),
+      [
+        ['comment', 2, 'Luis', 10, 'Crema de calabaza', false],
+        ['like', 2, 'Luis', 10, 'Crema de calabaza', false],
+        ['follow', 2, 'Luis', null, null, false],
+      ],
+    );
+    // Luis no ha recibido nada.
+    assert.deepEqual((await api.luis('GET', '/notifications')).body, { notifications: [], nextCursor: null, unreadCount: 0 });
+  } finally {
+    await api.close();
+  }
+});
+
+test('notificaciones: quitar y volver a dar el me gusta o el follow no las repite; los comentarios sí', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    await api.luis('POST', '/recipes/10/like');
+    await api.luis('DELETE', '/recipes/10/like');
+    await api.luis('POST', '/recipes/10/like');
+    await api.luis('POST', '/users/1/follow');
+    await api.luis('DELETE', '/users/1/follow');
+    await api.luis('POST', '/users/1/follow');
+    await api.luis('POST', '/recipes/10/comments', { text: 'Uno' });
+    await api.luis('POST', '/recipes/10/comments', { text: 'Dos' });
+    assert.deepEqual(db.notifications.map((n) => n.type).sort(), ['comment', 'comment', 'follow', 'like']);
+  } finally {
+    await api.close();
+  }
+});
+
+test('GET /notifications: por páginas, unreadCount solo en la primera y read-all las marca todas', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    for (const text of ['a', 'b', 'c']) await api.marta('POST', '/recipes/10/comments', { text });
+    const first = await api.ana('GET', '/notifications?limit=2');
+    assert.equal(first.body.notifications.length, 2);
+    assert.equal(first.body.unreadCount, 3);
+    assert.equal(first.body.nextCursor, first.body.notifications[1].id);
+    const second = await api.ana('GET', `/notifications?limit=2&cursor=${first.body.nextCursor}`);
+    assert.equal(second.body.notifications.length, 1);
+    assert.equal(second.body.nextCursor, null);
+    assert.equal('unreadCount' in second.body, false);
+    // El cursor de otro usuario no sirve.
+    assert.equal((await api.luis('GET', `/notifications?cursor=${first.body.nextCursor}`)).status, 400);
+    assert.equal((await api.ana('GET', '/notifications?cursor=abc')).status, 400);
+
+    assert.deepEqual((await api.ana('POST', '/notifications/read-all')).body, { updated: 3, unreadCount: 0 });
+    const after = await api.ana('GET', '/notifications');
+    assert.equal(after.body.unreadCount, 0);
+    assert.ok(after.body.notifications.every((n) => n.read));
+  } finally {
+    await api.close();
+  }
+});
+
+test('un fallo al crear la notificación no rompe el me gusta, el comentario ni el follow', async () => {
+  const db = fakePrisma();
+  db.notification.create = async () => { throw new Error('base de datos caída'); };
+  const originalError = console.error;
+  console.error = () => {};
+  const api = await startApi(db);
+  try {
+    assert.deepEqual((await api.luis('POST', '/recipes/10/like')).body, { likesCount: 1, likedByMe: true });
+    assert.equal((await api.luis('POST', '/recipes/10/comments', { text: 'Hola' })).status, 201);
+    assert.deepEqual((await api.luis('POST', '/users/1/follow')).body, { isFollowedByMe: true });
+  } finally {
+    console.error = originalError;
     await api.close();
   }
 });

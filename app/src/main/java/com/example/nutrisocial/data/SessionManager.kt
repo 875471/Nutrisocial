@@ -53,8 +53,6 @@ class SessionManager(context: Context) {
 
     val token: Flow<String?> = session.map { it?.token }
 
-    val isLoggedIn: Flow<Boolean> = session.map { it != null }
-
     suspend fun saveSession(token: String, user: User) {
         dataStore.edit { prefs ->
             prefs[Keys.TOKEN] = token

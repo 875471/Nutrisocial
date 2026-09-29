@@ -10,7 +10,7 @@ import com.example.nutrisocial.ui.home.FeedViewModel
  * desaparece al momento (se puede volver a guardar si fue sin querer): sale de la lista al
  * refrescar.
  */
-class SavedRecipesViewModel : FeedViewModel(loadOnInit = false) {
+class SavedRecipesViewModel : FeedViewModel() {
     // La primera carga la pide la pantalla al abrir el segmento (ver HomeScreen).
 
     override suspend fun fetchPage(cursor: Int?): ApiResult<FeedPage> = feedRepository.getSaved(cursor)

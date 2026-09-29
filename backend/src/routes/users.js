@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../prismaClient');
 const requireAuth = require('../middleware/auth');
 const { parseUserSearchQuery, searchUsers } = require('../social/userSearch');
+const { notify } = require('../social/notifications');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -65,6 +66,7 @@ router.post('/:id/follow', async (req, res) => {
     create: { followerId: req.userId, followingId: id },
     update: {},
   });
+  await notify({ userId: id, type: 'follow', actorId: req.userId });
   res.json({ isFollowedByMe: true });
 });
 

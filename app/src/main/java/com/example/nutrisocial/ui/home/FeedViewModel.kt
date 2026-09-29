@@ -46,15 +46,14 @@ data class FeedUiState(
 /**
  * Lista paginada de tarjetas de receta con "me gusta", comentarios y "Seguir" desde la propia
  * tarjeta. Es la base del feed de amigos, del buscador y de las guardadas, que solo cambian de
- * dónde sale cada página ([fetchPage]). Las subclases pasan [loadOnInit] = false y cargan en su propio
- * `init`, cuando sus propiedades ya están inicializadas.
+ * dónde sale cada página ([fetchPage]). No carga nada al crearse: cada subclase decide cuándo
+ * (en su propio `init`, cuando sus propiedades ya están inicializadas, o al abrirse su pantalla).
  */
-open class FeedViewModel(
+abstract class FeedViewModel(
     protected val feedRepository: FeedRepository = FeedRepository(),
     private val recipeRepository: RecipeRepository = RecipeRepository(),
     private val commentRepository: CommentRepository = CommentRepository(),
-    private val userRepository: UserRepository = UserRepository(),
-    loadOnInit: Boolean = true
+    private val userRepository: UserRepository = UserRepository()
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedUiState())
@@ -62,12 +61,8 @@ open class FeedViewModel(
 
     private var pageJob: Job? = null
 
-    init {
-        if (loadOnInit) refresh()
-    }
-
-    /** Página a partir de [cursor] (null para la primera). Por defecto, el feed de Inicio. */
-    protected open suspend fun fetchPage(cursor: Int?): ApiResult<FeedPage> = feedRepository.getFeed(cursor)
+    /** Página a partir de [cursor] (null para la primera). */
+    protected abstract suspend fun fetchPage(cursor: Int?): ApiResult<FeedPage>
 
     /** Empieza de cero, sin enseñar lo anterior (p. ej. al cambiar la búsqueda). */
     protected fun restart() {

@@ -48,7 +48,7 @@ En `routes/recipes.js`, `GET /recipes/feed/friends` lee los seguidos y, si hay a
 
 ### Aplicación Android
 
-**Inicio.** `HomeTabScreen` muestra el saludo, un `PrimaryTabRow` con "Explorar" y "Amigos" y, debajo, el contenido del segmento, que pone `HomeScreen` con su propio ViewModel. Es el mismo patrón que ya usaba la pestaña Recetas. El botón "Nueva receta" sigue en Inicio.
+**Inicio.** `HomeTabScreen` muestra el saludo, un `PrimaryTabRow` con "Explorar" y "Amigos" y, debajo, el contenido del segmento, que pone `HomeScreen` con su propio ViewModel. Es el mismo patrón que ya usaba la pestaña Recetas. El botón "Nueva receta" sigue en Inicio. (En el informe 21 el saludo y la fila de pestañas se sustituyen por un título desplegable con la lupa y la campana de notificaciones.)
 
 - **Explorar** es el `ExploreContent` del informe 16, trasladado sin cambios de comportamiento con su `RecipeSearchViewModel`.
 - **Amigos** usa `FriendsFeedViewModel`, una subclase de `FeedViewModel` que solo cambia de dónde salen las páginas (`GET /recipes/feed/friends`). Por eso tiene gratis la paginación por cursor, tirar para refrescar, los "me gusta", los guardados y los comentarios desde la tarjeta. Se recarga cada vez que se abre el segmento, porque el usuario puede haber empezado a seguir a alguien desde otro sitio. Si no hay recetas, un mensaje centrado explica qué se verá ahí y ofrece el botón "Buscar personas". Si las hay, el mismo enlace queda sobre la primera tarjeta para seguir a más gente.

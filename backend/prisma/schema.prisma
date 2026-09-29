@@ -12,11 +12,11 @@ datasource db {
 }
 
 model User {
-  id                        Int           @id @default(autoincrement())
-  email                     String        @unique
+  id                        Int            @id @default(autoincrement())
+  email                     String         @unique
   password                  String
   name                      String
-  createdAt                 DateTime      @default(now())
+  createdAt                 DateTime       @default(now())
   // Datos de perfil para el objetivo calórico (ver src/nutrition/calorieGoal.js). Opcionales:
   // un usuario recién registrado todavía no los ha rellenado.
   birthDate                 DateTime?
@@ -30,11 +30,11 @@ model User {
   goal                      String?
   // Verificación del email (ver src/routes/auth.js). Los tokens se guardan hasheados
   // (SHA-256): el enlace o el código que recibe el usuario no está en la base de datos.
-  emailVerified             Boolean       @default(false)
-  verificationTokenHash     String?       @unique
+  emailVerified             Boolean        @default(false)
+  verificationTokenHash     String?        @unique
   verificationTokenExpires  DateTime?
   // Recuperación de contraseña: código de un solo uso con caducidad corta.
-  passwordResetTokenHash    String?       @unique
+  passwordResetTokenHash    String?        @unique
   passwordResetTokenExpires DateTime?
   recipes                   Recipe[]
   logEntries                LogEntry[]
@@ -43,8 +43,11 @@ model User {
   comments                  Comment[]
   savedRecipes              SavedRecipe[]
   // A quién sigue este usuario y quién le sigue a él (ver model Follow).
-  following                 Follow[]      @relation("Following")
-  followers                 Follow[]      @relation("Followers")
+  following                 Follow[]       @relation("Following")
+  followers                 Follow[]       @relation("Followers")
+  // Notificaciones que recibe y las que ha provocado en otros (ver model Notification).
+  notifications             Notification[] @relation("NotificationRecipient")
+  notificationsCaused       Notification[] @relation("NotificationActor")
 }
 
 model Recipe {
@@ -52,7 +55,8 @@ model Recipe {
   title            String
   // Texto corto opcional que acompaña al título en el feed
   description      String?            @db.Text
-  // SQLite no tiene tipo lista: los pasos se guardan como JSON serializado (array de strings)
+  // Pasos como JSON serializado (array de strings). Viene de cuando la base era SQLite, sin tipo
+  // lista; en PostgreSQL podría ser String[], pero cambiarlo exigiría migrar los datos existentes.
   steps            String
   servings         Int
   prepMinutes      Int?
@@ -73,6 +77,7 @@ model Recipe {
   likes            RecipeLike[]
   comments         Comment[]
   saves            SavedRecipe[]
+  notifications    Notification[]
   createdAt        DateTime           @default(now())
 
   @@index([authorId])
@@ -208,4 +213,24 @@ model Follow {
 
   @@unique([followerId, followingId])
   @@index([followingId])
+}
+
+// Aviso dentro de la app para `userId`: alguien (`actorId`) ha empezado a seguirle ("follow"),
+// ha dado "me gusta" a una receta suya ("like") o la ha comentado ("comment"). No hay push:
+// se consultan al abrir la app (ver src/routes/notifications.js).
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  // "follow" | "like" | "comment"
+  type      String
+  actorId   Int
+  actor     User     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  // La receta del "me gusta" o del comentario; null en "follow"
+  recipeId  Int?
+  recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
