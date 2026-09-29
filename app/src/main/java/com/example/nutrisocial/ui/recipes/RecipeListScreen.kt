@@ -39,18 +39,17 @@ import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
 
-/** Segmentos de la pestaña Recetas. */
+/** Segmentos de las recetas del perfil. */
 enum class RecipesTab(val label: String) {
     MINE("Mis recetas"),
-    EXPLORE("Explorar"),
     SAVED("Guardadas")
 }
 
 /**
- * Pestaña Recetas: las propias ("Mis recetas"), el buscador de todas ("Explorar") y las que el
- * usuario ha guardado de cualquier autor ("Guardadas"). El contenido
- * de los segmentos que no son "Mis recetas" lo pone quien llama, con su propio ViewModel; recibe
- * el [SnackbarHostState] de la pantalla para sus avisos.
+ * Pestaña Perfil: [header] con los datos del usuario y, debajo, sus dos listas personales de
+ * recetas: las propias ("Mis recetas") y las que ha guardado de cualquier autor ("Guardadas").
+ * El contenido de "Guardadas" lo pone quien llama, con su propio ViewModel; recibe el
+ * [SnackbarHostState] de la pantalla para sus avisos.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,8 +66,8 @@ fun RecipeListScreen(
     onRefresh: () -> Unit = {},
     selectedTab: RecipesTab = RecipesTab.MINE,
     onTabSelected: (RecipesTab) -> Unit = {},
-    exploreContent: @Composable (SnackbarHostState) -> Unit = {},
-    savedContent: @Composable (SnackbarHostState) -> Unit = {}
+    savedContent: @Composable (SnackbarHostState) -> Unit = {},
+    header: @Composable () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(message) {
@@ -81,9 +80,10 @@ fun RecipeListScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Recetas") },
+                title = { Text("Perfil") },
                 actions = {
-                    TextButton(onClick = onScanRecipe) {
+                    // Como el botón de crear: escanear es cosa de "Mis recetas".
+                    if (selectedTab == RecipesTab.MINE) TextButton(onClick = onScanRecipe) {
                         Icon(
                             painterResource(R.drawable.ic_photo_camera),
                             contentDescription = null,
@@ -110,6 +110,7 @@ fun RecipeListScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            header()
             PrimaryTabRow(
                 selectedTabIndex = selectedTab.ordinal,
                 containerColor = MaterialTheme.colorScheme.background
@@ -131,7 +132,6 @@ fun RecipeListScreen(
                 ) {
                     RecipeListContent(state = state, onRecipeClick = onRecipeClick, onRetry = onRetry)
                 }
-                RecipesTab.EXPLORE -> exploreContent(snackbarHostState)
                 RecipesTab.SAVED -> savedContent(snackbarHostState)
             }
         }

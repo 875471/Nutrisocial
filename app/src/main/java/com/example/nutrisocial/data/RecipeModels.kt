@@ -21,7 +21,9 @@ data class Recipe(
     // Nombres de quienes dieron los últimos "me gusta" (como mucho 3, el más reciente primero).
     val likersPreview: List<String> = emptyList(),
     // Si el usuario la tiene en "Guardadas".
-    val savedByMe: Boolean = false
+    val savedByMe: Boolean = false,
+    // Si el usuario sigue al autor (siempre false en las recetas propias).
+    val isFollowedByMe: Boolean = false
 )
 
 /** Ingrediente guardado: cantidad tal como se escribió, peso estimado y alimento asociado (BEDCA u Open Food Facts). */
@@ -145,7 +147,8 @@ data class FeedRecipe(
     // Los 2 comentarios más recientes y los nombres de los últimos 3 "me gusta".
     val commentsPreview: List<CommentPreview> = emptyList(),
     val likersPreview: List<String> = emptyList(),
-    val savedByMe: Boolean = false
+    val savedByMe: Boolean = false,
+    val isFollowedByMe: Boolean = false
 )
 
 /**

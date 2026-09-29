@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -35,6 +36,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
@@ -64,6 +66,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.data.ActivityOptions
@@ -73,6 +76,7 @@ import com.example.nutrisocial.data.ProfileOption
 import com.example.nutrisocial.data.SexOptions
 import com.example.nutrisocial.data.User
 import com.example.nutrisocial.data.profileFieldLabel
+import com.example.nutrisocial.ui.InitialsAvatar
 import com.example.nutrisocial.ui.displayDate
 import com.example.nutrisocial.ui.isoToPickerMillis
 import com.example.nutrisocial.ui.pickerMillisToIso
@@ -104,14 +108,18 @@ data class ProfileActions(
     val onDeleteAccountDismissed: () -> Unit = {}
 )
 
-/** Pestaña "Perfil": datos personales, objetivo calórico diario y cierre de sesión. */
+/**
+ * "Mis datos", desde la cabecera de la pestaña Perfil: datos personales, objetivo calórico diario,
+ * cierre de sesión y borrado de la cuenta.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     user: User?,
     state: ProfileUiState,
     actions: ProfileActions,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onBack: () -> Unit = {}
 ) {
     // Cuenta borrada en el servidor: se cierra la sesión, lo que lleva de vuelta al login.
     LaunchedEffect(state.accountDeletion.deleted) {
@@ -128,7 +136,12 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Perfil") },
+                title = { Text("Mis datos") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -330,6 +343,28 @@ private fun UserHeader(name: String, email: String) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+/**
+ * Cabecera de la pestaña Perfil, encima de "Mis recetas" y "Guardadas": avatar, nombre, el
+ * objetivo calórico (o que falta completarlo) y el acceso a "Mis datos".
+ */
+@Composable
+fun ProfileHeader(name: String, dailyCalorieGoal: Int?, onOpenData: () -> Unit, modifier: Modifier = Modifier) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
+        InitialsAvatar(name = name.ifBlank { "?" }, size = 56.dp)
+        Column(modifier = Modifier
+            .weight(1f)
+            .padding(horizontal = Spacing.md)) {
+            Text(text = name, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                text = dailyCalorieGoal?.let { "Objetivo: ${formatKcal(it)} kcal al día" } ?: "Completa tus datos para calcular tu objetivo",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        OutlinedButton(onClick = onOpenData, shape = ButtonShape) { Text("Mis datos") }
     }
 }
 

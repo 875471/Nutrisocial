@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -35,6 +34,8 @@ import com.example.nutrisocial.data.User
 import com.example.nutrisocial.data.toPreview
 import com.example.nutrisocial.ui.comments.CommentsActions
 import com.example.nutrisocial.ui.explore.ExploreContent
+import com.example.nutrisocial.ui.explore.FriendsFeedContent
+import com.example.nutrisocial.ui.explore.FriendsFeedViewModel
 import com.example.nutrisocial.ui.explore.RecipeSearchViewModel
 import com.example.nutrisocial.ui.explore.SavedRecipesContent
 import com.example.nutrisocial.ui.explore.SavedRecipesViewModel
@@ -51,6 +52,9 @@ import com.example.nutrisocial.ui.log.LogViewModel
 import com.example.nutrisocial.ui.pantry.PantryActions
 import com.example.nutrisocial.ui.pantry.PantryScreen
 import com.example.nutrisocial.ui.pantry.PantryViewModel
+import com.example.nutrisocial.ui.people.PeopleSearchActions
+import com.example.nutrisocial.ui.people.PeopleSearchScreen
+import com.example.nutrisocial.ui.people.PeopleSearchViewModel
 import com.example.nutrisocial.ui.recipes.IngredientActions
 import com.example.nutrisocial.ui.recipes.RecipeDetailActions
 import com.example.nutrisocial.ui.recipes.RecipeDetailScreen
@@ -60,13 +64,16 @@ import com.example.nutrisocial.ui.recipes.RecipeListScreen
 import com.example.nutrisocial.ui.recipes.RecipeViewModel
 import com.example.nutrisocial.ui.scan.ScanRecipeScreen
 import com.example.nutrisocial.ui.scan.ScanRecipeViewModel
+import com.example.nutrisocial.ui.theme.Spacing
 
 private object HomeRoutes {
     const val INICIO = "inicio"
-    const val RECETAS = "recetas"
     const val DIARIO = "diario"
     const val DESPENSA = "despensa"
+    // Con "Mis recetas" y "Guardadas"; los datos personales están en PERFIL_DATOS.
     const val PERFIL = "perfil"
+    const val PERFIL_DATOS = "perfil/datos"
+    const val BUSCAR_PERSONAS = "personas"
     const val NUEVA_RECETA = "recetas/nueva"
     const val EDITAR_RECETA = "recetas/editar"
     const val ESCANEAR_RECETA = "recetas/escanear"
@@ -78,8 +85,7 @@ private object HomeRoutes {
 
 private enum class HomeTab(val route: String, val label: String, val icon: ImageVector) {
     INICIO(HomeRoutes.INICIO, "Inicio", Icons.Filled.Home),
-    // Etiquetas de una palabra: con cinco pestañas, "Mis recetas" se cortaba en pantallas estrechas.
-    RECETAS(HomeRoutes.RECETAS, "Recetas", Icons.AutoMirrored.Filled.List),
+    // Etiquetas de una palabra, para que no se corten en pantallas estrechas.
     DIARIO(HomeRoutes.DIARIO, "Diario", Icons.Filled.DateRange),
     DESPENSA(HomeRoutes.DESPENSA, "Despensa", Icons.Filled.ShoppingCart),
     PERFIL(HomeRoutes.PERFIL, "Perfil", Icons.Filled.Person)
@@ -101,14 +107,30 @@ fun HomeScreen(
     profileViewModel: ProfileViewModel = viewModel(),
     // Mismo ámbito: la despensa y los últimos resultados se conservan al volver del detalle.
     pantryViewModel: PantryViewModel = viewModel(),
-    feedViewModel: FeedViewModel = viewModel(),
-    // "Explorar" de la pestaña Recetas: se conserva la búsqueda al abrir una receta y volver.
+    // "Explorar" y "Amigos" del inicio: se conserva la búsqueda al abrir una receta y volver.
     recipeSearchViewModel: RecipeSearchViewModel = viewModel(),
+    friendsFeedViewModel: FriendsFeedViewModel = viewModel(),
+    // "Guardadas" del perfil.
     savedRecipesViewModel: SavedRecipesViewModel = viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
-    // Listas de tarjetas que deben reflejar lo que cambie en el detalle o en los comentarios.
-    val feedLists = listOf(feedViewModel, recipeSearchViewModel, savedRecipesViewModel)
+    // Listas de tarjetas que deben reflejar lo que cambie en el detalle, en los comentarios o al
+    // seguir a alguien desde otra lista o desde el buscador de personas.
+    val feedLists = listOf(recipeSearchViewModel, friendsFeedViewModel, savedRecipesViewModel)
+    val onFollowChanged: (Int, Boolean) -> Unit = { authorId, followed -> feedLists.forEach { it.applyFollow(authorId, followed) } }
+    // Segmentos elegidos en Inicio y en Perfil. Aquí y no en cada pestaña para poder volver a
+    // "Mis recetas" al crear o borrar una receta, aunque se estuviera en "Guardadas".
+    var homeTab by rememberSaveable { mutableStateOf(HomeFeedTab.EXPLORE) }
+    var profileTab by rememberSaveable { mutableStateOf(RecipesTab.MINE) }
+    // Tras crear o borrar una receta: a "Mis recetas" del perfil, quitando lo que haya encima.
+    fun showMyRecipes() {
+        profileTab = RecipesTab.MINE
+        if (!navController.popBackStack(HomeRoutes.PERFIL, inclusive = false)) {
+            // Se venía de otra pestaña (Inicio, Diario, Despensa).
+            navController.popBackStack()
+            navController.navigateToTab(HomeRoutes.PERFIL)
+        }
+    }
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val showBottomBar = HomeTab.entries.any { it.route == currentDestination?.route }
@@ -139,42 +161,14 @@ fun HomeScreen(
                 .consumeWindowInsets(padding)
         ) {
             composable(HomeRoutes.INICIO) {
-                val feedState by feedViewModel.state.collectAsStateWithLifecycle()
                 HomeTabScreen(
                     userName = user?.name.orEmpty(),
-                    state = feedState,
-                    actions = remember(feedViewModel) {
-                        feedActions(feedViewModel, navController).copy(
-                            onCreateRecipe = {
-                                recipeViewModel.resetForm()
-                                navController.navigate(HomeRoutes.NUEVA_RECETA)
-                            }
-                        )
-                    }
-                )
-            }
-
-            composable(HomeRoutes.RECETAS) {
-                // Se guarda con la entrada de navegación: al volver del detalle sigue el mismo segmento.
-                var recipesTab by rememberSaveable { mutableStateOf(RecipesTab.MINE) }
-                val listState by recipeViewModel.listState.collectAsStateWithLifecycle()
-                val listMessage by recipeViewModel.listMessage.collectAsStateWithLifecycle()
-                val listRefreshing by recipeViewModel.isRefreshingList.collectAsStateWithLifecycle()
-                RecipeListScreen(
-                    isRefreshing = listRefreshing,
-                    onRefresh = recipeViewModel::refreshMyRecipes,
-                    message = listMessage,
-                    onMessageShown = recipeViewModel::onListMessageShown,
-                    state = listState,
-                    onRecipeClick = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) },
+                    selectedTab = homeTab,
+                    onTabSelected = { homeTab = it },
                     onCreateRecipe = {
                         recipeViewModel.resetForm()
                         navController.navigate(HomeRoutes.NUEVA_RECETA)
                     },
-                    onRetry = recipeViewModel::loadMyRecipes,
-                    onScanRecipe = { navController.navigate(HomeRoutes.ESCANEAR_RECETA) },
-                    selectedTab = recipesTab,
-                    onTabSelected = { recipesTab = it },
                     exploreContent = { snackbarHostState ->
                         val searchState by recipeSearchViewModel.state.collectAsStateWithLifecycle()
                         val params by recipeSearchViewModel.params.collectAsStateWithLifecycle()
@@ -182,23 +176,44 @@ fun HomeScreen(
                             state = searchState,
                             params = params,
                             userName = user?.name.orEmpty(),
-                            actions = remember(recipeSearchViewModel) { feedActions(recipeSearchViewModel, navController) },
+                            currentUserId = user?.id,
+                            actions = remember(recipeSearchViewModel) { feedActions(recipeSearchViewModel, navController, onFollowChanged) },
                             onQueryChange = recipeSearchViewModel::onQueryChange,
                             onSortChange = recipeSearchViewModel::onSortChange,
                             onSearch = recipeSearchViewModel::search,
                             snackbarHostState = snackbarHostState
                         )
                     },
-                    savedContent = { snackbarHostState ->
-                        // Al abrir el segmento se recarga: se pueden haber guardado recetas desde el
-                        // inicio, desde "Explorar" o desde el detalle.
-                        LaunchedEffect(Unit) { savedRecipesViewModel.refresh() }
-                        val savedState by savedRecipesViewModel.state.collectAsStateWithLifecycle()
-                        SavedRecipesContent(
-                            state = savedState,
+                    friendsContent = { snackbarHostState ->
+                        // Al abrir el segmento se recarga: se puede haber empezado a seguir a alguien
+                        // desde "Explorar", desde el buscador de personas o desde otra pestaña.
+                        LaunchedEffect(Unit) { friendsFeedViewModel.refresh() }
+                        val friendsState by friendsFeedViewModel.state.collectAsStateWithLifecycle()
+                        FriendsFeedContent(
+                            state = friendsState,
                             userName = user?.name.orEmpty(),
-                            actions = remember(savedRecipesViewModel) { feedActions(savedRecipesViewModel, navController) },
+                            currentUserId = user?.id,
+                            actions = remember(friendsFeedViewModel) { feedActions(friendsFeedViewModel, navController, onFollowChanged) },
+                            onFindPeople = { navController.navigate(HomeRoutes.BUSCAR_PERSONAS) },
                             snackbarHostState = snackbarHostState
+                        )
+                    }
+                )
+            }
+
+            composable(HomeRoutes.BUSCAR_PERSONAS) {
+                // Con ámbito en esta pantalla: cada vez que se abre empieza sin texto.
+                val peopleViewModel: PeopleSearchViewModel = viewModel()
+                val peopleState by peopleViewModel.state.collectAsStateWithLifecycle()
+                PeopleSearchScreen(
+                    state = peopleState,
+                    actions = remember(peopleViewModel) {
+                        PeopleSearchActions(
+                            onBack = { navController.popBackStack() },
+                            onQueryChange = peopleViewModel::onQueryChange,
+                            onSearch = { peopleViewModel.search() },
+                            onToggleFollow = { id -> peopleViewModel.toggleFollow(id, onFollowChanged) },
+                            onMessageShown = peopleViewModel::onMessageShown
                         )
                     }
                 )
@@ -259,7 +274,7 @@ fun HomeScreen(
                             onRetry = logViewModel::loadDay,
                             onDelete = logViewModel::deleteEntry,
                             onMessageShown = logViewModel::onMessageShown,
-                            onOpenProfile = { navController.navigateToTab(HomeRoutes.PERFIL) },
+                            onOpenProfile = { navController.navigate(HomeRoutes.PERFIL_DATOS) },
                             onAddRecommendation = logViewModel::addRecommendation,
                             onRetryRecommendations = logViewModel::loadRecommendations,
                             add = AddEntryActions(
@@ -322,6 +337,50 @@ fun HomeScreen(
 
             composable(HomeRoutes.PERFIL) {
                 val profileState by profileViewModel.state.collectAsStateWithLifecycle()
+                val listState by recipeViewModel.listState.collectAsStateWithLifecycle()
+                val listMessage by recipeViewModel.listMessage.collectAsStateWithLifecycle()
+                val listRefreshing by recipeViewModel.isRefreshingList.collectAsStateWithLifecycle()
+                RecipeListScreen(
+                    isRefreshing = listRefreshing,
+                    onRefresh = recipeViewModel::refreshMyRecipes,
+                    message = listMessage,
+                    onMessageShown = recipeViewModel::onListMessageShown,
+                    state = listState,
+                    onRecipeClick = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) },
+                    onCreateRecipe = {
+                        recipeViewModel.resetForm()
+                        navController.navigate(HomeRoutes.NUEVA_RECETA)
+                    },
+                    onRetry = recipeViewModel::loadMyRecipes,
+                    onScanRecipe = { navController.navigate(HomeRoutes.ESCANEAR_RECETA) },
+                    selectedTab = profileTab,
+                    onTabSelected = { profileTab = it },
+                    savedContent = { snackbarHostState ->
+                        // Al abrir el segmento se recarga: se pueden haber guardado recetas desde el
+                        // inicio o desde el detalle.
+                        LaunchedEffect(Unit) { savedRecipesViewModel.refresh() }
+                        val savedState by savedRecipesViewModel.state.collectAsStateWithLifecycle()
+                        SavedRecipesContent(
+                            state = savedState,
+                            userName = user?.name.orEmpty(),
+                            currentUserId = user?.id,
+                            actions = remember(savedRecipesViewModel) { feedActions(savedRecipesViewModel, navController, onFollowChanged) },
+                            snackbarHostState = snackbarHostState
+                        )
+                    },
+                    header = {
+                        ProfileHeader(
+                            name = user?.name ?: profileState.profile?.name.orEmpty(),
+                            dailyCalorieGoal = profileState.profile?.dailyCalorieGoal,
+                            onOpenData = { navController.navigate(HomeRoutes.PERFIL_DATOS) },
+                            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm)
+                        )
+                    }
+                )
+            }
+
+            composable(HomeRoutes.PERFIL_DATOS) {
+                val profileState by profileViewModel.state.collectAsStateWithLifecycle()
                 ProfileScreen(
                     user = user,
                     state = profileState,
@@ -341,7 +400,8 @@ fun HomeScreen(
                             onDeleteAccountDismissed = profileViewModel::onDeleteAccountDismissed
                         )
                     },
-                    onLogout = onLogout
+                    onLogout = onLogout,
+                    onBack = { navController.popBackStack() }
                 )
             }
 
@@ -349,15 +409,11 @@ fun HomeScreen(
                 RecipeFormDestination(
                     recipeViewModel = recipeViewModel,
                     onSaved = {
-                        // Tras guardar se vuelve a "Mis recetas", que ya incluye la nueva receta.
+                        // Tras guardar se va a "Mis recetas" del perfil, que ya incluye la nueva receta.
                         recipeViewModel.resetForm()
-                        // La nueva receta también es lo primero del feed.
-                        feedViewModel.refresh()
-                        if (!navController.popBackStack(HomeRoutes.RECETAS, inclusive = false)) {
-                            // Se abrió desde Inicio: se quita el formulario y se cambia de pestaña.
-                            navController.popBackStack()
-                            navController.navigateToTab(HomeRoutes.RECETAS)
-                        }
+                        // La nueva receta también es lo primero de "Explorar".
+                        recipeSearchViewModel.refresh()
+                        showMyRecipes()
                     },
                     onBack = { navController.popBackStack() }
                 )
@@ -386,16 +442,12 @@ fun HomeScreen(
                 LaunchedEffect(id) { recipeViewModel.loadRecipe(id) }
                 val detailState by recipeViewModel.detailState.collectAsStateWithLifecycle()
                 val detailActionState by recipeViewModel.detailActionState.collectAsStateWithLifecycle()
-                // Receta eliminada: fuera del feed y de vuelta a "Mis recetas", que muestra el aviso.
+                // Receta eliminada: fuera de las listas y a "Mis recetas" del perfil, que muestra el aviso.
                 LaunchedEffect(detailActionState.deletedRecipeId) {
                     val deletedId = detailActionState.deletedRecipeId ?: return@LaunchedEffect
                     feedLists.forEach { it.removeRecipe(deletedId) }
                     recipeViewModel.onDeletedHandled()
-                    if (!navController.popBackStack(HomeRoutes.RECETAS, inclusive = false)) {
-                        // Se abrió desde otra pestaña (Inicio, Diario, Despensa).
-                        navController.popBackStack()
-                        navController.navigateToTab(HomeRoutes.RECETAS)
-                    }
+                    showMyRecipes()
                 }
                 // Lo que cambie aquí (likes, foto, edición) se copia a la tarjeta del feed.
                 LaunchedEffect(detailState) {
@@ -511,8 +563,15 @@ private fun RecipeFormDestination(recipeViewModel: RecipeViewModel, onSaved: () 
     )
 }
 
-/** Acciones de una lista de tarjetas de receta (feed, buscador o guardadas) sobre su ViewModel. */
-private fun feedActions(viewModel: FeedViewModel, navController: NavHostController) = FeedActions(
+/**
+ * Acciones de una lista de tarjetas de receta (amigos, buscador o guardadas) sobre su ViewModel.
+ * [onFollowChanged] copia a las demás listas el seguimiento confirmado por el servidor.
+ */
+private fun feedActions(
+    viewModel: FeedViewModel,
+    navController: NavHostController,
+    onFollowChanged: (Int, Boolean) -> Unit
+) = FeedActions(
     onRefresh = viewModel::refresh,
     onLoadMore = viewModel::loadMore,
     onToggleLike = viewModel::toggleLike,
@@ -522,7 +581,8 @@ private fun feedActions(viewModel: FeedViewModel, navController: NavHostControll
     onOpenComments = { id -> navController.navigate(HomeRoutes.comentarios(id)) },
     onCommentDraftChange = viewModel::onCommentDraftChange,
     onSendComment = viewModel::sendComment,
-    onToggleSave = viewModel::toggleSave
+    onToggleSave = viewModel::toggleSave,
+    onToggleFollow = { authorId -> viewModel.toggleFollow(authorId, onFollowChanged) }
 )
 
 /** Navegación estándar entre pestañas: conserva y restaura el estado de cada una. */

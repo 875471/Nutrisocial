@@ -73,6 +73,7 @@ function fakePrisma() {
   const likes = [];
   const comments = [];
   const saves = [];
+  const follows = [];
   let clock = Date.parse('2026-09-10');
   const now = () => new Date((clock += 1000));
 
@@ -82,6 +83,13 @@ function fakePrisma() {
   function shape(recipe, query = {}) {
     const spec = query.include ?? query.select ?? {};
     const out = { ...recipe, author: { name: users[recipe.authorId] }, ingredients: [] };
+    // isFollowedByMe: solo el seguimiento del usuario que pregunta al autor.
+    const followersWhere = spec.author?.select?.followers?.where;
+    if (followersWhere) {
+      out.author.followers = follows
+        .filter((f) => f.followingId === recipe.authorId && f.followerId === followersWhere.followerId)
+        .map((f) => ({ id: f.id }));
+    }
     const recipeLikes = likes.filter((l) => l.recipeId === recipe.id);
     const recipeComments = comments.filter((c) => c.recipeId === recipe.id).sort(newestFirst);
     if (spec._count) {
@@ -106,6 +114,7 @@ function fakePrisma() {
     likes,
     comments,
     saves,
+    follows,
     recipes,
     // Añade un comentario directamente, sin pasar por la API.
     addComment: (userId, recipeId, text) => {
@@ -119,7 +128,10 @@ function fakePrisma() {
         return recipe ? shape(recipe, query) : null;
       },
       findMany: async ({ where, take = Infinity, cursor, skip = 0, ...query }) => {
-        const sorted = recipes.filter((r) => !where?.id?.in || where.id.in.includes(r.id)).sort(newestFirst);
+        const sorted = recipes
+          .filter((r) => !where?.id?.in || where.id.in.includes(r.id))
+          .filter((r) => !where?.authorId?.in || where.authorId.in.includes(r.authorId))
+          .sort(newestFirst);
         const start = cursor ? sorted.findIndex((r) => r.id === cursor.id) : 0;
         return sorted.slice(start + skip, start + skip + take).map((r) => shape(r, query));
       },
@@ -167,6 +179,38 @@ function fakePrisma() {
           .map((s) => ({ recipe: shape(recipes.find((r) => r.id === s.recipeId), { select: select.recipe.select }) }));
       },
     },
+    follow: {
+      findMany: async ({ where }) => follows.filter((f) => f.followerId === where.followerId),
+      upsert: async ({ where: { followerId_followingId: key }, create }) => {
+        let follow = follows.find((f) => f.followerId === key.followerId && f.followingId === key.followingId);
+        if (!follow) follows.push((follow = { id: follows.length + 1, ...create, createdAt: now() }));
+        return follow;
+      },
+      deleteMany: async ({ where }) => {
+        const before = follows.length;
+        for (let i = follows.length - 1; i >= 0; i--) {
+          if (follows[i].followerId === where.followerId && follows[i].followingId === where.followingId) follows.splice(i, 1);
+        }
+        return { count: before - follows.length };
+      },
+    },
+    user: {
+      findUnique: async ({ where }) => (users[where.id] ? { id: where.id } : null),
+      // Sin `where`, todos (id y nombre); con `where.id.in`, con el recuento de recetas y el
+      // seguimiento de quien pregunta, como en GET /users/search.
+      findMany: async ({ where, select }) => Object.entries(users)
+        .map(([id, name]) => ({ id: Number(id), name }))
+        .filter((u) => !where?.id?.in || where.id.in.includes(u.id))
+        .map((u) => (select._count
+          ? {
+            ...u,
+            _count: { recipes: recipes.filter((r) => r.authorId === u.id).length },
+            followers: follows
+              .filter((f) => f.followingId === u.id && f.followerId === select.followers.where.followerId)
+              .map((f) => ({ id: f.id })),
+          }
+          : u)),
+    },
     comment: {
       findMany: async ({ where, take, cursor, skip = 0 }) => {
         const sorted = comments.filter((c) => c.recipeId === where.recipeId).sort(newestFirst);
@@ -191,15 +235,18 @@ async function startApi(db) {
   const prismaPath = path.resolve(__dirname, '../src/prismaClient.js');
   const recipesPath = require.resolve('../src/routes/recipes');
   const commentsPath = require.resolve('../src/routes/comments');
+  const usersPath = require.resolve('../src/routes/users');
   require.cache[prismaPath] = { id: prismaPath, filename: prismaPath, loaded: true, exports: db };
   delete require.cache[recipesPath];
   delete require.cache[commentsPath];
+  delete require.cache[usersPath];
 
   const express = require('express');
   const app = express();
   app.use(express.json({ limit: '3mb' }));
   app.use('/recipes', require(recipesPath));
   app.use('/comments', require(commentsPath));
+  app.use('/users', require(usersPath));
   const server = await new Promise((resolve) => { const s = app.listen(0, () => resolve(s)); });
   const base = `http://127.0.0.1:${server.address().port}`;
 
@@ -485,6 +532,103 @@ test('recetas guardadas: guardar, savedByMe en feed/detalle/búsqueda, lista pag
     assert.equal((await api.ana('DELETE', '/recipes/12/save')).status, 200);
     assert.deepEqual((await api.ana('GET', '/recipes/saved')).body.recipes.map((r) => r.id), [10, 11]);
     assert.equal((await api.ana('GET', '/recipes/saved?cursor=12')).status, 400);
+  } finally {
+    await api.close();
+  }
+});
+
+// ---- Seguir usuarios ----
+
+test('seguir: es idempotente, no se puede seguir a uno mismo y se puede dejar de seguir', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    assert.deepEqual((await api.ana('POST', '/users/2/follow')).body, { isFollowedByMe: true });
+    // Seguir dos veces no duplica.
+    assert.deepEqual((await api.ana('POST', '/users/2/follow')).body, { isFollowedByMe: true });
+    assert.deepEqual(db.follows.map((f) => [f.followerId, f.followingId]), [[1, 2]]);
+
+    const self = await api.ana('POST', '/users/1/follow');
+    assert.equal(self.status, 400);
+    assert.match(self.body.error, /ti mismo/);
+    assert.equal((await api.ana('POST', '/users/999/follow')).status, 404);
+    assert.equal((await api.ana('POST', '/users/abc/follow')).status, 400);
+    assert.equal(db.follows.length, 1);
+
+    assert.deepEqual((await api.ana('DELETE', '/users/2/follow')).body, { isFollowedByMe: false });
+    // Dejar de seguir a quien ya no se sigue no es un error.
+    assert.deepEqual((await api.ana('DELETE', '/users/2/follow')).body, { isFollowedByMe: false });
+    assert.equal(db.follows.length, 0);
+  } finally {
+    await api.close();
+  }
+});
+
+test('GET /recipes/feed/friends: solo recetas de gente seguida, y vacío si no sigue a nadie', async () => {
+  const db = fakePrisma();
+  // Marta publica la receta más reciente de todas: no debe salirle a Ana, que no la sigue.
+  db.recipes.push({ id: 13, title: 'Gazpacho', authorId: 3, servings: 4, prepMinutes: 15, kcal: 400, protein: 8, carbs: 40, fat: 20, totalWeightGrams: null, steps: '["Triturar"]', imageBase64: null, createdAt: new Date('2026-09-04') });
+  const api = await startApi(db);
+  try {
+    const none = await api.ana('GET', '/recipes/feed/friends');
+    assert.equal(none.status, 200);
+    assert.deepEqual(none.body, { recipes: [], nextCursor: null });
+
+    await api.ana('POST', '/users/2/follow');
+    const first = await api.ana('GET', '/recipes/feed/friends?limit=1');
+    assert.deepEqual(first.body.recipes.map((r) => r.id), [12]);
+    assert.equal(first.body.nextCursor, 12);
+    assert.equal(first.body.recipes[0].isFollowedByMe, true);
+    const second = await api.ana('GET', `/recipes/feed/friends?limit=1&cursor=${first.body.nextCursor}`);
+    assert.deepEqual(second.body.recipes.map((r) => r.id), [11]);
+    assert.equal(second.body.nextCursor, null);
+
+    // Luis no sigue a nadie: su feed de amigos está vacío aunque Ana le siga a él.
+    assert.deepEqual((await api.luis('GET', '/recipes/feed/friends')).body.recipes, []);
+    assert.equal((await api.ana('GET', '/recipes/feed/friends?cursor=abc')).status, 400);
+    assert.equal((await api.pablo('GET', '/recipes/feed/friends?limit=0')).status, 400);
+  } finally {
+    await api.close();
+  }
+});
+
+test('isFollowedByMe en el feed y en el detalle depende de quién pregunta', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    await api.ana('POST', '/users/2/follow');
+    const feed = (await api.ana('GET', '/recipes/feed')).body.recipes;
+    assert.deepEqual(feed.map((r) => [r.id, r.isFollowedByMe]), [[12, true], [11, true], [10, false]]);
+    // Marta no sigue a Luis.
+    assert.equal((await api.marta('GET', '/recipes/feed')).body.recipes[0].isFollowedByMe, false);
+    assert.equal((await api.ana('GET', '/recipes/11')).body.isFollowedByMe, true);
+    assert.equal((await api.marta('GET', '/recipes/11')).body.isFollowedByMe, false);
+  } finally {
+    await api.close();
+  }
+});
+
+test('GET /users/search: excluye a quien busca, sin tildes, con isFollowedByMe y recetas', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    await api.ana('POST', '/users/2/follow');
+    const all = await api.ana('GET', '/users/search');
+    assert.equal(all.status, 200);
+    // Sin texto, todos menos Ana, por orden alfabético.
+    assert.deepEqual(all.body.users, [
+      { id: 2, name: 'Luis', isFollowedByMe: true, recipesCount: 2 },
+      { id: 3, name: 'Marta', isFollowedByMe: false, recipesCount: 0 },
+      { id: 4, name: 'Pablo', isFollowedByMe: false, recipesCount: 0 },
+    ]);
+    assert.deepEqual((await api.ana('GET', '/users/search?q=M%C3%81RTA')).body.users.map((u) => u.id), [3]);
+    // Ana no se encuentra a sí misma, pero Luis sí la encuentra (y no la sigue).
+    assert.deepEqual((await api.ana('GET', '/users/search?q=ana')).body.users, []);
+    assert.deepEqual((await api.luis('GET', '/users/search?q=ana')).body.users, [
+      { id: 1, name: 'Ana', isFollowedByMe: false, recipesCount: 1 },
+    ]);
+    assert.equal((await api.ana('GET', '/users/search?limit=2')).body.users.length, 2);
+    assert.equal((await api.ana('GET', '/users/search?limit=0')).status, 400);
   } finally {
     await api.close();
   }

@@ -8,7 +8,7 @@ const { parseRecipeText } = require('../ocr/parseRecipeText');
 const { estimatePrepMinutes } = require('../ocr/estimatePrepTime');
 const { matchRecipesToPantry } = require('../nutrition/pantryMatch');
 const {
-  validateImageBase64, likeFields, likeSummary, socialFields, socialSummary, canEditRecipe,
+  validateImageBase64, likeFields, likeSummary, socialFields, socialSummary, authorFields, canEditRecipe,
 } = require('../social/recipeSocial');
 const {
   COMMENTS_PAGE_SIZE, COMMENTS_MAX_PAGE_SIZE, NEWEST_FIRST, validateCommentText, COMMENT_SELECT,
@@ -29,9 +29,9 @@ const INCLUDE_INGREDIENTS = {
 };
 const AUTHOR_NAME = { author: { select: { name: true } } };
 
-// Todo lo que necesita toRecipeResponse, con los likes vistos por el usuario `userId`.
+// Todo lo que necesita toRecipeResponse, con los likes y el seguimiento vistos por el usuario `userId`.
 function recipeInclude(userId) {
-  return { ...INCLUDE_INGREDIENTS, ...AUTHOR_NAME, ...socialFields(userId) };
+  return { ...INCLUDE_INGREDIENTS, ...authorFields(userId), ...socialFields(userId) };
 }
 
 // Nombres de quienes dieron los últimos likes a cada receta, para "Le gusta a X y a otras N
@@ -104,13 +104,13 @@ function toFeedItem(recipe, likers) {
 }
 
 // `select` de una tarjeta del feed (lo que usa toFeedItem), con lo social visto por `userId`.
-// Lo comparten el feed, el buscador y las recetas guardadas.
+// Lo comparten el feed, el de amigos, el buscador y las recetas guardadas.
 function feedSelect(userId) {
   return {
     id: true, title: true, description: true, imageBase64: true, authorId: true, servings: true,
     prepMinutes: true, kcal: true, protein: true, steps: true, createdAt: true,
     ingredients: { orderBy: { position: 'asc' }, select: { name: true, quantity: true, unit: true } },
-    ...AUTHOR_NAME, ...socialFields(userId), ...commentsPreviewField(),
+    ...authorFields(userId), ...socialFields(userId), ...commentsPreviewField(),
   };
 }
 
@@ -325,13 +325,15 @@ router.get('/mine', async (req, res) => {
 // Feed social: recetas de todos los usuarios, de la más reciente a la más antigua.
 // Paginación por cursor: `cursor` es el id de la última receta recibida y la respuesta
 // trae `nextCursor` (null si no hay más).
-router.get('/feed', async (req, res) => {
+// Página del feed (ver GET /feed) con las recetas que cumplen `where`.
+async function feedPage(req, res, where) {
   const pageQuery = parsePage(req.query, FEED_PAGE_SIZE, FEED_MAX_PAGE_SIZE);
   if (pageQuery.error) return res.status(400).json({ error: pageQuery.error });
   const { cursor, limit } = pageQuery;
 
   // Se pide una de más para saber si hay página siguiente sin otra consulta.
   const recipes = await prisma.recipe.findMany({
+    where,
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: limit + 1,
     ...(cursor != null && { cursor: { id: cursor }, skip: 1 }),
@@ -342,6 +344,21 @@ router.get('/feed', async (req, res) => {
     recipes: await toFeedItems(page),
     nextCursor: recipes.length > limit ? page[page.length - 1].id : null,
   });
+}
+
+router.get('/feed', (req, res) => feedPage(req, res, undefined));
+
+// Feed de "Amigos": como /feed, pero solo con recetas de los usuarios a los que sigue quien
+// pregunta. Si no sigue a nadie, una lista vacía (la app enseña entonces el buscador de personas).
+router.get('/feed/friends', async (req, res) => {
+  const follows = await prisma.follow.findMany({ where: { followerId: req.userId }, select: { followingId: true } });
+  if (follows.length === 0) {
+    // Se validan igualmente el cursor y el límite, para responder igual que con seguidos.
+    const pageQuery = parsePage(req.query, FEED_PAGE_SIZE, FEED_MAX_PAGE_SIZE);
+    if (pageQuery.error) return res.status(400).json({ error: pageQuery.error });
+    return res.json({ recipes: [], nextCursor: null });
+  }
+  return feedPage(req, res, { authorId: { in: follows.map((f) => f.followingId) } });
 });
 
 // Buscador de recetas de cualquier autor por texto libre sobre el título y los ingredientes,

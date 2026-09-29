@@ -1,14 +1,11 @@
 package com.example.nutrisocial.ui.home
 
-import com.example.nutrisocial.R
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,13 +21,13 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,33 +55,41 @@ data class FeedActions(
     val onOpenComments: (Int) -> Unit,
     val onCommentDraftChange: (Int, String) -> Unit,
     val onSendComment: (Int) -> Unit,
-    val onToggleSave: (Int) -> Unit = {}
+    val onToggleSave: (Int) -> Unit = {},
+    // Recibe el id del autor, no el de la receta.
+    val onToggleFollow: (Int) -> Unit = {}
 ) {
     companion object {
         val Noop = FeedActions({}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {})
     }
 }
 
-/** Pestaña "Inicio": el feed con las recetas de toda la comunidad, de la más reciente a la más antigua. */
+/** Segmentos de la pestaña Inicio. */
+enum class HomeFeedTab(val label: String) {
+    EXPLORE("Explorar"),
+    FRIENDS("Amigos")
+}
+
+/**
+ * Pestaña "Inicio": saludo y dos segmentos, "Explorar" (el buscador sobre las recetas de toda la
+ * comunidad) y "Amigos" (las de la gente a la que se sigue). El contenido de cada segmento lo pone
+ * quien llama, con su propio ViewModel; recibe el [SnackbarHostState] de la pantalla para sus avisos.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTabScreen(
     userName: String,
-    state: FeedUiState,
-    actions: FeedActions
+    selectedTab: HomeFeedTab,
+    onTabSelected: (HomeFeedTab) -> Unit,
+    onCreateRecipe: () -> Unit,
+    exploreContent: @Composable (SnackbarHostState) -> Unit,
+    friendsContent: @Composable (SnackbarHostState) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    LaunchedEffect(state.message) {
-        state.message?.let {
-            snackbarHostState.showSnackbar(it)
-            actions.onMessageShown()
-        }
-    }
-
     Scaffold(
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = actions.onCreateRecipe,
+                onClick = onCreateRecipe,
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text("Nueva receta") },
                 shape = ButtonShape,
@@ -94,30 +99,23 @@ fun HomeTabScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = state.isRefreshing,
-            onRefresh = actions.onRefresh,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            // Todo va dentro de una lista (también la carga y los errores) para que se pueda
-            // tirar hacia abajo para refrescar en cualquier estado.
-            LazyColumn(
-                // Hueco inferior extra para que el FAB no tape la última tarjeta.
-                contentPadding = PaddingValues(start = Spacing.md, end = Spacing.md, top = Spacing.lg, bottom = Spacing.xl * 3),
-                verticalArrangement = Arrangement.spacedBy(Spacing.md),
-                modifier = Modifier.fillMaxSize()
+        Column(modifier = Modifier.padding(padding)) {
+            FeedHeader(userName, modifier = Modifier.padding(start = Spacing.md, end = Spacing.md, top = Spacing.lg, bottom = Spacing.sm))
+            PrimaryTabRow(
+                selectedTabIndex = selectedTab.ordinal,
+                containerColor = MaterialTheme.colorScheme.background
             ) {
-                item(key = "header") { FeedHeader(userName) }
-                feedCardItems(state = state, userName = userName, actions = actions, errorTitle = "No se pudo cargar el inicio") {
-                    CenteredMessage(
-                        icon = painterResource(R.drawable.ic_brand_plate),
-                        title = "Todavía no hay recetas",
-                        message = "Sé la primera persona en compartir una: pulsa «Nueva receta».",
-                        modifier = Modifier.fillParentMaxSize(0.6f)
+                HomeFeedTab.entries.forEach { tab ->
+                    Tab(
+                        selected = tab == selectedTab,
+                        onClick = { onTabSelected(tab) },
+                        text = { Text(tab.label, maxLines = 1) }
                     )
                 }
+            }
+            when (selectedTab) {
+                HomeFeedTab.EXPLORE -> exploreContent(snackbarHostState)
+                HomeFeedTab.FRIENDS -> friendsContent(snackbarHostState)
             }
         }
     }
@@ -125,11 +123,13 @@ fun HomeTabScreen(
 
 /**
  * Tarjetas de receta de una lista paginada ([FeedUiState]) con "Cargar más" al final o, en su
- * lugar, la carga, el error o [empty]. La usan el feed, el buscador y las recetas guardadas.
+ * lugar, la carga, el error o [empty]. La usan el feed de amigos, el buscador y las recetas
+ * guardadas. Las recetas de [currentUserId] no llevan el botón "Seguir".
  */
 fun LazyListScope.feedCardItems(
     state: FeedUiState,
     userName: String,
+    currentUserId: Int?,
     actions: FeedActions,
     errorTitle: String,
     empty: @Composable LazyItemScope.() -> Unit
@@ -163,7 +163,9 @@ fun LazyListScope.feedCardItems(
                         onOpenComments = { actions.onOpenComments(recipe.id) },
                         onDraftChange = { actions.onCommentDraftChange(recipe.id, it) },
                         onSendComment = { actions.onSendComment(recipe.id) },
-                        onToggleSave = { actions.onToggleSave(recipe.id) }
+                        onToggleSave = { actions.onToggleSave(recipe.id) },
+                        onToggleFollow = if (currentUserId == null || recipe.authorId == currentUserId) null
+                        else ({ actions.onToggleFollow(recipe.authorId) })
                     )
                 )
             }
@@ -173,8 +175,8 @@ fun LazyListScope.feedCardItems(
 }
 
 @Composable
-private fun FeedHeader(userName: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+private fun FeedHeader(userName: String, modifier: Modifier = Modifier) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs), modifier = modifier) {
         Text(
             text = if (userName.isBlank()) "Hola" else "Hola, $userName",
             style = MaterialTheme.typography.headlineMedium
@@ -209,28 +211,35 @@ private fun HomeTabScreenPreview() {
     NutriSocialTheme {
         HomeTabScreen(
             userName = "Ana",
-            state = FeedUiState(
-                isLoading = false,
-                recipes = listOf(
-                    FeedRecipe(
-                        3, "Tortilla de patatas", authorId = 2, authorName = "Luis", kcalPerServing = 410.0,
-                        proteinPerServing = 14.5, prepMinutes = 40, likesCount = 5, likedByMe = true,
-                        likersPreview = listOf("Marta"), steps = listOf("Pelar y freír las patatas.", "Batir los huevos y cuajar."),
-                        commentsCount = 1, commentsPreview = listOf(CommentPreview(1, "¡Con cebolla, por favor!", "Marta"))
-                    ),
-                    FeedRecipe(2, "Crema de calabaza", authorId = 1, authorName = "Ana", kcalPerServing = 140.0, likesCount = 2)
-                ),
-                nextCursor = 1
-            ),
-            actions = FeedActions.Noop
+            selectedTab = HomeFeedTab.FRIENDS,
+            onTabSelected = {},
+            onCreateRecipe = {},
+            exploreContent = {},
+            friendsContent = {
+                LazyColumn(
+                    contentPadding = PaddingValues(Spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.md)
+                ) {
+                    feedCardItems(
+                        state = FeedUiState(
+                            isLoading = false,
+                            recipes = listOf(
+                                FeedRecipe(
+                                    3, "Tortilla de patatas", authorId = 2, authorName = "Luis", kcalPerServing = 410.0,
+                                    proteinPerServing = 14.5, prepMinutes = 40, likesCount = 5, likedByMe = true,
+                                    likersPreview = listOf("Marta"), steps = listOf("Pelar y freír las patatas.", "Batir los huevos y cuajar."),
+                                    commentsCount = 1, commentsPreview = listOf(CommentPreview(1, "¡Con cebolla, por favor!", "Marta")),
+                                    isFollowedByMe = true
+                                )
+                            )
+                        ),
+                        userName = "Ana",
+                        currentUserId = 1,
+                        actions = FeedActions.Noop,
+                        errorTitle = ""
+                    ) {}
+                }
+            }
         )
-    }
-}
-
-@Preview(showBackground = true, heightDp = 500)
-@Composable
-private fun HomeTabEmptyPreview() {
-    NutriSocialTheme {
-        HomeTabScreen(userName = "Ana", state = FeedUiState(isLoading = false), actions = FeedActions.Noop)
     }
 }

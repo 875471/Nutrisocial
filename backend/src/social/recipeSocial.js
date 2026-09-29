@@ -69,12 +69,24 @@ function socialFields(userId) {
   };
 }
 
-// Traduce lo cargado con socialFields: likesCount, likedByMe, commentsCount y savedByMe.
+// Fragmento de `select`/`include` con el nombre del autor y, como mucho, el seguimiento del
+// usuario `userId` a ese autor (para isFollowedByMe).
+function authorFields(userId) {
+  return {
+    author: {
+      select: { name: true, followers: { where: { followerId: userId }, select: { id: true }, take: 1 } },
+    },
+  };
+}
+
+// Traduce lo cargado con socialFields (y authorFields): likesCount, likedByMe, commentsCount,
+// savedByMe e isFollowedByMe.
 function socialSummary(recipe) {
   return {
     ...likeSummary(recipe),
     commentsCount: recipe._count?.comments ?? 0,
     savedByMe: (recipe.saves?.length ?? 0) > 0,
+    isFollowedByMe: (recipe.author?.followers?.length ?? 0) > 0,
   };
 }
 
@@ -84,5 +96,6 @@ function canEditRecipe(recipe, userId) {
 }
 
 module.exports = {
-  MAX_IMAGE_BYTES, validateImageBase64, likeFields, likeSummary, socialFields, socialSummary, canEditRecipe,
+  MAX_IMAGE_BYTES, validateImageBase64, likeFields, likeSummary, socialFields, socialSummary, authorFields,
+  canEditRecipe,
 };

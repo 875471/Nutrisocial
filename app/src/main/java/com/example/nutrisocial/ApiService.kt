@@ -13,6 +13,7 @@ import com.example.nutrisocial.data.DeleteAccountRequest
 import com.example.nutrisocial.data.DeleteRecipeResponse
 import com.example.nutrisocial.data.EmailRequest
 import com.example.nutrisocial.data.FeedPage
+import com.example.nutrisocial.data.FollowState
 import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.LikeState
 import com.example.nutrisocial.data.LogEntry
@@ -32,6 +33,7 @@ import com.example.nutrisocial.data.RegisterRequest
 import com.example.nutrisocial.data.UpdateLogEntryRequest
 import com.example.nutrisocial.data.UpdateProfileRequest
 import com.example.nutrisocial.data.User
+import com.example.nutrisocial.data.UserSearchResult
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -92,6 +94,10 @@ interface ApiService {
     @GET("recipes/feed")
     suspend fun getFeed(@Query("cursor") cursor: Int?, @Query("limit") limit: Int): Response<FeedPage>
 
+    // Como el feed, solo con recetas de los usuarios que sigue (vacío si no sigue a nadie).
+    @GET("recipes/feed/friends")
+    suspend fun getFriendsFeed(@Query("cursor") cursor: Int?, @Query("limit") limit: Int): Response<FeedPage>
+
     // Buscador de recetas de cualquier autor por texto libre, ordenadas por fecha o por tiempo.
     @GET("recipes/search")
     suspend fun searchRecipes(
@@ -138,6 +144,17 @@ interface ApiService {
     // Solo el autor del comentario (403 si no).
     @DELETE("comments/{id}")
     suspend fun deleteComment(@Path("id") id: Int): Response<Map<String, Boolean>>
+
+    // Personas por nombre (sin incluir al propio usuario). Sin texto, todas por orden alfabético.
+    @GET("users/search")
+    suspend fun searchUsers(@Query("q") query: String?, @Query("limit") limit: Int): Response<UserSearchResult>
+
+    // Seguir y dejar de seguir (idempotentes): devuelven el estado final. 400 si es uno mismo.
+    @POST("users/{id}/follow")
+    suspend fun followUser(@Path("id") id: Int): Response<FollowState>
+
+    @DELETE("users/{id}/follow")
+    suspend fun unfollowUser(@Path("id") id: Int): Response<FollowState>
 
     @GET("foods/search")
     suspend fun searchFoods(@Query("q") query: String): Response<List<FoodSuggestion>>

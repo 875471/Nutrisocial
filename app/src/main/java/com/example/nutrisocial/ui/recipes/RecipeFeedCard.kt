@@ -27,12 +27,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -68,6 +70,7 @@ import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RecipeIngredient
 import com.example.nutrisocial.ui.InitialsAvatar
 import com.example.nutrisocial.ui.formatRelativeTime
+import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.CardElevation
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
@@ -97,7 +100,8 @@ data class RecipeCardData(
     val likersPreview: List<String>,
     val commentsCount: Int,
     val commentsPreview: List<CommentPreview>,
-    val savedByMe: Boolean = false
+    val savedByMe: Boolean = false,
+    val isFollowedByMe: Boolean = false
 )
 
 /** Ingrediente del carrusel: "200 g · Harina de trigo" y, en el detalle, un aviso del cálculo. */
@@ -125,7 +129,8 @@ fun FeedRecipe.toCardData() = RecipeCardData(
     likersPreview = likersPreview,
     commentsCount = commentsCount,
     commentsPreview = commentsPreview,
-    savedByMe = savedByMe
+    savedByMe = savedByMe,
+    isFollowedByMe = isFollowedByMe
 )
 
 /** [ingredientNote] añade a cada ingrediente lo que haya que saber de su cálculo nutricional. */
@@ -148,7 +153,8 @@ fun Recipe.toCardData(ingredientNote: (RecipeIngredient) -> String? = { null }) 
     commentsCount = commentsCount,
     // El detalle no trae vista previa: se enlaza a la lista completa.
     commentsPreview = emptyList(),
-    savedByMe = savedByMe
+    savedByMe = savedByMe,
+    isFollowedByMe = isFollowedByMe
 )
 
 /** Texto del campo de comentario de una tarjeta y si se está enviando. */
@@ -156,14 +162,18 @@ data class CommentDraft(val text: String = "", val isSending: Boolean = false) {
     val canSend: Boolean get() = text.isNotBlank() && !isSending
 }
 
-/** Acciones de la tarjeta. Con [onOpen] null (en el propio detalle) la tarjeta no se puede pulsar. */
+/**
+ * Acciones de la tarjeta. Con [onOpen] null (en el propio detalle) la tarjeta no se puede pulsar;
+ * con [onToggleFollow] null (recetas propias) no se enseña el botón "Seguir".
+ */
 class RecipeCardActions(
     val onOpen: (() -> Unit)?,
     val onToggleLike: () -> Unit,
     val onOpenComments: () -> Unit,
     val onDraftChange: (String) -> Unit,
     val onSendComment: () -> Unit,
-    val onToggleSave: () -> Unit = {}
+    val onToggleSave: () -> Unit = {},
+    val onToggleFollow: (() -> Unit)? = null
 ) {
     companion object {
         val Noop = RecipeCardActions(null, {}, {}, {}, {})
@@ -197,7 +207,12 @@ fun RecipeFeedCard(
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                 modifier = openModifier.padding(horizontal = Spacing.md)
             ) {
-                RecipeCardHeader(authorName = recipe.authorName, createdAt = recipe.createdAt)
+                RecipeCardHeader(
+                    authorName = recipe.authorName,
+                    createdAt = recipe.createdAt,
+                    isFollowedByMe = recipe.isFollowedByMe,
+                    onToggleFollow = actions.onToggleFollow
+                )
                 Text(text = recipe.title, style = MaterialTheme.typography.titleLarge)
                 recipe.description?.takeIf { it.isNotBlank() }?.let {
                     Text(
@@ -252,13 +267,24 @@ fun RecipeFeedCard(
     }
 }
 
-/** Avatar con iniciales, nombre del autor y hace cuánto se publicó. */
+/**
+ * Avatar con iniciales, nombre del autor y hace cuánto se publicó y, si hay [onToggleFollow]
+ * (recetas de otros), el botón "Seguir"/"Siguiendo" a la derecha.
+ */
 @Composable
-fun RecipeCardHeader(authorName: String, createdAt: String, modifier: Modifier = Modifier) {
+fun RecipeCardHeader(
+    authorName: String,
+    createdAt: String,
+    modifier: Modifier = Modifier,
+    isFollowedByMe: Boolean = false,
+    onToggleFollow: (() -> Unit)? = null
+) {
     val name = authorName.ifBlank { "Usuario de NutriSocial" }
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
         InitialsAvatar(name = name)
-        Column(modifier = Modifier.padding(start = Spacing.md)) {
+        Column(modifier = Modifier
+            .weight(1f)
+            .padding(start = Spacing.md)) {
             Text(
                 text = name,
                 style = MaterialTheme.typography.titleSmall,
@@ -274,6 +300,25 @@ fun RecipeCardHeader(authorName: String, createdAt: String, modifier: Modifier =
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+        onToggleFollow?.let { FollowButton(isFollowing = isFollowedByMe, onClick = it, modifier = Modifier.padding(start = Spacing.sm)) }
+    }
+}
+
+/**
+ * Botón pequeño "Seguir" (relleno, llama la atención) o "Siguiendo" (con borde, discreto). Lo
+ * usan la cabecera de la tarjeta y el buscador de personas.
+ */
+@Composable
+fun FollowButton(isFollowing: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val padding = PaddingValues(horizontal = Spacing.md, vertical = 0.dp)
+    if (isFollowing) {
+        OutlinedButton(onClick = onClick, shape = ButtonShape, contentPadding = padding, modifier = modifier.height(32.dp)) {
+            Text("Siguiendo", style = MaterialTheme.typography.labelLarge)
+        }
+    } else {
+        Button(onClick = onClick, shape = ButtonShape, contentPadding = padding, modifier = modifier.height(32.dp)) {
+            Text("Seguir", style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -667,6 +712,7 @@ private fun RecipeFeedCardPreview() {
                 description = "Para las tardes de otoño. Con un chorrito de nata queda aún más suave.",
                 authorName = "Lucía Martín",
                 createdAt = "2026-09-28T10:00:00.000Z",
+                isFollowedByMe = true,
                 imageBase64 = null,
                 prepMinutes = 35,
                 kcalPerServing = 140.0,
@@ -692,7 +738,7 @@ private fun RecipeFeedCardPreview() {
             ),
             currentUserName = "Ana",
             draft = CommentDraft(),
-            actions = RecipeCardActions.Noop
+            actions = RecipeCardActions(null, {}, {}, {}, {}, onToggleFollow = {})
         )
     }
 }

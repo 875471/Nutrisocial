@@ -23,6 +23,7 @@ const profileRoutes = require('./routes/profile');
 const logRoutes = require('./routes/log');
 const pantryRoutes = require('./routes/pantry');
 const commentRoutes = require('./routes/comments');
+const userRoutes = require('./routes/users');
 app.use('/auth', authRoutes);
 app.use('/recipes', recipeRoutes);
 app.use('/foods', foodRoutes);
@@ -30,6 +31,7 @@ app.use('/profile', profileRoutes);
 app.use('/log', logRoutes);
 app.use('/pantry', pantryRoutes);
 app.use('/comments', commentRoutes);
+app.use('/users', userRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 

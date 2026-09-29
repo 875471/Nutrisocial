@@ -11,6 +11,7 @@ import com.example.nutrisocial.data.FeedRecipe
 import com.example.nutrisocial.data.FeedRepository
 import com.example.nutrisocial.data.Recipe
 import com.example.nutrisocial.data.RecipeRepository
+import com.example.nutrisocial.data.UserRepository
 import com.example.nutrisocial.data.toPreview
 import com.example.nutrisocial.ui.recipes.CommentDraft
 import kotlinx.coroutines.Job
@@ -43,15 +44,16 @@ data class FeedUiState(
 }
 
 /**
- * Lista paginada de tarjetas de receta con "me gusta" y comentarios desde la propia tarjeta. Es
- * el feed de Inicio y la base del buscador y de las guardadas, que solo cambian de dónde sale
- * cada página ([fetchPage]). Las subclases pasan [loadOnInit] = false y cargan en su propio
+ * Lista paginada de tarjetas de receta con "me gusta", comentarios y "Seguir" desde la propia
+ * tarjeta. Es la base del feed de amigos, del buscador y de las guardadas, que solo cambian de
+ * dónde sale cada página ([fetchPage]). Las subclases pasan [loadOnInit] = false y cargan en su propio
  * `init`, cuando sus propiedades ya están inicializadas.
  */
 open class FeedViewModel(
     protected val feedRepository: FeedRepository = FeedRepository(),
     private val recipeRepository: RecipeRepository = RecipeRepository(),
     private val commentRepository: CommentRepository = CommentRepository(),
+    private val userRepository: UserRepository = UserRepository(),
     loadOnInit: Boolean = true
 ) : ViewModel() {
 
@@ -182,6 +184,40 @@ open class FeedViewModel(
         }
     }
 
+    private val pendingFollows = mutableSetOf<Int>()
+
+    /**
+     * Seguir o dejar de seguir al autor [authorId], con el mismo cambio inmediato que el "me gusta"
+     * en todas sus tarjetas de la lista. [onChanged] recibe el estado final confirmado por el
+     * servidor, para copiarlo a las demás listas (ver HomeScreen).
+     */
+    fun toggleFollow(authorId: Int, onChanged: (authorId: Int, followed: Boolean) -> Unit = { _, _ -> }) {
+        val recipe = _state.value.recipes.find { it.authorId == authorId } ?: return
+        if (!pendingFollows.add(authorId)) return
+        val followed = !recipe.isFollowedByMe
+        applyFollow(authorId, followed)
+        viewModelScope.launch {
+            val result = userRepository.setFollowed(authorId, followed)
+            pendingFollows.remove(authorId)
+            when (result) {
+                is ApiResult.Success -> {
+                    applyFollow(authorId, result.data.isFollowedByMe)
+                    onChanged(authorId, result.data.isFollowedByMe)
+                }
+                is ApiResult.Error -> {
+                    applyFollow(authorId, recipe.isFollowedByMe)
+                    _state.update { it.copy(message = "No se pudo ${if (followed) "seguir" else "dejar de seguir"} a ${recipe.authorName}: ${result.message}") }
+                }
+            }
+        }
+    }
+
+    /** Marca como seguido (o no) al autor [authorId] en todas sus tarjetas de esta lista. */
+    fun applyFollow(authorId: Int, followed: Boolean) = _state.update { state ->
+        if (state.recipes.none { it.authorId == authorId }) state
+        else state.copy(recipes = state.recipes.map { if (it.authorId == authorId) it.copy(isFollowedByMe = followed) else it })
+    }
+
     // ---- Comentarios desde la tarjeta ----
 
     fun onCommentDraftChange(recipeId: Int, text: String) = updateDraft(recipeId) { it.copy(text = text) }
@@ -248,7 +284,8 @@ open class FeedViewModel(
             likesCount = recipe.likesCount,
             likedByMe = recipe.likedByMe,
             likersPreview = recipe.likersPreview,
-            savedByMe = recipe.savedByMe
+            savedByMe = recipe.savedByMe,
+            isFollowedByMe = recipe.isFollowedByMe
         )
     }
 
