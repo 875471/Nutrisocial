@@ -13,6 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+# Borradores de prompts para Claude Code (no forman parte del proyecto)
+/Claude outputs/
+
 # Node
 backend/node_modules/
 backend/.env
