@@ -273,6 +273,29 @@ class LogViewModel(
 
     fun onQuickAddMessageShown() = _quickAddState.update { it.copy(message = null) }
 
+    /**
+     * Cambia la cantidad de una entrada ([servings] si es de receta, [grams] si es de alimento).
+     * La lista se actualiza con lo que devuelve el servidor y el día se recarga para refrescar los
+     * totales y los objetivos; si falla, la entrada se queda como estaba.
+     */
+    fun updateEntry(id: Int, servings: Double?, grams: Double?) {
+        viewModelScope.launch {
+            when (val result = logRepository.updateEntry(id, servings = servings, grams = grams)) {
+                is ApiResult.Success -> {
+                    val updated = result.data
+                    _dayState.update { state ->
+                        if (state is DayUiState.Success) {
+                            DayUiState.Success(state.log.copy(entries = state.log.entries.map { if (it.id == id) updated else it }))
+                        } else state
+                    }
+                    _message.value = "Actualizado: ${updated.name}"
+                    loadDay()
+                }
+                is ApiResult.Error -> _message.value = result.message
+            }
+        }
+    }
+
     fun deleteEntry(id: Int) {
         // Se quita de la lista al momento; los totales se recalculan al recargar el día.
         val current = _dayState.value

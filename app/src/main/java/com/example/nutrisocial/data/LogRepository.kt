@@ -24,6 +24,10 @@ class LogRepository(
     suspend fun addFood(date: String, foodId: Int, grams: Double): ApiResult<LogEntry> =
         safeApiCall { api.createLogEntry(CreateLogEntryRequest(date = date, foodId = foodId, grams = grams)) }
 
+    /** Nueva cantidad de una entrada: [servings] si es de receta o [grams] si es de alimento. */
+    suspend fun updateEntry(id: Int, servings: Double? = null, grams: Double? = null): ApiResult<LogEntry> =
+        safeApiCall { api.updateLogEntry(id, UpdateLogEntryRequest(servings = servings, grams = grams)) }
+
     suspend fun deleteEntry(id: Int): ApiResult<Unit> =
         safeApiCallNoContent(defaultErrorMessage = { code -> if (code == 404) "La entrada ya no existe" else null }) {
             api.deleteLogEntry(id)

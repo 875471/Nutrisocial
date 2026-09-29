@@ -1,6 +1,9 @@
 package com.example.nutrisocial.data
 
-/** Entrada del registro diario. Los valores se calcularon al registrarla y ya no cambian. */
+/**
+ * Entrada del registro diario. Los valores se calculan al registrarla y solo cambian si se edita
+ * su cantidad (PUT /log/:id), que los recalcula con la receta o el alimento actuales.
+ */
 data class LogEntry(
     val id: Int,
     val date: String,
@@ -18,8 +21,9 @@ data class LogEntry(
 )
 
 /**
- * Día del registro (GET /log?date=): entradas, totales y comparación con el objetivo. Los
- * campos del objetivo son null si el perfil está incompleto ([missingProfileFields]).
+ * Día del registro (GET /log?date=): entradas, totales y comparación con los objetivos de kcal y
+ * de gramos de proteína, hidratos y grasas (los mismos que usa el recomendador). Los campos de
+ * los objetivos son null si el perfil está incompleto ([missingProfileFields]).
  */
 data class DailyLog(
     val date: String,
@@ -30,6 +34,18 @@ data class DailyLog(
     val excessKcal: Int? = null,
     // Fracción del objetivo consumida; puede ser mayor que 1.
     val progress: Double? = null,
+    val proteinGoal: Double? = null,
+    val remainingProtein: Double? = null,
+    val excessProtein: Double? = null,
+    val proteinProgress: Double? = null,
+    val carbsGoal: Double? = null,
+    val remainingCarbs: Double? = null,
+    val excessCarbs: Double? = null,
+    val carbsProgress: Double? = null,
+    val fatGoal: Double? = null,
+    val remainingFat: Double? = null,
+    val excessFat: Double? = null,
+    val fatProgress: Double? = null,
     val missingProfileFields: List<String> = emptyList()
 )
 
@@ -39,6 +55,15 @@ data class CreateLogEntryRequest(
     val recipeId: Int? = null,
     val servings: Double? = null,
     val foodId: Int? = null,
+    val grams: Double? = null
+)
+
+/**
+ * Cuerpo de PUT /log/:id: raciones si la entrada es de una receta o gramos si es de un alimento.
+ * El que no corresponde va a null y Gson lo omite.
+ */
+data class UpdateLogEntryRequest(
+    val servings: Double? = null,
     val grams: Double? = null
 )
 

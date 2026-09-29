@@ -4,8 +4,9 @@ const requireAuth = require('../middleware/auth');
 const { findFoodById } = require('../nutrition/matchFood');
 const { calculateCalorieGoal } = require('../nutrition/calorieGoal');
 const {
-  LOG_LIMITS, macrosFromRecipe, macrosFromFood, sumTotals, compareWithGoal, calendarDays,
+  LOG_LIMITS, macrosFromRecipe, macrosFromFood, sumTotals, compareWithGoal, compareMacrosWithGoals, calendarDays,
 } = require('../nutrition/dailyLog');
+const { getMacroTargets } = require('../nutrition/macroTargets');
 const { recommendRecipes } = require('../nutrition/recommend');
 const { parseDay, parseMonth, formatDay } = require('../utils/day');
 
@@ -98,7 +99,8 @@ async function loadDay(req, res) {
   return { day, user, entries };
 }
 
-// Entradas de un día, totales y comparación con el objetivo calórico del perfil.
+// Entradas de un día, totales y comparación con los objetivos del perfil: kcal y gramos de
+// proteína, hidratos y grasas (los mismos objetivos que usa el recomendador).
 router.get('/', async (req, res) => {
   const loaded = await loadDay(req, res);
   if (!loaded) return;
@@ -111,6 +113,7 @@ router.get('/', async (req, res) => {
     entries: entries.map(toEntryResponse),
     totals,
     ...compareWithGoal(totals.kcal, dailyCalorieGoal),
+    ...compareMacrosWithGoals(totals, getMacroTargets(user)),
     missingProfileFields: missingFields,
   });
 });
@@ -157,6 +160,57 @@ router.get('/calendar', async (req, res) => {
     days: calendarDays(entries, dailyCalorieGoal, formatDay),
     missingProfileFields: missingFields,
   });
+});
+
+// Cambia la cantidad de una entrada (raciones si es de receta, gramos si es de alimento) y
+// recalcula sus valores con la receta o el alimento ACTUALES. No se puede cambiar el tipo.
+router.put('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Id de entrada no válido' });
+  const { servings, grams } = req.body ?? {};
+
+  const entry = await prisma.logEntry.findFirst({ where: { id, userId: req.userId } });
+  if (!entry) return res.status(404).json({ error: 'Entrada no encontrada' });
+
+  // El tipo se decide igual que en toEntryResponse: al borrar la receta o el alimento, su id
+  // pasa a null (onDelete: SetNull), pero las raciones o los gramos se conservan.
+  let data;
+  if (entry.grams == null) {
+    if (grams != null) {
+      return res.status(400).json({ error: 'Esta entrada es de una receta: indica las raciones (servings), no gramos' });
+    }
+    if (!inRange(servings, LOG_LIMITS.servings)) {
+      return res.status(400).json({
+        error: `Las raciones deben estar entre ${LOG_LIMITS.servings.min} y ${LOG_LIMITS.servings.max}`,
+      });
+    }
+    const recipe = entry.recipeId != null
+      ? await prisma.recipe.findUnique({ where: { id: entry.recipeId } })
+      : null;
+    if (!recipe) {
+      return res.status(404).json({ error: 'La receta de esta entrada ya no existe; no se pueden recalcular sus valores' });
+    }
+    data = { servings, ...macrosFromRecipe(recipe, servings) };
+  } else {
+    if (servings != null) {
+      return res.status(400).json({ error: 'Esta entrada es de un alimento: indica los gramos (grams), no raciones' });
+    }
+    if (!inRange(grams, LOG_LIMITS.grams)) {
+      return res.status(400).json({
+        error: `Los gramos deben estar entre ${LOG_LIMITS.grams.min} y ${LOG_LIMITS.grams.max}`,
+      });
+    }
+    const food = entry.foodId != null ? await findFoodById(entry.foodId) : null;
+    if (!food) {
+      return res.status(404).json({ error: 'El alimento de esta entrada ya no existe; no se pueden recalcular sus valores' });
+    }
+    data = { grams, ...macrosFromFood(food, grams) };
+  }
+
+  // updateMany con userId, igual que DELETE: si la entrada desaparece o no es del usuario, 404.
+  const { count } = await prisma.logEntry.updateMany({ where: { id, userId: req.userId }, data });
+  if (count === 0) return res.status(404).json({ error: 'Entrada no encontrada' });
+  res.json(toEntryResponse({ ...entry, ...data }));
 });
 
 router.delete('/:id', async (req, res) => {

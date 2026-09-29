@@ -55,6 +55,36 @@ function compareWithGoal(consumedKcal, dailyCalorieGoal) {
   };
 }
 
+// Macronutrientes con objetivo en gramos y prefijo de sus campos en la respuesta de GET /log.
+const GOAL_MACROS = { protein: 'Protein', carbs: 'Carbs', fat: 'Fat' };
+
+/**
+ * Comparación de los gramos consumidos de proteína, hidratos y grasas con los objetivos de
+ * getMacroTargets ({ proteinG, carbsG, fatG }). Mismo criterio que compareWithGoal para las kcal:
+ * por cada macronutriente, el objetivo, lo que queda o el exceso (nunca negativos) y la fracción
+ * consumida (puede superar 1). Con objetivos null (perfil incompleto), todo null.
+ */
+function compareMacrosWithGoals(totals, macroTargets) {
+  const result = {};
+  for (const [key, suffix] of Object.entries(GOAL_MACROS)) {
+    const goal = macroTargets?.[`${key}G`] ?? null;
+    if (goal == null) {
+      Object.assign(result, {
+        [`${key}Goal`]: null, [`remaining${suffix}`]: null, [`excess${suffix}`]: null, [`${key}Progress`]: null,
+      });
+      continue;
+    }
+    const diff = goal - totals[key];
+    Object.assign(result, {
+      [`${key}Goal`]: goal,
+      [`remaining${suffix}`]: Math.max(0, round1(diff)),
+      [`excess${suffix}`]: Math.max(0, round1(-diff)),
+      [`${key}Progress`]: goal > 0 ? Math.round((totals[key] / goal) * 1000) / 1000 : null,
+    });
+  }
+  return result;
+}
+
 // Margen del calendario mensual: un día es "adecuado" si sus kcal quedan a ±10 % del objetivo.
 const CALENDAR_TOLERANCE = 0.1;
 
@@ -87,5 +117,6 @@ function calendarDays(entries, dailyCalorieGoal, formatDay) {
 }
 
 module.exports = {
-  LOG_LIMITS, CALENDAR_TOLERANCE, macrosFromRecipe, macrosFromFood, sumTotals, compareWithGoal, dayStatus, calendarDays,
+  LOG_LIMITS, CALENDAR_TOLERANCE, macrosFromRecipe, macrosFromFood, sumTotals, compareWithGoal,
+  compareMacrosWithGoals, dayStatus, calendarDays,
 };

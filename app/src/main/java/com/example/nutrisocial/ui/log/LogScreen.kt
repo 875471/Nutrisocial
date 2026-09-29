@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,6 +40,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -52,11 +55,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,14 +74,15 @@ import com.example.nutrisocial.data.Macros
 import com.example.nutrisocial.data.RecipeRecommendation
 import com.example.nutrisocial.data.RemainingMacros
 import com.example.nutrisocial.ui.dayLabel
+import com.example.nutrisocial.ui.home.decimalInput
 import com.example.nutrisocial.ui.home.formatKcal
+import com.example.nutrisocial.ui.home.parseDecimal
 import com.example.nutrisocial.ui.isoToPickerMillis
 import com.example.nutrisocial.ui.pickerMillisToIso
 import com.example.nutrisocial.ui.recipes.CenteredMessage
 import com.example.nutrisocial.ui.recipes.InfoPill
 import com.example.nutrisocial.ui.recipes.InitialBadge
 import com.example.nutrisocial.ui.recipes.LoadingBox
-import com.example.nutrisocial.ui.recipes.MacroStat
 import com.example.nutrisocial.ui.recipes.RecipeListUiState
 import com.example.nutrisocial.ui.recipes.formatNumber
 import com.example.nutrisocial.ui.theme.ButtonShape
@@ -107,7 +114,9 @@ data class LogActions(
     val onPreviousMonth: () -> Unit = {},
     val onNextMonth: () -> Unit = {},
     val onCalendarDayClick: (String) -> Unit = {},
-    val onRetryCalendar: () -> Unit = {}
+    val onRetryCalendar: () -> Unit = {},
+    // Nueva cantidad de una entrada: (id, raciones, gramos); solo uno de los dos no es null.
+    val onUpdateEntry: (Int, Double?, Double?) -> Unit = { _, _, _ -> }
 )
 
 /** Pestaña "Diario": registro de lo que se ha comido cada día frente al objetivo calórico. */
@@ -134,6 +143,7 @@ fun LogScreen(
         }
     }
     var entryToDelete by remember { mutableStateOf<LogEntry?>(null) }
+    var entryToEdit by remember { mutableStateOf<LogEntry?>(null) }
 
     Scaffold(
         topBar = {
@@ -205,6 +215,7 @@ fun LogScreen(
                     recommendationsState = recommendationsState,
                     addingRecommendationId = addingRecommendationId,
                     onDelete = { entryToDelete = it },
+                    onEdit = { entryToEdit = it },
                     actions = actions
                 )
             }
@@ -227,6 +238,17 @@ fun LogScreen(
                 ) { Text("Quitar") }
             },
             dismissButton = { TextButton(onClick = { entryToDelete = null }) { Text("Cancelar") } }
+        )
+    }
+
+    entryToEdit?.let { entry ->
+        EditEntryDialog(
+            entry = entry,
+            onConfirm = { servings, grams ->
+                actions.onUpdateEntry(entry.id, servings, grams)
+                entryToEdit = null
+            },
+            onDismiss = { entryToEdit = null }
         )
     }
 
@@ -283,6 +305,7 @@ private fun DayContent(
     recommendationsState: RecommendationsUiState,
     addingRecommendationId: Int?,
     onDelete: (LogEntry) -> Unit,
+    onEdit: (LogEntry) -> Unit,
     actions: LogActions
 ) {
     LazyColumn(
@@ -310,6 +333,10 @@ private fun DayContent(
             EntryRow(
                 entry = entry,
                 onDelete = { onDelete(entry) },
+                // Sin la receta o el alimento de origen no hay con qué recalcular los valores.
+                onEdit = if (entry.recipeId != null || entry.foodId != null) {
+                    { onEdit(entry) }
+                } else null,
                 // Los alimentos sueltos no tienen detalle; las recetas borradas tampoco (recipeId null).
                 onOpen = entry.recipeId?.let { id -> { actions.onOpenRecipe(id) } }
             )
@@ -317,7 +344,10 @@ private fun DayContent(
     }
 }
 
-/** Resumen del día: kcal consumidas frente al objetivo, barra de progreso y macronutrientes. */
+/**
+ * Resumen del día: kcal consumidas frente al objetivo con su barra de progreso y, debajo, lo
+ * mismo en pequeño para proteínas, hidratos y grasas.
+ */
 @Composable
 private fun SummaryCard(log: DailyLog, onOpenProfile: () -> Unit) {
     val goal = log.dailyCalorieGoal
@@ -368,10 +398,63 @@ private fun SummaryCard(log: DailyLog, onOpenProfile: () -> Unit) {
                 TextButton(onClick = onOpenProfile, contentPadding = PaddingValues(0.dp)) { Text("Ir al perfil") }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                MacroStat("Proteínas", log.totals.protein, Modifier.weight(1f))
-                MacroStat("Hidratos", log.totals.carbs, Modifier.weight(1f))
-                MacroStat("Grasas", log.totals.fat, Modifier.weight(1f))
+                MacroProgressStat("Proteínas", log.totals.protein, log.proteinGoal, log.proteinProgress, log.excessProtein, Modifier.weight(1f))
+                MacroProgressStat("Hidratos", log.totals.carbs, log.carbsGoal, log.carbsProgress, log.excessCarbs, Modifier.weight(1f))
+                MacroProgressStat("Grasas", log.totals.fat, log.fatGoal, log.fatProgress, log.excessFat, Modifier.weight(1f))
             }
+        }
+    }
+}
+
+/**
+ * Gramos consumidos de un macronutriente y, si hay objetivo ([goal] no null), "de X g" y una
+ * barra fina que se pone en color de error al pasarse, igual que la de kcal. Sin objetivo
+ * (perfil incompleto) solo muestra los gramos.
+ */
+@Composable
+private fun MacroProgressStat(
+    label: String,
+    grams: Double,
+    goal: Double?,
+    progress: Double?,
+    excess: Double?,
+    modifier: Modifier = Modifier
+) {
+    val exceeded = (excess ?: 0.0) > 0
+    Surface(
+        shape = CardShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = Spacing.sm, horizontal = Spacing.xs),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = "${formatNumber(grams)} g",
+                style = MaterialTheme.typography.titleMedium,
+                color = if (exceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            if (goal != null) {
+                Text(
+                    text = "de ${goal.roundToInt()} g",
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1
+                )
+                LinearProgressIndicator(
+                    progress = { (progress ?: 0.0).toFloat().coerceIn(0f, 1f) },
+                    color = if (exceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    strokeCap = StrokeCap.Round,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.sm, vertical = 2.dp)
+                        .height(4.dp)
+                )
+            }
+            Text(text = label, style = MaterialTheme.typography.labelMedium)
         }
     }
 }
@@ -567,7 +650,7 @@ fun entryQuantityLabel(entry: LogEntry): String = when {
 }
 
 @Composable
-private fun EntryRow(entry: LogEntry, onDelete: () -> Unit, onOpen: (() -> Unit)?) {
+private fun EntryRow(entry: LogEntry, onDelete: () -> Unit, onEdit: (() -> Unit)?, onOpen: (() -> Unit)?) {
     ElevatedCard(
         shape = CardShape,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
@@ -600,6 +683,11 @@ private fun EntryRow(entry: LogEntry, onDelete: () -> Unit, onOpen: (() -> Unit)
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Text(
+                    text = entryMacrosLabel(entry),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Text(
                 text = "${formatKcal(entry.kcal.roundToInt())} kcal",
@@ -607,6 +695,15 @@ private fun EntryRow(entry: LogEntry, onDelete: () -> Unit, onOpen: (() -> Unit)
                 textAlign = TextAlign.End,
                 modifier = Modifier.padding(start = Spacing.sm)
             )
+            if (onEdit != null) {
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        Icons.Filled.Edit,
+                        contentDescription = "Editar ${entry.name}",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Filled.Delete,
@@ -618,6 +715,59 @@ private fun EntryRow(entry: LogEntry, onDelete: () -> Unit, onOpen: (() -> Unit)
     }
 }
 
+/** "P: 18 g · H: 32 g · G: 9 g". */
+fun entryMacrosLabel(entry: LogEntry): String =
+    "P: ${formatNumber(entry.protein)} g · H: ${formatNumber(entry.carbs)} g · G: ${formatNumber(entry.fat)} g"
+
+/**
+ * Cambia las raciones (receta) o los gramos (alimento) de una entrada, con los mismos rangos que
+ * al añadirla. Las kcal aproximadas salen de escalar las actuales de la entrada; el valor exacto
+ * lo recalcula el servidor con la receta o el alimento.
+ */
+@Composable
+private fun EditEntryDialog(entry: LogEntry, onConfirm: (servings: Double?, grams: Double?) -> Unit, onDismiss: () -> Unit) {
+    val isFood = entry.type == "food"
+    val current = if (isFood) entry.grams else entry.servings
+    var text by rememberSaveable(entry.id) { mutableStateOf(current?.let(::formatNumber) ?: "") }
+    val range = if (isFood) 1.0..5000.0 else 0.1..20.0
+    val value = parseDecimal(text)?.takeIf { it in range }
+    val previewKcal = if (value != null && current != null && current > 0) entry.kcal * value / current else null
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar cantidad") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                Text("«${entry.name}»")
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = decimalInput(it, if (isFood) 6 else 4) },
+                    label = { Text(if (isFood) "Gramos" else "Raciones") },
+                    singleLine = true,
+                    isError = value == null,
+                    supportingText = {
+                        Text(
+                            when {
+                                value == null -> if (isFood) "Entre 1 y 5000 g" else "Entre 0,1 y 20 raciones"
+                                previewKcal != null -> "≈ ${formatKcal(previewKcal.roundToInt())} kcal"
+                                else -> ""
+                            }
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { value?.let { if (isFood) onConfirm(null, it) else onConfirm(it, null) } },
+                enabled = value != null && value != current
+            ) { Text("Guardar") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
+}
+
 private val PreviewAddActions = AddEntryActions({}, {}, {}, {}, {}, {}, {}, {}, {})
 
 @Preview(showBackground = true)
@@ -626,14 +776,17 @@ private fun LogScreenPreview() {
     val log = DailyLog(
         date = "2026-09-27",
         entries = listOf(
-            LogEntry(1, "2026-09-27", "recipe", "Crema de calabaza", servings = 1.5, kcal = 310.0),
-            LogEntry(2, "2026-09-27", "food", "Manzana, cruda", grams = 150.0, kcal = 78.0)
+            LogEntry(1, "2026-09-27", "recipe", "Crema de calabaza", recipeId = 1, servings = 1.5, kcal = 310.0, protein = 8.0, carbs = 40.2, fat = 10.7),
+            LogEntry(2, "2026-09-27", "food", "Manzana, cruda", foodId = 2, grams = 150.0, kcal = 78.0, protein = 0.4, carbs = 21.0, fat = 0.3)
         ),
         totals = Macros(388.0, 8.4, 61.2, 11.0),
         dailyCalorieGoal = 2000,
         remainingKcal = 1612,
         excessKcal = 0,
-        progress = 0.194
+        progress = 0.194,
+        proteinGoal = 175.0, remainingProtein = 166.6, excessProtein = 0.0, proteinProgress = 0.048,
+        carbsGoal = 175.0, remainingCarbs = 113.8, excessCarbs = 0.0, carbsProgress = 0.35,
+        fatGoal = 10.0, remainingFat = 0.0, excessFat = 1.0, fatProgress = 1.1
     )
     NutriSocialTheme {
         LogScreen(

@@ -29,6 +29,7 @@ import com.example.nutrisocial.data.RegisterResponse
 import com.example.nutrisocial.data.ResetPasswordRequest
 import com.example.nutrisocial.data.SaveState
 import com.example.nutrisocial.data.RegisterRequest
+import com.example.nutrisocial.data.UpdateLogEntryRequest
 import com.example.nutrisocial.data.UpdateProfileRequest
 import com.example.nutrisocial.data.User
 import okhttp3.RequestBody
@@ -162,6 +163,10 @@ interface ApiService {
 
     @POST("log")
     suspend fun createLogEntry(@Body request: CreateLogEntryRequest): Response<LogEntry>
+
+    // Solo cambia la cantidad; 404 si no es del usuario o su receta/alimento ya no existe.
+    @PUT("log/{id}")
+    suspend fun updateLogEntry(@Path("id") id: Int, @Body request: UpdateLogEntryRequest): Response<LogEntry>
 
     // 204 sin cuerpo: el repositorio usa safeApiCallNoContent.
     @DELETE("log/{id}")

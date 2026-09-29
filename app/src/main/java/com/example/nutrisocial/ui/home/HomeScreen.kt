@@ -283,7 +283,8 @@ fun HomeScreen(
                             onPreviousMonth = logViewModel::previousMonth,
                             onNextMonth = logViewModel::nextMonth,
                             onCalendarDayClick = logViewModel::openCalendarDay,
-                            onRetryCalendar = logViewModel::loadCalendar
+                            onRetryCalendar = logViewModel::loadCalendar,
+                            onUpdateEntry = logViewModel::updateEntry
                         )
                     }
                 )
