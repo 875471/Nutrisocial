@@ -268,6 +268,61 @@ test('sin encabezados: la numeración con forma de ingrediente va a ingredientes
   assert.equal(salsa.steps.length, 2);
 });
 
+// ---- Ingredientes partidos en varias líneas ----
+
+test('ingrediente partido en dos líneas: la segunda se pega al nombre del anterior', () => {
+  const r = parseRecipeText(
+    'Bizcocho\nIngredientes\n200 g de harina de\ntrigo integral\n2 huevos\n'
+    + '100 ml de aceite de girasol\no de oliva suave\nPreparación\nBatir todo.',
+  );
+  assert.deepEqual(r.ingredients, [
+    { rawName: 'harina de trigo integral', quantity: 200, unit: 'g' },
+    { rawName: 'huevos', quantity: 2, unit: 'unidad' },
+    // La "o" inicial no es una viñeta: el ingrediente anterior no llevaba.
+    { rawName: 'aceite de girasol o de oliva suave', quantity: 100, unit: 'ml' },
+  ]);
+  assert.deepEqual(
+    r.lines.filter((l) => l.kind === 'ingredient-continuation').map((l) => l.text),
+    ['trigo integral', 'o de oliva suave'],
+  );
+});
+
+test('ingrediente partido en tres líneas dentro de una lista con viñetas', () => {
+  const r = parseRecipeText(
+    'Ensalada\nIngredientes:\n- 250 g de pasta\n- 2 cucharadas de aceite de\noliva virgen\nextra\n'
+    + '- 1 lata de atún\nPreparación:\nMezclar todo.',
+  );
+  assert.deepEqual(r.ingredients, [
+    { rawName: 'pasta', quantity: 250, unit: 'g' },
+    { rawName: 'aceite de oliva virgen extra', quantity: 2, unit: 'cucharada' },
+    { rawName: 'lata de atún', quantity: 1, unit: 'unidad' },
+  ]);
+  // En una lista con viñetas, un renglón sin viñeta y en minúscula continúa el anterior
+  // aunque la línea previa no acabe en un conector.
+  const vinetas = parseRecipeText('Crema\nIngredientes\n- 1 cebolla\n- 2 cucharadas de nata\nlíquida para cocinar\n- Sal');
+  assert.deepEqual(vinetas.ingredients.map((i) => i.rawName), ['cebolla', 'nata líquida para cocinar', 'Sal']);
+});
+
+test('una línea sin cantidad y sin señal de corte sigue siendo un ingrediente aparte', () => {
+  const r = parseRecipeText('Ensalada verde\nIngredientes\nLechuga\nPepino\nAceite de oliva\nSal\nPreparación\nAliñar.');
+  assert.deepEqual(r.ingredients.map((i) => i.rawName), ['Lechuga', 'Pepino', 'Aceite de oliva', 'Sal']);
+  const conCantidad = parseRecipeText('Merluza\nIngredientes\n2 lomos de merluza\nSal\nPimienta\nPreparación\nHacer a la plancha.');
+  assert.deepEqual(conCantidad.ingredients.map((i) => i.rawName), ['lomos de merluza', 'Sal', 'Pimienta']);
+});
+
+test('la continuación no se aplica a la primera línea del bloque ni dentro de los pasos', () => {
+  // Primera línea tras el encabezado, sin ingrediente anterior: se queda como ingrediente sin cantidad.
+  const primera = parseRecipeText('Pisto\nIngredientes\nde la huerta\n2 calabacines\nPreparación\nPochar las verduras.');
+  assert.deepEqual(primera.ingredients, [
+    { rawName: 'la huerta', quantity: null, unit: null },
+    { rawName: 'calabacines', quantity: 2, unit: 'unidad' },
+  ]);
+  // En "Preparación" una línea sin cantidad es parte de un paso, aunque el paso anterior acabe en "de".
+  const pasos = parseRecipeText('Pisto\nIngredientes\n2 calabacines de\ntemporada\nPreparación\nCortar los calabacines en dados de\nun centímetro.');
+  assert.deepEqual(pasos.ingredients.map((i) => i.rawName), ['calabacines de temporada']);
+  assert.deepEqual(pasos.steps, ['Cortar los calabacines en dados de un centímetro.']);
+});
+
 // ---- Estimación del tiempo de preparación ----
 
 const { estimatePrepMinutes } = require('../src/ocr/estimatePrepTime');

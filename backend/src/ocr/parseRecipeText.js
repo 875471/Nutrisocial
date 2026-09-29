@@ -233,6 +233,29 @@ function looksLikeIngredient(text, words) {
 // Conectores con los que empieza la segunda línea de un título partido ("de chocolate").
 const TITLE_CONTINUATION_RE = /^(de|del|con|y|e|al|a|en|sin|para)\s/i;
 
+// Un ingrediente partido en varias líneas: la línea anterior acaba en un conector, una coma o
+// un guion ("200 g de harina de" / "trigo integral"), o esta empieza por uno ("o de maíz").
+const OPEN_ENDING_RE = /(?:\s(?:de|del|con|y|e|o|u|en|para|sin|al|a|la|el|los|las)|[,(-])$/i;
+const CONTINUATION_START_RE = /^(?:(?:de|del|con|y|e|o|u|en|para|sin|al|a)\s|[(,)])/i;
+
+/**
+ * true si `text` (sin viñeta ni número) continúa el nombre del ingrediente de la línea
+ * anterior en lugar de ser uno nuevo. Hace falta alguna señal de que el renglón se ha cortado:
+ * una línea suelta sin cantidad ("Sal", "Pimienta") es un ingrediente más, no una continuación.
+ * - `previousLine`: la línea anterior tal cual (con su coma o su "de" final).
+ * - `previousBulleted`: si la anterior llevaba viñeta; en una lista con viñetas, un renglón sin
+ *   ella que empieza en minúscula es la segunda mitad del anterior.
+ * - `previousWasContinuation`: si la anterior ya era una continuación (ingrediente en tres o
+ *   más líneas); entonces basta con que esta empiece en minúscula.
+ */
+function continuesIngredient(text, { previousLine, previousBulleted, previousWasContinuation }) {
+  const lowercase = /^[a-záéíóúñü]/.test(text);
+  return OPEN_ENDING_RE.test(previousLine)
+    || CONTINUATION_START_RE.test(text)
+    || (previousBulleted && lowercase)
+    || (previousWasContinuation && lowercase);
+}
+
 /**
  * Analiza el texto completo. Devuelve { title, servings, ingredients, steps, lines }, donde
  * `lines` indica cómo se ha clasificado cada línea (útil para evaluar la heurística).
@@ -252,6 +275,8 @@ function parseRecipeText(rawText) {
   const steps = [];
   const classified = [];
   let lastKind = null;
+  // Última línea reconocida como ingrediente, para pegarle las líneas que continúan su nombre.
+  let lastIngredient = null;
   // Las líneas que hay antes del primer encabezado pueden ser un título en varias líneas.
   const firstHeading = lines.findIndex((l) => {
     const n = normalize(l).replace(/[:.]+$/, '');
@@ -263,6 +288,7 @@ function parseRecipeText(rawText) {
     const record = (kind) => {
       classified.push({ text: original, kind });
       lastKind = kind;
+      if (kind !== 'ingredient' && kind !== 'ingredient-continuation') lastIngredient = null;
     };
 
     const heading = HEADINGS.find(([re]) => re.test(n) && n.split(' ').length <= 4);
@@ -296,6 +322,7 @@ function parseRecipeText(rawText) {
       const parsed = parseQuantityLine(fixOcrDigits(text));
       if (parsed) {
         ingredients.push(parsed);
+        lastIngredient = { line: original, bulleted, continued: false };
         return record('ingredient');
       }
     } else if (!stepNumbered) {
@@ -307,6 +334,26 @@ function parseRecipeText(rawText) {
     }
 
     const action = startsWithAction(text);
+
+    // 1b) Continuación del ingrediente anterior, solo en el bloque de ingredientes (con
+    //     encabezado, o sin encabezados antes del primer paso) y justo detrás de otro
+    //     ingrediente: sin viñeta, sin número, sin verbo y con alguna señal de corte.
+    //     Una "o" inicial se lee como viñeta (un círculo manuscrito), pero si el ingrediente
+    //     anterior no llevaba viñeta es la conjunción: "100 ml de aceite de girasol" / "o de oliva".
+    const inIngredientBlock = section === 'ingredients' || (section == null && steps.length === 0);
+    const wordO = bulleted && /^o\s/i.test(original) && lastIngredient && !lastIngredient.bulleted;
+    const continuation = wordO ? original : text;
+    if (inIngredientBlock && lastIngredient && (!bulleted || wordO) && !numbered && !startsWithAction(continuation)
+      && continuesIngredient(continuation, {
+        previousLine: lastIngredient.line,
+        previousBulleted: lastIngredient.bulleted,
+        previousWasContinuation: lastIngredient.continued,
+      })) {
+      const previous = ingredients[ingredients.length - 1];
+      previous.rawName = cleanName(`${previous.rawName} ${fixOcrLetters(continuation)}`);
+      lastIngredient = { line: original, bulleted: lastIngredient.bulleted, continued: true };
+      return record('ingredient-continuation');
+    }
 
     // 2) Título: primera línea, corta, sin cantidad ni verbo y antes de cualquier otra cosa.
     if (index === 0 && title == null && !action && !stepNumbered && words <= 8) {
@@ -329,6 +376,7 @@ function parseRecipeText(rawText) {
     const shortNoVerb = !action && !stepNumbered && words <= 4 && !/[.!?]$/.test(text);
     if (shortNoVerb && (section === 'ingredients' || (section == null && steps.length === 0))) {
       ingredients.push({ rawName: cleanName(text), quantity: null, unit: null });
+      lastIngredient = { line: original, bulleted, continued: false };
       return record('ingredient');
     }
 

@@ -365,6 +365,41 @@
         "Sofreír la cebolla y añadir el tomate.",
         "Mezclar, cubrir con el queso y gratinar."
       ]
+    },
+    {
+      "id": "ingrediente-en-dos-lineas",
+      "origen": "sintético",
+      "nota": "Ingredientes largos partidos en dos renglones: la primera mitad acaba en 'de' o la segunda empieza por un conector ('o de oliva'). 'Sal' sigue siendo un ingrediente aparte (informe 20).",
+      "rawText": "Bizcocho integral\nIngredientes\n200 g de harina de\ntrigo integral\n2 huevos\n100 ml de aceite de girasol\no de oliva suave\nSal\nPreparación\nBatir los huevos con el aceite.\nAñadir la harina y la sal.\nHornear 35 minutos a 180 ºC.",
+      "expectedTitle": "Bizcocho integral",
+      "expectedIngredients": [
+        { "name": "harina de trigo integral", "quantity": 200, "unit": "g" },
+        { "name": "huevos", "quantity": 2, "unit": "unidad" },
+        { "name": "aceite de girasol o de oliva suave", "quantity": 100, "unit": "ml" },
+        { "name": "Sal", "quantity": null, "unit": null }
+      ],
+      "expectedSteps": [
+        "Batir los huevos con el aceite.",
+        "Añadir la harina y la sal.",
+        "Hornear 35 minutos a 180 ºC."
+      ]
+    },
+    {
+      "id": "ingrediente-en-tres-lineas",
+      "origen": "sintético",
+      "nota": "Lista con viñetas en la que un ingrediente ocupa tres renglones sin viñeta; 'Pimienta', con su viñeta, sigue siendo otro ingrediente (informe 20).",
+      "rawText": "Ensalada de pasta\nIngredientes:\n- 250 g de pasta\n- 2 cucharadas de aceite de\noliva virgen\nextra\n- 1 lata de atún\n- Pimienta\nPreparación:\nCocer la pasta y enfriarla.\nMezclar con el atún y el aceite.",
+      "expectedTitle": "Ensalada de pasta",
+      "expectedIngredients": [
+        { "name": "pasta", "quantity": 250, "unit": "g" },
+        { "name": "aceite de oliva virgen extra", "quantity": 2, "unit": "cucharada" },
+        { "name": "lata de atún", "quantity": 1, "unit": "unidad" },
+        { "name": "Pimienta", "quantity": null, "unit": null }
+      ],
+      "expectedSteps": [
+        "Cocer la pasta y enfriarla.",
+        "Mezclar con el atún y el aceite."
+      ]
     }
   ]
 }

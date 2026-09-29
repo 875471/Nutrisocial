@@ -1,6 +1,6 @@
 # Evaluación de la segmentación del texto OCR (núcleo 3.1)
 
-Generado el 2026-09-29 con `npm run eval:ocr-segmentacion` sobre 20 casos de `eval/data/ocrSegmentationCases.json` (2 salidas reales de ML Kit y 18 construidos para cubrir variantes de formato). Cada texto se pasa por `parseRecipeText`, la misma función que usa `POST /recipes/parse-ocr`.
+Generado el 2026-09-29 con `npm run eval:ocr-segmentacion` sobre 22 casos de `eval/data/ocrSegmentationCases.json` (2 salidas reales de ML Kit y 20 construidos para cubrir variantes de formato). Cada texto se pasa por `parseRecipeText`, la misma función que usa `POST /recipes/parse-ocr`.
 
 Criterios: un ingrediente está bien separado si su nombre tiene una similitud de edición ≥ 0,8 con el esperado (texto normalizado); un paso, si su texto la tiene ≥ 0,9. "Cantidad y unidad" es el porcentaje de ingredientes bien separados cuya cantidad y unidad también son correctas. "Acierto global" es el F1 de ingredientes y pasos juntos.
 
@@ -8,13 +8,13 @@ Criterios: un ingrediente está bien separado si su nombre tiene una similitud d
 
 | Conjunto | Casos | Ingr. precisión | Ingr. exhaustividad | Ingr. F1 | Cantidad y unidad | Pasos precisión | Pasos exhaustividad | Pasos F1 | Título | Acierto global (F1) | Casos perfectos |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Todos | 20 | 96,3 % | 89,5 % | 92,8 % | 98,7 % | 93,7 % | 100,0 % | 96,7 % | 100,0 % | 94,4 % | 15/20 |
+| Todos | 22 | 96,6 % | 90,4 % | 93,4 % | 98,8 % | 94,1 % | 100,0 % | 97,0 % | 100,0 % | 94,9 % | 17/22 |
 | Reales (ML Kit) | 2 | 100,0 % | 100,0 % | 100,0 % | 100,0 % | 100,0 % | 100,0 % | 100,0 % | 100,0 % | 100,0 % | 2/2 |
-| Sintéticos | 18 | 95,4 % | 87,3 % | 91,2 % | 98,4 % | 92,7 % | 100,0 % | 96,2 % | 100,0 % | 93,4 % | 13/18 |
+| Sintéticos | 20 | 95,9 % | 88,6 % | 92,1 % | 98,6 % | 93,3 % | 100,0 % | 96,6 % | 100,0 % | 94,0 % | 15/20 |
 
-- Ingredientes: 77 bien separados de 86 esperados (80 propuestos).
-- Ingredientes completamente correctos (nombre, cantidad y unidad) sobre los esperados: 88,4 %.
-- Pasos: 59 bien separados de 59 esperados (63 propuestos).
+- Ingredientes: 85 bien separados de 94 esperados (88 propuestos).
+- Ingredientes completamente correctos (nombre, cantidad y unidad) sobre los esperados: 89,4 %.
+- Pasos: 64 bien separados de 64 esperados (68 propuestos).
 
 ## Resultados por caso
 
@@ -40,6 +40,8 @@ Criterios: un ingrediente está bien separado si su nombre tiene una similitud d
 | sin-titulo | sintético | 4/4/4 | 4/4 | 2/2/2 | sí | 100,0 % |
 | sin-cantidades | sintético | 4/5/4 | 4/4 | 3/3/4 | sí | 87,5 % |
 | mayusculas-y-vinetas-redondas | sintético | 4/4/4 | 4/4 | 3/3/3 | sí | 100,0 % |
+| ingrediente-en-dos-lineas | sintético | 4/4/4 | 4/4 | 3/3/3 | sí | 100,0 % |
+| ingrediente-en-tres-lineas | sintético | 4/4/4 | 4/4 | 2/2/2 | sí | 100,0 % |
 
 ## Errores encontrados
 
