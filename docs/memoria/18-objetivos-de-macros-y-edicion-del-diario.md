@@ -40,6 +40,10 @@ En `GET /log`, después de sumar las entradas del día, la ruta calcula el objet
 
 **Barras de macros.** En la tarjeta de resumen, los tres `MacroStat` se han sustituido por `MacroProgressStat`. Cada uno muestra los gramos consumidos y, si hay objetivo, "de X g", una barra de 4 dp de alto (la de kcal tiene 10 dp) y la etiqueta. Si se ha superado el objetivo, los gramos y la barra pasan al color de error, igual que las kcal. Los tres siguen repartiéndose la fila con `Modifier.weight(1f)`. Sin objetivo (perfil incompleto) solo se ven los gramos y la etiqueta, como antes.
 
+**Lo registrado, antes que las recomendaciones.** Al probar la pantalla se vio que, por debajo del resumen, "parecía que no aparecía nada": ni el título "Registrado", ni el aviso de día vacío, ni las entradas recién añadidas. Se comprobó en el emulador que no era un fallo de datos. Logcat no mostraba ninguna excepción, la vista activa era la del día, y la fecha del `POST /log` y la del `GET /log` salen de la misma cadena (`todayIso()`/`_date`), así que no había un desfase de zona horaria. La causa era el orden de la lista. En `DayContent`, la sección de recomendaciones iba entre el resumen y "Registrado", y con un perfil completo el recomendador devuelve cinco tarjetas de unos 500 px cada una. La lista de lo registrado quedaba unas dos pantallas más abajo, sin nada que indicara que había que desplazarse. Con el perfil incompleto no se notaba, porque en lugar de las cinco tarjetas sale un único aviso de "Completa tu perfil". Se ha movido "Registrado" (y sus entradas o el aviso de día vacío) justo debajo del resumen, y las recomendaciones al final. Es también el orden natural de lectura: primero lo que ya he comido y después qué me falta. De paso, la línea de macros de cada entrada une cada número a su "g" con espacios de no separación, para que al partirse en dos líneas no quede una "g" suelta.
+
+La prueba de interfaz `LogScreenTest` (instrumentada, con Compose) pinta el diario con una entrada y cinco recomendaciones y comprueba que "Registrado", la entrada y su línea de macros se ven sin desplazarse. Con el orden anterior falla ("The component with text 'Registrado' is not displayed"), y con el nuevo pasa.
+
 ### Pruebas
 
 `test/dailyLog.test.js` (7 pruebas nuevas), con un cliente de Prisma en memoria:
@@ -77,3 +81,4 @@ En `GET /log`, después de sumar las entradas del día, la ruta calcula el objet
 | `ui/log/LogViewModel.kt` (modificado) | `updateEntry`: actualiza la entrada, avisa y recarga el día. |
 | `ui/log/LogScreen.kt` (modificado) | Macros por entrada, botón y diálogo de edición, `MacroProgressStat` en el resumen. |
 | `ui/home/HomeScreen.kt` (modificado) | Conecta `onUpdateEntry` con el ViewModel. |
+| `androidTest/.../ui/log/LogScreenTest.kt` (nuevo) | Lo registrado se ve sin desplazarse aunque haya cinco recomendaciones. |

@@ -314,11 +314,9 @@ private fun DayContent(
         verticalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
         item { SummaryCard(log = log, onOpenProfile = actions.onOpenProfile) }
-        recommendationsSection(
-            state = recommendationsState,
-            addingRecipeId = addingRecommendationId,
-            actions = actions
-        )
+        // Lo registrado va justo debajo del resumen y antes de las recomendaciones: con cinco
+        // tarjetas recomendadas delante, la lista quedaba dos pantallas más abajo y parecía que
+        // lo añadido no aparecía.
         item { SectionTitle("Registrado") }
         if (log.entries.isEmpty()) {
             item {
@@ -341,6 +339,11 @@ private fun DayContent(
                 onOpen = entry.recipeId?.let { id -> { actions.onOpenRecipe(id) } }
             )
         }
+        recommendationsSection(
+            state = recommendationsState,
+            addingRecipeId = addingRecommendationId,
+            actions = actions
+        )
     }
 }
 
@@ -715,9 +718,13 @@ private fun EntryRow(entry: LogEntry, onDelete: () -> Unit, onEdit: (() -> Unit)
     }
 }
 
-/** "P: 18 g · H: 32 g · G: 9 g". */
+/**
+ * "P: 18 g · H: 32 g · G: 9 g". Cada valor va unido a su unidad con espacios de no separación
+ * para que, si la línea no cabe, no se corte entre el número y la "g".
+ */
 fun entryMacrosLabel(entry: LogEntry): String =
-    "P: ${formatNumber(entry.protein)} g · H: ${formatNumber(entry.carbs)} g · G: ${formatNumber(entry.fat)} g"
+    listOf("P" to entry.protein, "H" to entry.carbs, "G" to entry.fat)
+        .joinToString(" · ") { (label, grams) -> "$label: ${formatNumber(grams)} g" }
 
 /**
  * Cambia las raciones (receta) o los gramos (alimento) de una entrada, con los mismos rangos que
