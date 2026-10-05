@@ -2481,11 +2481,11 @@
   },
   {
     "name": "Dorada, cruda",
-    "kcal": 77.9,
+    "kcal": 133.0,
     "protein": 17.0,
     "carbs": 0.0,
     "fat": 7.22,
-    "source": "BEDCA"
+    "source": "BEDCA (kcal corregida: el valor original, 77.9, era inconsistente con sus propios macros -4P+4H+9G=133.0-, posible error de transcripcion en el volcado original; se sustituye por el valor calculado con Atwater a partir de sus macros)"
   },
   {
     "name": "Dorada, plancha",
@@ -2849,11 +2849,11 @@
   },
   {
     "name": "Garbanzo, hervido",
-    "kcal": 358.7,
+    "kcal": 132.9,
     "protein": 8.9,
     "carbs": 18.7,
     "fat": 2.5,
-    "source": "BEDCA"
+    "source": "BEDCA (kcal corregida: el valor original, 358.7, era inconsistente con sus propios macros -4P+4H+9G=132.9-, posible error de transcripción en el volcado original; se sustituye por el valor calculado con Atwater a partir de sus macros, que sí son plausibles para garbanzo hervido)"
   },
   {
     "name": "Garbanzo, seco, crudo",
@@ -3441,11 +3441,11 @@
   },
   {
     "name": "Kebab",
-    "kcal": 303.5,
+    "kcal": 173.1,
     "protein": 8.8,
     "carbs": 16.7,
     "fat": 7.9,
-    "source": "BEDCA"
+    "source": "BEDCA (kcal corregida: el valor original, 303.5, era inconsistente con sus propios macros -4P+4H+9G=173.1-, posible error de transcripcion en el volcado original; se sustituye por el valor calculado con Atwater a partir de sus macros)"
   },
   {
     "name": "Kefir",

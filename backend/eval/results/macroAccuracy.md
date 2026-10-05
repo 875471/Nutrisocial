@@ -1,56 +1,41 @@
 # Evaluación del cálculo de macronutrientes (núcleo 3.2)
 
-Generado el 2026-09-29 con `npm run eval:macros` sobre 14 recetas de `eval/data/macroReferenceRecipes.json`. Open Food Facts desactivado (solo BEDCA). Valores **por ración**.
+Generado el 2026-10-01 con `npm run eval:macros -- --solo-verificadas` sobre 14 recetas de `eval/data/macroReferenceRecipes.json`. Open Food Facts desactivado (solo BEDCA). Valores **por ración**.
 
-> **Resultados PROVISIONALES.** 14 de las 14 recetas tienen valores de referencia sin verificar (borrador escrito con valores típicos de tablas, ver el LEEME de `eval/data/macroReferenceRecipes.json`). No citar estos números en la memoria hasta revisar las referencias y volver a ejecutar con `--solo-verificadas`.
+> Todas las recetas evaluadas tienen la referencia verificada.
 
 ## Error por macronutriente
 
 | Macronutriente | Error medio absoluto | Mediana del error absoluto | Error medio porcentual | Mediana del error porcentual |
 | --- | --- | --- | --- | --- |
-| Energía (kcal) | 32,4 | 13,5 | 11,2 % | 3,8 % |
-| Proteínas (g) | 1,2 | 0,7 | 9,6 % | 7,4 % |
-| Hidratos (g) | 2,3 | 2,0 | 7,8 % | 6,8 % |
-| Grasas (g) | 1,9 | 1,3 | 12,3 % | 9,2 % |
+| Energía (kcal) | 16,6 | 13,4 | 4,5 % | 3,9 % |
+| Proteínas (g) | 0,8 | 0,2 | 5,3 % | 1,4 % |
+| Hidratos (g) | 0,8 | 0,3 | 3,9 % | 0,8 % |
+| Grasas (g) | 1,7 | 1,4 | 10,0 % | 9,4 % |
 
-- Error porcentual medio de los cuatro macronutrientes: **10,2 %**.
-- Recetas con las kcal por ración a ±10 % de la referencia: 12/14; a ±20 %: 13/14.
-- Sesgo medio de las kcal (positivo = la app da más que la referencia): 9,8 %.
+- Error porcentual medio de los cuatro macronutrientes: **5,9 %**.
+- Recetas con las kcal por ración a ±10 % de la referencia: 13/14; a ±20 %: 14/14.
+- Sesgo medio de las kcal (positivo = la app da más que la referencia): 4,1 %.
 - El error porcentual no se calcula cuando la referencia es menor de 1 (kcal o g), para no dividir por casi cero.
-
-### Sin las recetas con un alimento incoherente en la tabla Food
-
-- «Garbanzo, hervido» (BEDCA): 358,7 kcal/100 g, pero sus macros suman 132,9 kcal (4·P + 4·H + 9·G). Afecta a: Garbanzos con espinacas.
-
-Es un error del dato de origen, no del cálculo. Sin esa receta (13 recetas):
-
-| Macronutriente | Error medio absoluto | Mediana del error absoluto | Error medio porcentual | Mediana del error porcentual |
-| --- | --- | --- | --- | --- |
-| Energía (kcal) | 16,4 | 10,9 | 4,4 % | 3,2 % |
-| Proteínas (g) | 1,1 | 0,7 | 9,1 % | 6,1 % |
-| Hidratos (g) | 2,4 | 2,1 | 7,7 % | 6,4 % |
-| Grasas (g) | 1,9 | 1,2 | 12,2 % | 8,2 % |
-
-- Error porcentual medio de los cuatro macronutrientes: **8,4 %**.
 
 ## Resultados por receta (por ración)
 
 | Receta | Verificada | kcal app / ref. | Error kcal | Proteínas app / ref. | Hidratos app / ref. | Grasas app / ref. | Sin contar |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Porridge de avena con plátano | no | 438 / 420 | 4,4 % | 16,0 / 14,4 | 67,0 / 62,5 | 11,4 / 11,3 | — |
-| Tostadas con tomate y aceite | no | 287 / 293 | -2,1 % | 5,5 / 5,7 | 30,3 / 34,1 | 16,0 / 14,5 | — |
-| Yogur griego con fresas y nueces | no | 342 / 340 | 0,6 % | 11,5 / 8,0 | 18,3 / 18,3 | 25,9 / 26,3 | — |
-| Lentejas con verduras | no | 336 / 347 | -3,1 % | 19,9 / 19,2 | 43,7 / 44,8 | 8,7 / 8,1 | — |
-| Garbanzos con espinacas | no | 482 / 241 | 99,9 % | 11,0 / 9,5 | 20,8 / 18,9 | 14,5 / 12,8 | — |
-| Macarrones con tomate y atún | no | 561 / 557 | 0,8 % | 28,4 / 27,7 | 76,8 / 82,1 | 15,1 / 12,1 | — |
-| Pollo al limón con arroz | no | 588 / 570 | 3,2 % | 40,2 / 40,1 | 66,5 / 61,9 | 17,5 / 16,7 | — |
-| Espaguetis a la boloñesa | no | 714 / 664 | 7,5 % | 30,6 / 33,5 | 79,8 / 80,9 | 30,0 / 22,1 | — |
-| Salmón a la plancha con verduras | no | 450 / 474 | -4,9 % | 30,7 / 32,7 | 7,3 / 7,0 | 33,5 / 33,6 | — |
-| Crema de calabaza | no | 171 / 161 | 6,2 % | 3,8 / 3,3 | 19,6 / 22,1 | 8,6 / 7,0 | — |
-| Tortilla de patatas | no | 385 / 369 | 4,4 % | 15,0 / 13,4 | 24,8 / 28,5 | 25,3 / 21,5 | — |
-| Revuelto de champiñones y ajos tiernos | no | 284 / 247 | 14,6 % | 17,4 / 17,5 | 6,2 / 4,8 | 21,2 / 17,6 | — |
-| Bizcocho de yogur | no | 361 / 351 | 2,6 % | 6,7 / 6,2 | 48,3 / 48,9 | 15,5 / 14,3 | — |
-| Arroz con leche | no | 289 / 281 | 3,0 % | 6,9 / 7,1 | 50,0 / 47,9 | 6,6 / 6,3 | — |
+| Porridge de avena con plátano | sí | 438 / 437 | 0,2 % | 16,0 / 16,1 | 67,0 / 66,2 | 11,4 / 11,6 | — |
+| Tostadas con tomate y aceite | sí | 287 / 275 | 4,5 % | 5,5 / 5,6 | 30,3 / 30,5 | 16,0 / 14,5 | — |
+| Yogur griego con fresas y nueces | sí | 342 / 349 | -1,8 % | 11,5 / 11,5 | 18,3 / 19,8 | 25,9 / 25,9 | — |
+| Lentejas con verduras | sí | 336 / 326 | 3,1 % | 19,9 / 19,8 | 43,7 / 43,0 | 8,7 / 8,0 | — |
+| Garbanzos con espinacas | sí | 256 / 242 | 5,8 % | 11,0 / 9,1 | 20,8 / 15,7 | 14,5 / 13,6 | — |
+| Macarrones con tomate y atún | sí | 561 / 532 | 5,5 % | 28,4 / 26,8 | 76,8 / 76,5 | 15,1 / 12,7 | — |
+| Pollo al limón con arroz | sí | 588 / 574 | 2,5 % | 40,2 / 40,1 | 66,5 / 66,3 | 17,5 / 16,0 | — |
+| Espaguetis a la boloñesa | sí | 714 / 662 | 7,8 % | 30,6 / 34,3 | 79,8 / 79,4 | 30,0 / 22,2 | — |
+| Salmón a la plancha con verduras | sí | 450 / 438 | 2,9 % | 30,7 / 30,6 | 7,3 / 7,5 | 33,5 / 32,0 | — |
+| Crema de calabaza | sí | 171 / 165 | 3,7 % | 3,8 / 3,8 | 19,6 / 19,8 | 8,6 / 7,8 | — |
+| Tortilla de patatas | sí | 385 / 355 | 8,5 % | 15,0 / 13,6 | 24,8 / 24,5 | 25,3 / 22,6 | — |
+| Revuelto de champiñones y ajos tiernos | sí | 284 / 255 | 11,2 % | 17,4 / 15,7 | 6,2 / 6,0 | 21,2 / 18,9 | — |
+| Bizcocho de yogur | sí | 361 / 346 | 4,2 % | 6,7 / 6,1 | 48,3 / 48,0 | 15,5 / 14,3 | — |
+| Arroz con leche | sí | 289 / 291 | -0,6 % | 6,9 / 7,0 | 50,0 / 49,9 | 6,6 / 6,8 | — |
 
 ## Emparejamiento de cada ingrediente
 
@@ -99,7 +84,7 @@ Alimento de la tabla Food elegido por `matchFood` y gramos estimados por la conv
 
 | Ingrediente | Alimento asociado | Gramos (app) |
 | --- | --- | --- |
-| garbanzo hervido | Garbanzo, hervido (dato incoherente) | 400 |
+| garbanzo hervido | Garbanzo, hervido | 400 |
 | espinacas | Espinaca, picada, congelada, cruda | 250 |
 | ajo | Ajo | 15 |
 | comino | Comino | 5 |
