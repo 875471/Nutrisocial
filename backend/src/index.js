@@ -34,6 +34,9 @@ app.use('/pantry', pantryRoutes);
 app.use('/comments', commentRoutes);
 app.use('/users', userRoutes);
 app.use('/notifications', notificationRoutes);
+// Única zona pública (sin requireAuth): la página HTML de una receta compartida desde la app.
+const shareRoutes = require('./routes/share');
+app.use('/share', shareRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 

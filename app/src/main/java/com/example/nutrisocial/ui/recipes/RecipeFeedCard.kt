@@ -63,6 +63,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.R
+import com.example.nutrisocial.RetrofitClient.WEB_BASE_URL
 import com.example.nutrisocial.data.CommentPreview
 import com.example.nutrisocial.data.FeedRecipe
 import com.example.nutrisocial.data.MAX_COMMENT_LENGTH
@@ -594,10 +595,11 @@ private fun RecipeActionsRow(recipe: RecipeCardData, actions: RecipeCardActions,
             )
         }
         IconButton(onClick = {
-            // No hay enlaces a recetas concretas: se comparte el título como texto.
+            // Enlace a la página pública de la receta (backend/src/routes/share.js): se abre
+            // en cualquier navegador, sin la app ni sesión iniciada.
             val send = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, "Mira esta receta en NutriSocial: ${recipe.title}")
+                putExtra(Intent.EXTRA_TEXT, "Mira esta receta en NutriSocial: ${recipe.title}\n${WEB_BASE_URL}share/recipes/${recipe.id}")
             }
             try {
                 context.startActivity(Intent.createChooser(send, "Compartir receta"))
