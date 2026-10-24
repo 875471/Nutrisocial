@@ -6,9 +6,13 @@
 //
 //   node prisma/seedDemoData.js --dry-run   # solo lee: muestra cómo se empareja cada ingrediente
 //   node prisma/seedDemoData.js             # crea lo que falte
+//   node prisma/seedDemoData.js --follow-as=tu@email.com
+//                                           # además, esa cuenta (real) sigue a los usuarios de
+//                                           # demostración con más recetas
 //
 // Es idempotente: los usuarios se buscan por email, las recetas por autor y título, y los
-// likes usan el índice único (usuario, receta). Ejecutarlo dos veces no duplica nada.
+// likes y follows usan sus índices únicos (usuario, receta) y (seguidor, seguido). Ejecutarlo
+// dos veces no duplica nada.
 //
 // Los emails usan el dominio reservado ".example" (RFC 2606): no existen ni pueden recibir
 // correo, así que nunca se escribirá a una persona real. Todos comparten la contraseña
@@ -28,6 +32,8 @@ const prisma = require('../src/prismaClient');
 const { resolveIngredients } = require('../src/nutrition/calculate');
 
 const DRY_RUN = process.argv.includes('--dry-run');
+const FOLLOW_AS = (process.argv.find((a) => a.startsWith('--follow-as=')) || '').slice('--follow-as='.length).trim();
+const FOLLOW_AS_COUNT = 6;
 const DEMO_PASSWORD = 'demo1234';
 const DOMAIN = 'nutrisocial.example';
 
@@ -156,6 +162,25 @@ function likesFor(userIndex, recipes) {
   return recipes.filter((r, i) => r.authorIndex !== userIndex && (userIndex * 7 + i * 3) % 5 < 2);
 }
 
+// Reparte los follows de forma determinista: cada usuario sigue a los que están a ciertas
+// distancias de él en USERS (contando en círculo), 4 los de índice par y 3 los impares. Las
+// distancias van de 1 a USERS.length - 1, así que nadie se sigue a sí mismo; y como todos usan
+// las mismas, cada usuario acaba también con 3 o 4 seguidores. Devuelve índices de USERS.
+const FOLLOW_OFFSETS = [1, 3, 6, 10];
+function followsFor(userIndex) {
+  const offsets = userIndex % 2 === 0 ? FOLLOW_OFFSETS : FOLLOW_OFFSETS.slice(0, 3);
+  return offsets.map((d) => (userIndex + d) % USERS.length);
+}
+
+// Índices de USERS de los `count` usuarios con más recetas en RECIPES (a igualdad, el primero
+// de la lista), a los que sigue la cuenta indicada con --follow-as.
+function topAuthors(count) {
+  const recipesBy = USERS.map((_, i) => RECIPES.filter((r) => r[1] === i).length);
+  return USERS.map((_, i) => i)
+    .sort((a, b) => recipesBy[b] - recipesBy[a] || a - b)
+    .slice(0, count);
+}
+
 async function main() {
   const foodCount = await prisma.food.count();
   if (foodCount === 0) {
@@ -219,7 +244,32 @@ async function main() {
     recipes.push({ id: recipe.id, authorIndex });
     createdRecipes++;
   }
-  if (DRY_RUN) return;
+
+  // Cuenta real que, con --follow-as, seguirá a los autores de demostración con más recetas.
+  let followAsUser = null;
+  if (FOLLOW_AS) {
+    followAsUser = await prisma.user.findUnique({ where: { email: FOLLOW_AS }, select: { id: true, email: true } });
+    if (!followAsUser) {
+      console.warn(`AVISO: --follow-as: no existe ninguna cuenta con el email "${FOLLOW_AS}" en esta base de datos. ` +
+        'No se crea ningún follow para ella (revisa el email o el DATABASE_URL del .env).');
+      process.exitCode = 1;
+    }
+  }
+  const followAsTargets = followAsUser
+    ? topAuthors(FOLLOW_AS_COUNT).filter((j) => !users[j] || users[j].id !== followAsUser.id)
+    : [];
+
+  if (DRY_RUN) {
+    const demoFollows = USERS.reduce((n, _, i) => n + followsFor(i).length, 0);
+    console.log(`Follows entre usuarios de demostración: ${demoFollows}`);
+    for (const [i, u] of USERS.entries()) {
+      console.log(`  ${u.name} sigue a: ${followsFor(i).map((j) => USERS[j].name).join(', ')}`);
+    }
+    if (followAsUser) {
+      console.log(`${followAsUser.email} (id ${followAsUser.id}) seguirá a: ${followAsTargets.map((j) => USERS[j].name).join(', ')}`);
+    }
+    return;
+  }
 
   // ---- Likes ----
   let likes = 0;
@@ -234,9 +284,28 @@ async function main() {
     }
   }
 
+  // ---- Follows ----
+  // upsert no dice si ha creado la fila, así que los creados se cuentan por diferencia.
+  const followPairs = [];
+  for (const [userIndex, user] of users.entries()) {
+    for (const j of followsFor(userIndex)) followPairs.push([user.id, users[j].id]);
+  }
+  for (const j of followAsTargets) followPairs.push([followAsUser.id, users[j].id]);
+  const followsBefore = await prisma.follow.count();
+  for (const [followerId, followingId] of followPairs) {
+    await prisma.follow.upsert({
+      where: { followerId_followingId: { followerId, followingId } },
+      create: { followerId, followingId },
+      update: {},
+    });
+  }
+  const createdFollows = (await prisma.follow.count()) - followsBefore;
+
   console.log(`Usuarios: ${createdUsers} creados, ${USERS.length - createdUsers} ya existían.`);
   console.log(`Recetas: ${createdRecipes} creadas, ${RECIPES.length - createdRecipes} ya existían.`);
   console.log(`Me gusta: ${likes} (los que ya existían no se duplican).`);
+  console.log(`Follows: ${createdFollows} creados, ${followPairs.length - createdFollows} ya existían` +
+    (followAsUser ? ` (${followAsTargets.length} de ellos son de ${followAsUser.email}).` : '.'));
   console.log(`Contraseña de todas las cuentas de demostración: ${DEMO_PASSWORD} (emails @${DOMAIN}).`);
 }
 
