@@ -220,17 +220,18 @@ model Follow {
 }
 
 // Aviso dentro de la app para `userId`: alguien (`actorId`) ha empezado a seguirle ("follow"),
-// ha dado "me gusta" a una receta suya ("like") o la ha comentado ("comment"). No hay push:
+// ha dado "me gusta" a una receta suya ("like"), la ha comentado ("comment") o le ha compartido
+// una receta ("share"). No hay push:
 // se consultan al abrir la app (ver src/routes/notifications.js).
 model Notification {
   id        Int      @id @default(autoincrement())
   userId    Int
   user      User     @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
-  // "follow" | "like" | "comment"
+  // "follow" | "like" | "comment" | "share"
   type      String
   actorId   Int
   actor     User     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
-  // La receta del "me gusta" o del comentario; null en "follow"
+  // La receta del "me gusta", del comentario o la compartida; null en "follow"
   recipeId  Int?
   recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   read      Boolean  @default(false)

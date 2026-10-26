@@ -164,6 +164,10 @@ private fun notificationText(n: AppNotification) = buildAnnotatedString {
             append(" ha comentado en ")
             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(recipe) }
         }
+        "share" -> {
+            append(" te ha compartido su receta: ")
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(n.recipeTitle ?: "una receta") }
+        }
         else -> append(" ha interactuado contigo")
     }
 }

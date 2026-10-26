@@ -33,11 +33,14 @@ import com.example.nutrisocial.data.ReadAllResponse
 import com.example.nutrisocial.data.RegisterResponse
 import com.example.nutrisocial.data.ResetPasswordRequest
 import com.example.nutrisocial.data.SaveState
+import com.example.nutrisocial.data.ShareRecipeRequest
+import com.example.nutrisocial.data.ShareRecipeResponse
 import com.example.nutrisocial.data.RegisterRequest
 import com.example.nutrisocial.data.UpdateLogEntryRequest
 import com.example.nutrisocial.data.UpdateProfileRequest
 import com.example.nutrisocial.data.User
 import com.example.nutrisocial.data.UserSearchResult
+import com.example.nutrisocial.data.UserSummary
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -156,6 +159,13 @@ interface ApiService {
 
     @DELETE("users/{id}/follow")
     suspend fun unfollowUser(@Path("id") id: Int): Response<FollowState>
+
+    // Gente a la que sigue el usuario, por nombre: a quién se le puede compartir una receta.
+    @GET("users/following")
+    suspend fun getFollowing(): Response<List<UserSummary>>
+
+    @POST("recipes/{id}/share")
+    suspend fun shareRecipe(@Path("id") id: Int, @Body request: ShareRecipeRequest): Response<ShareRecipeResponse>
 
     // Notificaciones del usuario, de 20 en 20; la primera página trae unreadCount.
     @GET("notifications")

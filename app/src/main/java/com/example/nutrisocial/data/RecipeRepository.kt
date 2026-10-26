@@ -36,6 +36,10 @@ class RecipeRepository(
     suspend fun parseOcr(rawText: String): ApiResult<OcrRecipeProposal> =
         safeApiCall { api.parseOcr(ParseOcrRequest(rawText)) }
 
+    /** Comparte la receta [id] con [toUserId], que la recibe como notificación. Solo con alguien a quien se sigue. */
+    suspend fun shareRecipe(id: Int, toUserId: Int): ApiResult<ShareRecipeResponse> =
+        safeApiCall { api.shareRecipe(id, ShareRecipeRequest(toUserId)) }
+
     /** Pide una receta generada por IA con [ingredients]. No la guarda (ver [GeneratedRecipeProposal]). */
     suspend fun generateRecipe(ingredients: List<String>): ApiResult<GeneratedRecipeProposal> =
         safeApiCall { api.generateRecipe(GenerateRecipeRequest(ingredients)) }

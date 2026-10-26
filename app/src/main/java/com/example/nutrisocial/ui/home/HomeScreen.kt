@@ -202,7 +202,8 @@ fun HomeScreen(
                             onSearch = recipeSearchViewModel::search,
                             snackbarHostState = snackbarHostState,
                             searchExpanded = searchExpanded,
-                            onCloseSearch = closeSearch
+                            onCloseSearch = closeSearch,
+                            onFindPeople = { navController.navigate(HomeRoutes.BUSCAR_PERSONAS) }
                         )
                     },
                     friendsContent = { snackbarHostState ->
@@ -404,7 +405,8 @@ fun HomeScreen(
                             userName = user?.name.orEmpty(),
                             currentUserId = user?.id,
                             actions = remember(savedRecipesViewModel) { feedActions(savedRecipesViewModel, navController, onFollowChanged) },
-                            snackbarHostState = snackbarHostState
+                            snackbarHostState = snackbarHostState,
+                            onFindPeople = { navController.navigate(HomeRoutes.BUSCAR_PERSONAS) }
                         )
                     },
                     header = {
@@ -529,7 +531,8 @@ fun HomeScreen(
                     },
                     actionState = detailActionState,
                     currentUserName = user?.name.orEmpty(),
-                    commentDraft = commentDraft
+                    commentDraft = commentDraft,
+                    onFindPeople = { navController.navigate(HomeRoutes.BUSCAR_PERSONAS) }
                 )
             }
 

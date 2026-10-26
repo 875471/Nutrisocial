@@ -3,6 +3,7 @@ const prisma = require('../prismaClient');
 const requireAuth = require('../middleware/auth');
 const { parseUserSearchQuery, searchUsers } = require('../social/userSearch');
 const { notify } = require('../social/notifications');
+const { findOtherUserId } = require('../social/otherUser');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -36,29 +37,22 @@ router.get('/search', async (req, res) => {
   res.json({ users });
 });
 
-// Id de la ruta si es válido, no es el propio usuario y existe. Si no, responde 400/404 y
-// devuelve null.
-async function findOtherUserId(req, res) {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id <= 0) {
-    res.status(400).json({ error: 'Id de usuario no válido' });
-    return null;
-  }
-  if (id === req.userId) {
-    res.status(400).json({ error: 'No puedes seguirte a ti mismo' });
-    return null;
-  }
-  const exists = await prisma.user.findUnique({ where: { id }, select: { id: true } });
-  if (!exists) {
-    res.status(404).json({ error: 'Este usuario ya no existe' });
-    return null;
-  }
-  return id;
-}
+// Gente a la que sigue el usuario, por orden alfabético: de esta lista se elige a quién
+// compartir una receta (POST /recipes/:id/share).
+router.get('/following', async (req, res) => {
+  const follows = await prisma.follow.findMany({
+    where: { followerId: req.userId },
+    select: { following: { select: { id: true, name: true } } },
+    orderBy: { following: { name: 'asc' } },
+  });
+  res.json(follows.map((f) => f.following));
+});
+
+const followTarget = (req, res) => findOtherUserId(res, req.params.id, req.userId, 'No puedes seguirte a ti mismo');
 
 // Seguir y dejar de seguir. Igual que los likes, las dos son idempotentes y devuelven el estado final.
 router.post('/:id/follow', async (req, res) => {
-  const id = await findOtherUserId(req, res);
+  const id = await followTarget(req, res);
   if (id == null) return;
   // upsert: seguir dos veces no duplica ni choca con el índice único.
   await prisma.follow.upsert({
@@ -71,7 +65,7 @@ router.post('/:id/follow', async (req, res) => {
 });
 
 router.delete('/:id/follow', async (req, res) => {
-  const id = await findOtherUserId(req, res);
+  const id = await followTarget(req, res);
   if (id == null) return;
   await prisma.follow.deleteMany({ where: { followerId: req.userId, followingId: id } });
   res.json({ isFollowedByMe: false });

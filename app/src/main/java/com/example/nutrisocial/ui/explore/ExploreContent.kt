@@ -50,12 +50,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nutrisocial.R
 import com.example.nutrisocial.data.FeedRecipe
 import com.example.nutrisocial.ui.home.FeedActions
 import com.example.nutrisocial.ui.home.FeedUiState
 import com.example.nutrisocial.ui.home.feedCardItems
 import com.example.nutrisocial.ui.recipes.CenteredMessage
+import com.example.nutrisocial.ui.recipes.ShareRecipeSheet
+import com.example.nutrisocial.ui.recipes.ShareRecipeViewModel
 import com.example.nutrisocial.ui.recipes.listStateModifier
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
@@ -79,7 +82,8 @@ fun ExploreContent(
     onSearch: () -> Unit,
     snackbarHostState: SnackbarHostState,
     searchExpanded: Boolean = true,
-    onCloseSearch: () -> Unit = {}
+    onCloseSearch: () -> Unit = {},
+    onFindPeople: (() -> Unit)? = null
 ) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
@@ -133,6 +137,7 @@ fun ExploreContent(
             actions = actions,
             errorTitle = "No se pudo buscar",
             snackbarHostState = snackbarHostState,
+            onFindPeople = onFindPeople,
             header = state.total?.takeIf { !state.isLoading }?.let { total ->
                 { ResultsCount(total) }
             }
@@ -169,6 +174,7 @@ fun FriendsFeedContent(
         actions = actions,
         errorTitle = "No se pudieron cargar las recetas de tus amigos",
         snackbarHostState = snackbarHostState,
+        onFindPeople = onFindPeople,
         header = if (state.recipes.isEmpty()) null else {
             {
                 TextButton(onClick = onFindPeople) {
@@ -226,7 +232,8 @@ fun SavedRecipesContent(
     userName: String,
     currentUserId: Int?,
     actions: FeedActions,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    onFindPeople: (() -> Unit)? = null
 ) {
     FeedTabList(
         state = state,
@@ -234,7 +241,8 @@ fun SavedRecipesContent(
         currentUserId = currentUserId,
         actions = actions,
         errorTitle = "No se pudieron cargar tus guardadas",
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
+        onFindPeople = onFindPeople
     ) {
         CenteredMessage(
             icon = painterResource(R.drawable.ic_bookmark_border),
@@ -254,7 +262,11 @@ private fun ResultsCount(total: Int) {
     )
 }
 
-/** Lista de tarjetas con tirar para refrescar y sus avisos en el snackbar de la pantalla. */
+/**
+ * Lista de tarjetas con tirar para refrescar y sus avisos en el snackbar de la pantalla. El botón
+ * de compartir de cada tarjeta abre la hoja con la gente a la que se sigue ([onFindPeople], para
+ * ir a buscar personas si no se sigue a nadie).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FeedTabList(
@@ -264,6 +276,7 @@ private fun FeedTabList(
     actions: FeedActions,
     errorTitle: String,
     snackbarHostState: SnackbarHostState,
+    onFindPeople: (() -> Unit)? = null,
     header: (@Composable () -> Unit)? = null,
     empty: @Composable LazyItemScope.() -> Unit
 ) {
@@ -273,6 +286,8 @@ private fun FeedTabList(
             actions.onMessageShown()
         }
     }
+    val shareViewModel: ShareRecipeViewModel = viewModel()
+    ShareRecipeSheet(shareViewModel, snackbarHostState, onFindPeople)
     PullToRefreshBox(
         isRefreshing = state.isRefreshing,
         onRefresh = actions.onRefresh,
@@ -288,7 +303,7 @@ private fun FeedTabList(
                 state = state,
                 userName = userName,
                 currentUserId = currentUserId,
-                actions = actions,
+                actions = actions.copy(onShare = shareViewModel::open),
                 errorTitle = errorTitle,
                 empty = empty
             )

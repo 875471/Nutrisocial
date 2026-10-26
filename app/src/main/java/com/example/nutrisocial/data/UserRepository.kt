@@ -19,6 +19,10 @@ class UserRepository(
             if (followed) api.followUser(id) else api.unfollowUser(id)
         }
 
+    /** Gente a la que sigue el usuario, por nombre (a quién puede compartir una receta). */
+    suspend fun getFollowing(): ApiResult<List<UserSummary>> =
+        safeApiCall { api.getFollowing() }
+
     companion object {
         const val PAGE_SIZE = 20
     }

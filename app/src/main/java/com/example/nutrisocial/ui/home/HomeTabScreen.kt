@@ -75,7 +75,9 @@ data class FeedActions(
     val onSendComment: (Int) -> Unit,
     val onToggleSave: (Int) -> Unit = {},
     // Recibe el id del autor, no el de la receta.
-    val onToggleFollow: (Int) -> Unit = {}
+    val onToggleFollow: (Int) -> Unit = {},
+    // Abre la hoja de compartir la receta; null: las tarjetas no llevan el botón.
+    val onShare: ((Int) -> Unit)? = null
 ) {
     companion object {
         val Noop = FeedActions({}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {})
@@ -227,7 +229,8 @@ fun LazyListScope.feedCardItems(
                         onSendComment = { actions.onSendComment(recipe.id) },
                         onToggleSave = { actions.onToggleSave(recipe.id) },
                         onToggleFollow = if (currentUserId == null || recipe.authorId == currentUserId) null
-                        else ({ actions.onToggleFollow(recipe.authorId) })
+                        else ({ actions.onToggleFollow(recipe.authorId) }),
+                        onShare = actions.onShare?.let { share -> { share(recipe.id) } }
                     )
                 )
             }

@@ -1,8 +1,8 @@
-// Notificaciones dentro de la app: se crean al seguir a alguien, al dar "me gusta" a una receta
-// y al comentarla, y se consultan en GET /notifications (ver routes/notifications.js).
+// Notificaciones dentro de la app: se crean al seguir a alguien, al dar "me gusta" a una receta,
+// al comentarla y al compartirla con alguien, y se consultan en GET /notifications (ver routes/notifications.js).
 const prisma = require('../prismaClient');
 
-const NOTIFICATION_TYPES = ['follow', 'like', 'comment'];
+const NOTIFICATION_TYPES = ['follow', 'like', 'comment', 'share'];
 const NOTIFICATIONS_PAGE_SIZE = 20;
 const NOTIFICATIONS_MAX_PAGE_SIZE = 50;
 

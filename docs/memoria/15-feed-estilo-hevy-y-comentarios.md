@@ -96,7 +96,7 @@ La lógica que no depende de la base de datos (validación del texto, formato de
 - **Sin respuestas ni menciones.** Los comentarios son una lista plana. No se puede responder a un comentario concreto ni mencionar a otro usuario.
 - **Vistas previas con cierto retraso.** Los contadores y las vistas previas se sincronizan entre pantallas del mismo móvil, pero lo que publiquen otros usuarios solo aparece al refrescar el feed; no hay actualización en tiempo real.
 - **Peso de las páginas del feed.** Traer ingredientes, pasos y vistas previas hace cada página algo más pesada. Sigue siendo poco comparado con las fotos en Base64, que son el problema de tamaño real (informe 12).
-- **Compartir solo texto.** "Compartir" envía el título, no un enlace, porque la aplicación no tiene web ni enlaces profundos (*deep links*).
+- **Compartir solo texto.** "Compartir" envía el título, no un enlace, porque la aplicación no tiene web ni enlaces profundos (*deep links*). Resuelto en el informe 23 con una página pública por receta.
 
 ## Archivos creados o modificados
 

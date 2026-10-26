@@ -1,7 +1,5 @@
 package com.example.nutrisocial.ui.recipes
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,7 +46,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -173,7 +170,9 @@ class RecipeCardActions(
     val onDraftChange: (String) -> Unit,
     val onSendComment: () -> Unit,
     val onToggleSave: () -> Unit = {},
-    val onToggleFollow: (() -> Unit)? = null
+    val onToggleFollow: (() -> Unit)? = null,
+    // Abre la hoja para compartir con alguien a quien se sigue; null: sin botón de compartir.
+    val onShare: (() -> Unit)? = null
 ) {
     companion object {
         val Noop = RecipeCardActions(null, {}, {}, {}, {})
@@ -564,7 +563,6 @@ private fun PagerDots(current: Int, count: Int, modifier: Modifier = Modifier) {
 /** Me gusta (el corazón animado de siempre), comentarios, guardar y compartir. */
 @Composable
 private fun RecipeActionsRow(recipe: RecipeCardData, actions: RecipeCardActions, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
         LikeButton(liked = recipe.likedByMe, count = recipe.likesCount, onToggle = actions.onToggleLike)
         Row(
@@ -593,19 +591,11 @@ private fun RecipeActionsRow(recipe: RecipeCardData, actions: RecipeCardActions,
                 tint = if (recipe.savedByMe) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        IconButton(onClick = {
-            // No hay enlaces a recetas concretas: se comparte el título como texto.
-            val send = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, "Mira esta receta en NutriSocial: ${recipe.title}")
+        // Se comparte dentro de la app, con alguien a quien se sigue (ver ShareRecipeSheet).
+        actions.onShare?.let { onShare ->
+            IconButton(onClick = onShare) {
+                Icon(Icons.Filled.Share, contentDescription = "Compartir", tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            try {
-                context.startActivity(Intent.createChooser(send, "Compartir receta"))
-            } catch (e: ActivityNotFoundException) {
-                // Sin ninguna app para compartir texto no hay nada que hacer.
-            }
-        }) {
-            Icon(Icons.Filled.Share, contentDescription = "Compartir", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

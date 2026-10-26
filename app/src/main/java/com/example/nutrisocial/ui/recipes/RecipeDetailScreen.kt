@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nutrisocial.data.FoodRef
 import com.example.nutrisocial.data.Macros
 import com.example.nutrisocial.data.Nutrition
@@ -82,9 +83,13 @@ fun RecipeDetailScreen(
     actions: RecipeDetailActions = RecipeDetailActions.Noop,
     actionState: RecipeDetailActionState = RecipeDetailActionState(),
     currentUserName: String = "",
-    commentDraft: CommentDraft = CommentDraft()
+    commentDraft: CommentDraft = CommentDraft(),
+    // Para ir a buscar personas desde la hoja de compartir si no se sigue a nadie.
+    onFindPeople: (() -> Unit)? = null
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val shareViewModel: ShareRecipeViewModel = viewModel()
+    ShareRecipeSheet(shareViewModel, snackbarHostState, onFindPeople)
     LaunchedEffect(quickAddState.message) {
         quickAddState.message?.let {
             snackbarHostState.showSnackbar(it)
@@ -168,6 +173,7 @@ fun RecipeDetailScreen(
                 commentDraft = commentDraft,
                 actions = actions,
                 actionState = actionState,
+                onShare = { shareViewModel.open(state.recipe.id) },
                 modifier = contentModifier
             )
         }
@@ -255,6 +261,7 @@ private fun RecipeDetailContent(
     commentDraft: CommentDraft,
     actions: RecipeDetailActions,
     actionState: RecipeDetailActionState,
+    onShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -276,7 +283,8 @@ private fun RecipeDetailContent(
                 onOpenComments = actions.onOpenComments,
                 onDraftChange = actions.onCommentDraftChange,
                 onSendComment = actions.onSendComment,
-                onToggleSave = actions.onToggleSave
+                onToggleSave = actions.onToggleSave,
+                onShare = onShare
             ),
             expandLists = true,
             showCommentsPreview = false

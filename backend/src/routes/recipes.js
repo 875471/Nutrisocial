@@ -15,7 +15,8 @@ const {
   toCommentResponse, commentsPreviewField, toCommentsPreview, likersSelect, likersByRecipe,
 } = require('../social/comments');
 const { parseSearchQuery, searchRecipes } = require('../social/recipeSearch');
-const { notifyRecipeAuthor } = require('../social/notifications');
+const { notify, notifyRecipeAuthor } = require('../social/notifications');
+const { findOtherUserId } = require('../social/otherUser');
 const {
   generateRecipe, cleanInputIngredients, isConfigured: isGenerationConfigured, GenerationError,
 } = require('../ai/generateRecipe');
@@ -632,6 +633,25 @@ router.delete('/:id/save', async (req, res) => {
 });
 
 // Comentarios de una receta, del más reciente al más antiguo, paginados igual que el feed.
+// Compartir una receta con alguien a quien se sigue: le llega como notificación "share", que
+// al tocarla abre la receta. No hay mensajes ni chat. Compartir otra vez la misma receta con la
+// misma persona no repite el aviso (notify no duplica las que no son comentarios).
+router.post('/:id/share', async (req, res) => {
+  const toUserId = await findOtherUserId(
+    res, req.body?.toUserId, req.userId, 'No puedes compartir una receta contigo mismo'
+  );
+  if (toUserId == null) return;
+  const follows = await prisma.follow.findUnique({
+    where: { followerId_followingId: { followerId: req.userId, followingId: toUserId } },
+    select: { id: true },
+  });
+  if (!follows) return res.status(400).json({ error: 'Solo puedes compartir con alguien a quien sigues' });
+  const id = await findRecipeId(req, res);
+  if (id == null) return;
+  await notify({ userId: toUserId, type: 'share', actorId: req.userId, recipeId: id });
+  res.json({ shared: true });
+});
+
 router.get('/:id/comments', async (req, res) => {
   const pageQuery = parsePage(req.query, COMMENTS_PAGE_SIZE, COMMENTS_MAX_PAGE_SIZE);
   if (pageQuery.error) return res.status(400).json({ error: pageQuery.error });

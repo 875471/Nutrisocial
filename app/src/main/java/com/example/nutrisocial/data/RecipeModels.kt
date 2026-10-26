@@ -103,6 +103,12 @@ val IngredientUnits = listOf("g", "kg", "ml", "l", "unidad", "cucharada", "cucha
 
 data class ParseOcrRequest(val rawText: String)
 
+/** Cuerpo de POST /recipes/{id}/share: a quién se comparte (alguien a quien se sigue). */
+data class ShareRecipeRequest(val toUserId: Int)
+
+/** Respuesta de POST /recipes/{id}/share. */
+data class ShareRecipeResponse(val shared: Boolean)
+
 /** Cuerpo de POST /recipes/generate: nombres de los ingredientes que tiene el usuario. */
 data class GenerateRecipeRequest(val ingredients: List<String>)
 

@@ -205,7 +205,16 @@ function fakePrisma() {
       },
     },
     follow: {
-      findMany: async ({ where }) => follows.filter((f) => f.followerId === where.followerId),
+      // Con `select.following`, como GET /users/following: el seguido con su nombre, por nombre.
+      findMany: async ({ where, select }) => {
+        const mine = follows.filter((f) => f.followerId === where.followerId);
+        if (!select?.following) return mine;
+        return mine
+          .map((f) => ({ following: { id: f.followingId, name: users[f.followingId] } }))
+          .sort((a, b) => a.following.name.localeCompare(b.following.name));
+      },
+      findUnique: async ({ where: { followerId_followingId: key } }) =>
+        follows.find((f) => f.followerId === key.followerId && f.followingId === key.followingId) ?? null,
       upsert: async ({ where: { followerId_followingId: key }, create }) => {
         let follow = follows.find((f) => f.followerId === key.followerId && f.followingId === key.followingId);
         if (!follow) follows.push((follow = { id: follows.length + 1, ...create, createdAt: now() }));
@@ -264,12 +273,14 @@ async function startApi(db) {
   const notificationsPath = require.resolve('../src/routes/notifications');
   // Lo usan las rutas para crear notificaciones: también tiene que ver la base simulada.
   const notifySocialPath = require.resolve('../src/social/notifications');
+  const otherUserPath = require.resolve('../src/social/otherUser');
   require.cache[prismaPath] = { id: prismaPath, filename: prismaPath, loaded: true, exports: db };
   delete require.cache[recipesPath];
   delete require.cache[commentsPath];
   delete require.cache[usersPath];
   delete require.cache[notificationsPath];
   delete require.cache[notifySocialPath];
+  delete require.cache[otherUserPath];
 
   const express = require('express');
   const app = express();
@@ -753,6 +764,78 @@ test('un fallo al crear la notificación no rompe el me gusta, el comentario ni 
     assert.deepEqual((await api.luis('POST', '/users/1/follow')).body, { isFollowedByMe: true });
   } finally {
     console.error = originalError;
+    await api.close();
+  }
+});
+
+test('GET /users/following: la gente a la que sigue quien pregunta, por nombre', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    assert.deepEqual((await api.ana('GET', '/users/following')).body, []);
+    await api.ana('POST', '/users/4/follow');
+    await api.ana('POST', '/users/3/follow');
+    await api.ana('POST', '/users/2/follow');
+    await api.luis('POST', '/users/1/follow'); // lo que sigue otro no cuenta
+    const res = await api.ana('GET', '/users/following');
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, [{ id: 2, name: 'Luis' }, { id: 3, name: 'Marta' }, { id: 4, name: 'Pablo' }]);
+  } finally {
+    await api.close();
+  }
+});
+
+test('POST /recipes/:id/share: con alguien a quien sigues le llega una notificación "share"', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    await api.ana('POST', '/users/2/follow');
+    const res = await api.ana('POST', '/recipes/12/share', { toUserId: 2 });
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, { shared: true });
+    // Luis tiene también el aviso de que Ana le sigue; el más reciente es el de compartir.
+    const page = await api.luis('GET', '/notifications');
+    assert.deepEqual(
+      page.body.notifications.map((n) => [n.type, n.actorId, n.actorName, n.recipeId, n.recipeTitle, n.read]),
+      [['share', 1, 'Ana', 12, 'Pisto', false], ['follow', 1, 'Ana', null, null, false]],
+    );
+    // Compartir otra vez la misma receta con la misma persona no repite el aviso.
+    await api.ana('POST', '/recipes/12/share', { toUserId: 2 });
+    assert.equal(db.notifications.filter((n) => n.type === 'share').length, 1);
+  } finally {
+    await api.close();
+  }
+});
+
+test('POST /recipes/:id/share: no se puede compartir con uno mismo ni con alguien a quien no sigues', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    await api.marta('POST', '/users/1/follow'); // Marta sigue a Ana, pero Ana no a Marta
+    const self = await api.ana('POST', '/recipes/10/share', { toUserId: 1 });
+    assert.equal(self.status, 400);
+    assert.equal(self.body.error, 'No puedes compartir una receta contigo mismo');
+    const notFollowed = await api.ana('POST', '/recipes/10/share', { toUserId: 3 });
+    assert.equal(notFollowed.status, 400);
+    assert.equal(notFollowed.body.error, 'Solo puedes compartir con alguien a quien sigues');
+    assert.equal(db.notifications.filter((n) => n.type === 'share').length, 0);
+  } finally {
+    await api.close();
+  }
+});
+
+test('POST /recipes/:id/share: destinatario no válido o inexistente y receta inexistente', async () => {
+  const db = fakePrisma();
+  const api = await startApi(db);
+  try {
+    await api.ana('POST', '/users/2/follow');
+    assert.equal((await api.ana('POST', '/recipes/10/share', {})).status, 400);
+    assert.equal((await api.ana('POST', '/recipes/10/share', { toUserId: 'abc' })).status, 400);
+    assert.equal((await api.ana('POST', '/recipes/10/share', { toUserId: 999 })).status, 404);
+    const missing = await api.ana('POST', '/recipes/999/share', { toUserId: 2 });
+    assert.equal(missing.status, 404);
+    assert.equal(db.notifications.filter((n) => n.type === 'share').length, 0);
+  } finally {
     await api.close();
   }
 });

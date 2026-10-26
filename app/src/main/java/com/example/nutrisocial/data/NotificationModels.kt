@@ -2,7 +2,8 @@ package com.example.nutrisocial.data
 
 /**
  * Aviso de GET /notifications: [actorName] ha empezado a seguir al usuario ([type] "follow"),
- * ha dado "me gusta" a su receta [recipeTitle] ("like") o la ha comentado ("comment").
+ * ha dado "me gusta" a su receta [recipeTitle] ("like"), la ha comentado ("comment") o le ha
+ * compartido la receta [recipeTitle] ("share"; al tocarla se abre, como las de "like" y "comment").
  */
 data class AppNotification(
     val id: Int,
