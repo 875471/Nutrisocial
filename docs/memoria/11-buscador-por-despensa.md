@@ -23,6 +23,8 @@ No se reutiliza el emparejamiento completo de `matchFood` (distancia de edición
 
 **Lógica pura, separada de la base de datos.** `matchRecipesToPantry(pantryItems, recipes)` en `nutrition/pantryMatch.js` recibe datos ya cargados y no toca Prisma, igual que el recomendador del informe 09. La ruta se limita a leer la despensa y las recetas y a llamar a la función. Así se puede probar sin base de datos.
 
+**Sustitutos para cocinar (ampliación posterior).** Una tabla curada en `nutrition/substitutes.js` agrupa ingredientes intercambiables en la cocina: mantequilla y margarina; leche, semidesnatada y desnatada; nata y nata para cocinar; aceite de oliva y de girasol; azúcar y azúcar moreno; yogur y yogur griego. Solo se consulta cuando nada de la despensa cubre el ingrediente, ni por `foodId` ni por nombre, de modo que un sustituto nunca gana a una coincidencia directa. Cada nombre se asigna al miembro más específico que contiene ("leche semidesnatada" y no solo "leche"), y dos nombres son sustitutos si caen en miembros distintos del mismo grupo. Si caen en el mismo miembro no se tratan como sustitutos: se trata del mismo ingrediente, y si no se cubrió fue porque los `foodId` dicen que son alimentos distintos, que es lo que manda. El ingrediente sustituido cuenta como cubierto, así que la receta puede salir como "Puedes cocinar ya", y cada resultado incluye `substitutions` con qué se sustituye por qué. En el orden, a igual cobertura y mismas faltas, va antes la receta que no necesita sustituir nada. Los sustitutos no afectan al cálculo de macros. Para reutilizar la comparación por palabras sin una dependencia circular, `singular`, `words` y `containsWords` pasaron de `pantryMatch.js` a `normalize.js`.
+
 **Autocompletado reutilizado en Android.** La lista de sugerencias del formulario de recetas se ha extraído a `FoodSuggestionList` en `RecipeComponents.kt`, y la usan ahora el formulario y la despensa. Elegir una sugerencia añade directamente el ingrediente con el nombre del alimento, que después `matchFood` reconoce de forma exacta. También se puede escribir un nombre libre y pulsar "Añadir".
 
 ## Cómo funciona
@@ -44,7 +46,7 @@ No se reutiliza el emparejamiento completo de `matchFood` (distancia de edición
 ## Limitaciones
 
 - **El emparejamiento por nombre es más simple que el de las recetas.** Cuando a alguno de los dos lados le falta `foodId`, solo se acepta la coincidencia exacta o por contención de palabras completas, con un singular aproximado. No hay tolerancia a errores de escritura, sinónimos ni variantes. Un mismo alimento escrito de forma muy distinta en la despensa y en la receta ("jitomate" y "tomate", "judías verdes" y "vainas", "maicena" y "harina de maíz") no se reconoce como el mismo. El singular también falla en plurales irregulares ("nueces" y "nuez"). En la práctica, este caso afecta sobre todo a los ingredientes que ni BEDCA ni Open Food Facts reconocen.
-- **Con `foodId` en ambos lados, dos variantes del mismo alimento no coinciden.** Si la despensa tiene "leche" (asociada a leche entera) y la receta pide "leche semidesnatada" (otro alimento de BEDCA), la receta dice que falta leche, aunque en la cocina se podría sustituir sin problema. No hay una jerarquía de alimentos que diga que las dos son "leche".
+- **Los sustitutos son una lista corta y curada a mano.** Resuelven casos como leche y leche semidesnatada, o mantequilla y margarina, pero solo para los seis grupos de la tabla; no hay una jerarquía general de alimentos. La pertenencia a un grupo se decide por contención de palabras, así que "leche de coco" cae en el grupo de la leche y se ofrece como sustituto de la leche desnatada. La tabla no distingue usos: la margarina sirve en un bizcocho, pero no siempre en otras preparaciones.
 - **La búsqueda no tiene en cuenta cantidades.** Un ingrediente está en la despensa o no lo está: tener 10 g de harina cuenta igual que tener 1 kg, y la receta que pide 500 g aparece como "Puedes cocinar ya". La despensa no guarda cantidades ni fechas de caducidad.
 - **Todos los ingredientes pesan lo mismo.** La sal, que casi todo el mundo tiene, cuenta igual que el ingrediente principal. Una receta a la que solo le falta la carne puede salir como "te faltan pocos ingredientes". El umbral del 50 % es un valor fijo, elegido a criterio y no validado con usuarios.
 - **Se cargan todas las recetas en cada búsqueda.** Con el volumen de un TFG (decenas o pocos cientos de recetas) es inmediato. Con miles, habría que prefiltrar en la base de datos, por ejemplo con las recetas que comparten al menos un `foodId` con la despensa, antes de calcular la cobertura en memoria.
@@ -58,11 +60,13 @@ No se reutiliza el emparejamiento completo de `matchFood` (distancia de edición
 |---|---|
 | `prisma/schema.prisma` (modificado) | Modelo `PantryItem` y relaciones inversas en `User` y `Food`. |
 | `prisma/migrations/20260927180000_pantry/migration.sql` (nuevo) | Tabla `PantryItem`, índice único `(userId, name)` y claves ajenas. |
-| `src/nutrition/pantryMatch.js` (nuevo) | `matchRecipesToPantry`: criterio de coincidencia, cobertura, umbral del 50 % y orden. |
+| `src/nutrition/pantryMatch.js` (nuevo) | `matchRecipesToPantry`: criterio de coincidencia, sustitutos, cobertura, umbral del 50 % y orden. |
+| `src/nutrition/substitutes.js` (nuevo, posterior) | Grupos de ingredientes sustituibles y `areSubstitutes`. |
+| `src/nutrition/normalize.js` (modificado, posterior) | Recibe `words` y `containsWords`, compartidos por la despensa y los sustitutos. |
 | `src/routes/pantry.js` (nuevo) | `GET /pantry`, `POST /pantry` (con `matchFood` y `409` si ya existe) y `DELETE /pantry/:id`. |
 | `src/routes/recipes.js` (modificado) | `GET /recipes/by-pantry`, con los grupos `readyToCook` y `almostReady`. |
 | `src/index.js` (modificado) | Monta las rutas de `/pantry`. |
-| `test/pantryMatch.test.js` (nuevo) | 9 pruebas del emparejamiento. |
+| `test/pantryMatch.test.js` (nuevo) | 9 pruebas del emparejamiento y 4 más de los sustitutos (cubre, no gana a la coincidencia exacta, sin sustituto sigue faltando, orden). |
 
 **Aplicación Android (`app/src/main/java/com/example/nutrisocial/`)**
 

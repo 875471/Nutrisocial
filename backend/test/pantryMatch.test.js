@@ -13,7 +13,7 @@ test('receta totalmente cubierta: cobertura 1 y sin ingredientes que falten', ()
   const pantry = [ing('huevo', 10), ing('patata', 20), ing('aceite de oliva', 30), ing('sal')];
   const [result] = matchRecipesToPantry(pantry, [TORTILLA]);
   assert.deepEqual(result, {
-    id: 1, title: 'Tortilla de patatas', totalIngredients: 4, matchedCount: 4, missingIngredients: [], coverage: 1,
+    id: 1, title: 'Tortilla de patatas', totalIngredients: 4, matchedCount: 4, missingIngredients: [], substitutions: [], coverage: 1,
   });
 });
 
@@ -73,4 +73,36 @@ test('orden: más cobertura primero y, a igualdad, menos ingredientes que faltan
 test('despensa vacía o receta sin ingredientes: sin resultados', () => {
   assert.deepEqual(matchRecipesToPantry([], [TORTILLA]), []);
   assert.deepEqual(matchRecipesToPantry([ing('sal')], [recipe(7, 'Vacía', [])]), []);
+});
+
+test('un sustituto cubre el ingrediente y queda anotado', () => {
+  const recipes = [recipe(20, 'Bizcocho', [ing('Mantequilla', 200), ing('Harina', 210)])];
+  // Con foodId distintos en ambos lados la margarina no cubre la mantequilla, pero la sustituye.
+  const [result] = matchRecipesToPantry([ing('Margarina', 201), ing('harina', 210)], recipes);
+  assert.equal(result.coverage, 1);
+  assert.deepEqual(result.missingIngredients, []);
+  assert.deepEqual(result.substitutions, [{ recipeIngredient: 'Mantequilla', pantryItem: 'Margarina' }]);
+});
+
+test('un sustituto no gana a una coincidencia exacta', () => {
+  const recipes = [recipe(21, 'Salteado', [ing('Aceite de oliva', 30), ing('Pimiento', 50)])];
+  const pantry = [ing('Aceite de girasol', 31), ing('Aceite de oliva', 30), ing('pimiento', 50)];
+  const [result] = matchRecipesToPantry(pantry, recipes);
+  assert.equal(result.coverage, 1);
+  assert.deepEqual(result.substitutions, []);
+});
+
+test('un ingrediente sin sustituto conocido sigue faltando', () => {
+  const recipes = [recipe(22, 'Crema', [ing('Nata'), ing('Huevo'), ing('Queso')])];
+  const [result] = matchRecipesToPantry([ing('nata para cocinar'), ing('huevo'), ing('mantequilla')], recipes);
+  assert.deepEqual(result.missingIngredients, ['Queso']);
+  assert.deepEqual(result.substitutions, []); // "nata para cocinar" contiene "nata": cubre directamente
+});
+
+test('orden: a igual cobertura y faltas, primero la receta que no necesita sustitutos', () => {
+  const conSustituto = recipe(30, 'Con sustituto', [ing('mantequilla'), ing('harina')]);
+  const sinSustituto = recipe(31, 'Sin sustituto', [ing('margarina'), ing('harina')]);
+  const result = matchRecipesToPantry([ing('margarina'), ing('harina')], [conSustituto, sinSustituto]);
+  assert.deepEqual(result.map((r) => r.id), [31, 30]);
+  assert.equal(result[1].substitutions.length, 1);
 });
