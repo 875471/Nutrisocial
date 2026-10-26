@@ -11,14 +11,16 @@
 // y el servidor lo avisa en el log. Fuera de producción el log incluye además el enlace o el
 // código, para poder probar el flujo completo sin cuenta de Brevo.
 
-const { escapeHtml } = require('../utils/html');
-
 const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
 const TIMEOUT_MS = 10000;
 const DEFAULT_BASE_URL = 'https://nutrisocial.onrender.com';
 
 function appBaseUrl() {
   return (process.env.APP_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, '');
+}
+
+function escapeHtml(text) {
+  return String(text ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
 
 /**

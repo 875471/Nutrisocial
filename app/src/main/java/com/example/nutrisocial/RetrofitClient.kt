@@ -12,9 +12,6 @@ object RetrofitClient {
     // Backend real desplegado en Render (plan gratuito).
     private const val BASE_URL = "https://nutrisocial.onrender.com/"
 
-    /** Raíz pública del backend para enlaces que se abren en un navegador (p. ej. share/recipes/<id>). */
-    const val WEB_BASE_URL = BASE_URL
-
     private lateinit var appContext: Context
 
     /** Se llama una vez desde [NutriSocialApp.onCreate], antes de usar [api]. */
