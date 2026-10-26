@@ -71,6 +71,9 @@ model Recipe {
   // Foto de la receta: JPEG comprimido en el móvil y guardado en Base64, sin el prefijo
   // "data:". Render (plan gratuito) no tiene disco persistente para guardarla como archivo.
   imageBase64      String?            @db.Text
+  // true si se guardó desde una propuesta de POST /recipes/generate (modelo de lenguaje). Los
+  // macros se calculan igual que en el resto de recetas, no los propone el modelo.
+  aiGenerated      Boolean            @default(false)
   authorId         Int
   author           User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
   ingredients      RecipeIngredient[]

@@ -23,7 +23,9 @@ data class Recipe(
     // Si el usuario la tiene en "Guardadas".
     val savedByMe: Boolean = false,
     // Si el usuario sigue al autor (siempre false en las recetas propias).
-    val isFollowedByMe: Boolean = false
+    val isFollowedByMe: Boolean = false,
+    // Si se guardó a partir de una propuesta generada por IA (ver [GeneratedRecipeProposal]).
+    val aiGenerated: Boolean = false
 )
 
 /** Ingrediente guardado: cantidad tal como se escribió, peso estimado y alimento asociado (BEDCA u Open Food Facts). */
@@ -70,7 +72,9 @@ data class CreateRecipeRequest(
     // Foto ya comprimida en el móvil (ver ui/ImageUtils.kt); null si no hay.
     val imageBase64: String? = null,
     // Opcional; como Gson omite los null, al editar vaciarla la borra.
-    val description: String? = null
+    val description: String? = null,
+    // true al guardar una propuesta de POST /recipes/generate. Solo cuenta al crear; null no se envía.
+    val aiGenerated: Boolean? = null
 )
 
 /** Ingrediente enviado al crear una receta. Sin cantidad ("sal al gusto") no suma en el cálculo. */
@@ -98,6 +102,23 @@ data class FoodSuggestion(
 val IngredientUnits = listOf("g", "kg", "ml", "l", "unidad", "cucharada", "cucharadita", "taza", "pizca")
 
 data class ParseOcrRequest(val rawText: String)
+
+/** Cuerpo de POST /recipes/generate: nombres de los ingredientes que tiene el usuario. */
+data class GenerateRecipeRequest(val ingredients: List<String>)
+
+/**
+ * Receta propuesta por IA (POST /recipes/generate). No está guardada: si el usuario la quiere, se
+ * guarda con [CreateRecipeRequest] y `aiGenerated = true`. Los macros de [nutrition] los calcula el
+ * servidor contra BEDCA, no el modelo; [ingredients] traen ya el peso estimado y el alimento asociado.
+ */
+data class GeneratedRecipeProposal(
+    val title: String,
+    val servings: Int,
+    val steps: List<String>,
+    val ingredients: List<RecipeIngredient>,
+    val nutrition: Nutrition = Nutrition(),
+    val aiGenerated: Boolean = true
+)
 
 /**
  * Propuesta de receta extraída de una foto por POST /recipes/parse-ocr. No está guardada:
@@ -148,7 +169,8 @@ data class FeedRecipe(
     val commentsPreview: List<CommentPreview> = emptyList(),
     val likersPreview: List<String> = emptyList(),
     val savedByMe: Boolean = false,
-    val isFollowedByMe: Boolean = false
+    val isFollowedByMe: Boolean = false,
+    val aiGenerated: Boolean = false
 )
 
 /**

@@ -16,6 +16,11 @@ const {
 } = require('../social/comments');
 const { parseSearchQuery, searchRecipes } = require('../social/recipeSearch');
 const { notifyRecipeAuthor } = require('../social/notifications');
+const {
+  generateRecipe, cleanInputIngredients, isConfigured: isGenerationConfigured, GenerationError,
+} = require('../ai/generateRecipe');
+const Anthropic = require('@anthropic-ai/sdk');
+const { createAuthLimiter } = require('../middleware/rateLimit');
 
 const MAX_OCR_TEXT = 20000;
 const MAX_DESCRIPTION = 1000;
@@ -24,6 +29,9 @@ const FEED_MAX_PAGE_SIZE = 50;
 
 const router = express.Router();
 router.use(requireAuth);
+
+// Cada generación es una llamada de pago a la API del modelo: tope por conexión.
+const generateLimiter = createAuthLimiter({ limit: 10 });
 
 const INCLUDE_INGREDIENTS = {
   ingredients: { orderBy: { position: 'asc' }, include: { food: { select: { id: true, name: true, source: true } } } },
@@ -73,6 +81,7 @@ function toRecipeResponse(recipe, likers) {
     prepMinutes: recipe.prepMinutes,
     nutrition: nutritionSummary(recipe, recipe.ingredients),
     imageBase64: recipe.imageBase64,
+    aiGenerated: recipe.aiGenerated,
     authorId: recipe.authorId,
     authorName: recipe.author.name,
     ...socialSummary(recipe),
@@ -89,6 +98,7 @@ function toFeedItem(recipe, likers) {
     title: recipe.title,
     description: recipe.description,
     imageBase64: recipe.imageBase64,
+    aiGenerated: recipe.aiGenerated,
     authorId: recipe.authorId,
     authorName: recipe.author.name,
     servings: recipe.servings,
@@ -108,7 +118,7 @@ function toFeedItem(recipe, likers) {
 // Lo comparten el feed, el de amigos, el buscador y las recetas guardadas.
 function feedSelect(userId) {
   return {
-    id: true, title: true, description: true, imageBase64: true, authorId: true, servings: true,
+    id: true, title: true, description: true, imageBase64: true, aiGenerated: true, authorId: true, servings: true,
     prepMinutes: true, kcal: true, protein: true, steps: true, createdAt: true,
     ingredients: { orderBy: { position: 'asc' }, select: { name: true, quantity: true, unit: true } },
     ...authorFields(userId), ...socialFields(userId), ...commentsPreviewField(),
@@ -259,6 +269,10 @@ router.post('/', async (req, res) => {
   const body = req.body ?? {};
   const image = validateImageBase64(body.imageBase64);
   if (image.error) return res.status(400).json({ error: image.error });
+  // Solo al crear: marca las recetas guardadas desde una propuesta de POST /generate.
+  if (body.aiGenerated != null && typeof body.aiGenerated !== 'boolean') {
+    return res.status(400).json({ error: 'aiGenerated debe ser true o false' });
+  }
   const built = await buildRecipeData(body);
   if (built.error) return res.status(400).json({ error: built.error });
 
@@ -266,6 +280,7 @@ router.post('/', async (req, res) => {
     data: {
       ...built.fields,
       imageBase64: image.value,
+      aiGenerated: body.aiGenerated ?? false,
       authorId: req.userId,
       ingredients: { create: built.ingredients },
     },
@@ -273,6 +288,58 @@ router.post('/', async (req, res) => {
   });
   // Recién creada: todavía no tiene likes.
   res.status(201).json(toRecipeResponse(recipe, new Map()));
+});
+
+// Propuesta de receta generada por un modelo de lenguaje con los ingredientes que tiene el
+// usuario. No guarda nada: si le gusta, la app la guarda con POST / y aiGenerated: true. Los
+// macros no son los que diga el modelo: se calculan contra BEDCA con resolveIngredients, igual
+// que al guardar una receta.
+router.post('/generate', generateLimiter, async (req, res) => {
+  const input = cleanInputIngredients(req.body?.ingredients);
+  if (input.error) return res.status(400).json({ error: input.error });
+  if (!isGenerationConfigured()) {
+    console.error('POST /recipes/generate: falta ANTHROPIC_API_KEY');
+    return res.status(503).json({ error: 'La generación de recetas no está disponible ahora mismo' });
+  }
+
+  let proposal;
+  try {
+    proposal = await generateRecipe(input.ingredients);
+  } catch (err) {
+    if (err instanceof GenerationError) {
+      console.error('POST /recipes/generate: respuesta no válida del modelo:', err.message);
+      return res.status(502).json({ error: 'No se ha podido generar una receta válida. Prueba otra vez.' });
+    }
+    if (err instanceof Anthropic.APIError) {
+      console.error(`POST /recipes/generate: error de la API del modelo (${err.status}):`, err.message);
+      return res.status(502).json({ error: 'El servicio de generación de recetas no responde. Prueba más tarde.' });
+    }
+    throw err;
+  }
+
+  const { ingredients: resolved, totals } = await resolveIngredients(proposal.ingredients);
+  const foodIds = [...new Set(resolved.map((ing) => ing.foodId).filter((id) => id != null))];
+  const foods = await prisma.food.findMany({
+    where: { id: { in: foodIds } },
+    select: { id: true, name: true, source: true },
+  });
+  const foodById = new Map(foods.map((food) => [food.id, food]));
+
+  res.json({
+    title: proposal.title,
+    servings: proposal.servings,
+    steps: proposal.steps,
+    ingredients: resolved.map((ing) => ({
+      name: ing.name,
+      quantity: ing.quantity,
+      unit: ing.unit,
+      grams: ing.grams == null ? null : Math.round(ing.grams * 10) / 10,
+      foodId: ing.foodId,
+      food: foodById.get(ing.foodId) ?? null,
+    })),
+    nutrition: nutritionSummary({ ...totals, servings: proposal.servings }, resolved),
+    aiGenerated: true,
+  });
 });
 
 // Propuesta de receta a partir del texto reconocido por OCR en el móvil. No guarda nada:

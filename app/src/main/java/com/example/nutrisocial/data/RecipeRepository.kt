@@ -36,6 +36,10 @@ class RecipeRepository(
     suspend fun parseOcr(rawText: String): ApiResult<OcrRecipeProposal> =
         safeApiCall { api.parseOcr(ParseOcrRequest(rawText)) }
 
+    /** Pide una receta generada por IA con [ingredients]. No la guarda (ver [GeneratedRecipeProposal]). */
+    suspend fun generateRecipe(ingredients: List<String>): ApiResult<GeneratedRecipeProposal> =
+        safeApiCall { api.generateRecipe(GenerateRecipeRequest(ingredients)) }
+
     /** Pone o cambia la foto ([imageBase64] ya comprimida) o, con null, la quita. Solo el autor. */
     suspend fun updateImage(id: Int, imageBase64: String?): ApiResult<Recipe> {
         // Se escribe el JSON a mano porque Gson omitiría el campo si es null.

@@ -15,6 +15,8 @@ import com.example.nutrisocial.data.EmailRequest
 import com.example.nutrisocial.data.FeedPage
 import com.example.nutrisocial.data.FollowState
 import com.example.nutrisocial.data.FoodSuggestion
+import com.example.nutrisocial.data.GenerateRecipeRequest
+import com.example.nutrisocial.data.GeneratedRecipeProposal
 import com.example.nutrisocial.data.LikeState
 import com.example.nutrisocial.data.LogEntry
 import com.example.nutrisocial.data.LoginRequest
@@ -167,6 +169,9 @@ interface ApiService {
 
     @POST("recipes/parse-ocr")
     suspend fun parseOcr(@Body request: ParseOcrRequest): Response<OcrRecipeProposal>
+
+    @POST("recipes/generate")
+    suspend fun generateRecipe(@Body request: GenerateRecipeRequest): Response<GeneratedRecipeProposal>
 
     @GET("profile")
     suspend fun getProfile(): Response<Profile>
