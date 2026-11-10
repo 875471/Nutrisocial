@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../prismaClient');
 const requireAuth = require('../middleware/auth');
+const requirePremium = require('../middleware/premium');
 const { UNITS } = require('../nutrition/unitConversion');
 const { resolveIngredients, nutritionSummary } = require('../nutrition/calculate');
 const { matchFood } = require('../nutrition/matchFood');
@@ -345,7 +346,8 @@ router.post('/generate', generateLimiter, async (req, res) => {
 
 // Propuesta de receta a partir del texto reconocido por OCR en el móvil. No guarda nada:
 // la app la vuelca en el formulario para que el usuario la revise y la guarde con POST /.
-router.post('/parse-ocr', async (req, res) => {
+// Función Premium (ver middleware/premium.js).
+router.post('/parse-ocr', requirePremium, async (req, res) => {
   const { rawText } = req.body ?? {};
   if (typeof rawText !== 'string' || !rawText.trim()) {
     return res.status(400).json({ error: 'No se ha recibido texto que analizar' });

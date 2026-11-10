@@ -1,5 +1,6 @@
 package com.example.nutrisocial.ui.home
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
@@ -12,11 +13,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,6 +71,11 @@ import com.example.nutrisocial.ui.recipes.RecipeListScreen
 import com.example.nutrisocial.ui.recipes.RecipeViewModel
 import com.example.nutrisocial.ui.scan.ScanRecipeScreen
 import com.example.nutrisocial.ui.scan.ScanRecipeViewModel
+import com.example.nutrisocial.ui.subscription.SubscriptionActions
+import com.example.nutrisocial.ui.subscription.SubscriptionRow
+import com.example.nutrisocial.ui.subscription.SubscriptionScreen
+import com.example.nutrisocial.ui.subscription.SubscriptionViewModel
+import kotlinx.coroutines.launch
 import com.example.nutrisocial.ui.theme.Spacing
 
 private object HomeRoutes {
@@ -85,6 +94,7 @@ private object HomeRoutes {
     fun detalleReceta(id: Int) = "recetas/detalle/$id"
     const val COMENTARIOS = "recetas/comentarios/{id}"
     fun comentarios(id: Int) = "recetas/comentarios/$id"
+    const val SUSCRIPCION = "suscripcion"
 }
 
 private enum class HomeTab(val route: String, val label: String, val icon: ImageVector) {
@@ -118,6 +128,8 @@ fun HomeScreen(
     savedRecipesViewModel: SavedRecipesViewModel = viewModel(),
     // La campana de Inicio y su pantalla: el recuento se conserva al cambiar de pestaña.
     notificationsViewModel: NotificationsViewModel = viewModel(),
+    // Suscripción Premium: el Diario, el escáner y el perfil comprueban aquí si es Premium.
+    subscriptionViewModel: SubscriptionViewModel = viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
     // Listas de tarjetas que deben reflejar lo que cambie en el detalle, en los comentarios o al
@@ -142,10 +154,16 @@ fun HomeScreen(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val showBottomBar = HomeTab.entries.any { it.route == currentDestination?.route }
+    val subscriptionState by subscriptionViewModel.state.collectAsStateWithLifecycle()
+    val openSubscription = { navController.navigate(HomeRoutes.SUSCRIPCION) { launchSingleTop = true } }
+    // El aviso de alta o baja se enseña al volver de la pantalla de planes, ya fuera de ella.
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         // Cada pantalla interior gestiona sus propios márgenes de sistema con su Scaffold.
         contentWindowInsets = WindowInsets(0),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {
@@ -259,6 +277,7 @@ fun HomeScreen(
             }
 
             composable(HomeRoutes.ESCANEAR_RECETA) {
+                LaunchedEffect(Unit) { subscriptionViewModel.ensureStatus() }
                 // Con ámbito en esta pantalla: el reconocedor de ML Kit se libera al salir de ella.
                 val scanViewModel: ScanRecipeViewModel = viewModel()
                 val scanState by scanViewModel.state.collectAsStateWithLifecycle()
@@ -276,13 +295,41 @@ fun HomeScreen(
                             popUpTo(HomeRoutes.ESCANEAR_RECETA) { inclusive = true }
                         }
                     },
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    isPremium = subscriptionState.isPremium,
+                    onUpgrade = openSubscription
+                )
+            }
+
+            composable(HomeRoutes.SUSCRIPCION) {
+                LaunchedEffect(Unit) { subscriptionViewModel.open() }
+                SubscriptionScreen(
+                    state = subscriptionState,
+                    actions = remember(subscriptionViewModel) {
+                        SubscriptionActions(
+                            onBack = { navController.popBackStack() },
+                            onSubscribe = subscriptionViewModel::subscribe,
+                            onCancel = subscriptionViewModel::cancel,
+                            onRetryPlans = subscriptionViewModel::open,
+                            onRetryStatus = subscriptionViewModel::loadStatus,
+                            onMessageShown = subscriptionViewModel::onMessageShown,
+                            onFinished = { confirmation ->
+                                subscriptionViewModel.onConfirmationShown()
+                                navController.popBackStack()
+                                scope.launch { snackbarHostState.showSnackbar(confirmation) }
+                            }
+                        )
+                    }
                 )
             }
 
             composable(HomeRoutes.DIARIO) {
-                // Al entrar se recarga el día: el objetivo puede haber cambiado en el perfil.
-                LaunchedEffect(Unit) { logViewModel.onScreenShown() }
+                // Al entrar se recarga el día: el objetivo puede haber cambiado en el perfil. Al
+                // volver de la pantalla de planes también, y con él las recomendaciones.
+                LaunchedEffect(Unit) {
+                    logViewModel.onScreenShown()
+                    subscriptionViewModel.ensureStatus()
+                }
                 val date by logViewModel.date.collectAsStateWithLifecycle()
                 val dayState by logViewModel.dayState.collectAsStateWithLifecycle()
                 val recommendationsState by logViewModel.recommendationsState.collectAsStateWithLifecycle()
@@ -297,6 +344,7 @@ fun HomeScreen(
                     viewMode = viewMode,
                     month = month,
                     calendarState = calendarState,
+                    isPremium = subscriptionState.isPremium,
                     date = date,
                     dayState = dayState,
                     recommendationsState = recommendationsState,
@@ -339,7 +387,8 @@ fun HomeScreen(
                             onNextMonth = logViewModel::nextMonth,
                             onCalendarDayClick = logViewModel::openCalendarDay,
                             onRetryCalendar = logViewModel::loadCalendar,
-                            onUpdateEntry = logViewModel::updateEntry
+                            onUpdateEntry = logViewModel::updateEntry,
+                            onUpgrade = openSubscription
                         )
                     }
                 )
@@ -410,12 +459,18 @@ fun HomeScreen(
                         )
                     },
                     header = {
-                        ProfileHeader(
-                            name = user?.name ?: profileState.profile?.name.orEmpty(),
-                            dailyCalorieGoal = profileState.profile?.dailyCalorieGoal,
-                            onOpenData = { navController.navigate(HomeRoutes.PERFIL_DATOS) },
-                            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm)
-                        )
+                        Column(modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.sm)) {
+                            ProfileHeader(
+                                name = user?.name ?: profileState.profile?.name.orEmpty(),
+                                dailyCalorieGoal = profileState.profile?.dailyCalorieGoal,
+                                onOpenData = { navController.navigate(HomeRoutes.PERFIL_DATOS) }
+                            )
+                            SubscriptionRow(
+                                isPremium = subscriptionState.isPremium,
+                                onClick = openSubscription,
+                                modifier = Modifier.padding(top = Spacing.md)
+                            )
+                        }
                     }
                 )
             }

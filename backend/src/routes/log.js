@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../prismaClient');
 const requireAuth = require('../middleware/auth');
+const requirePremium = require('../middleware/premium');
 const { findFoodById } = require('../nutrition/matchFood');
 const { calculateCalorieGoal } = require('../nutrition/calorieGoal');
 const {
@@ -119,7 +120,8 @@ router.get('/', async (req, res) => {
 });
 
 // Recetas recomendadas para completar el día, sin repetir las ya registradas ese día.
-router.get('/recommendations', async (req, res) => {
+// Función Premium (ver middleware/premium.js).
+router.get('/recommendations', requirePremium, async (req, res) => {
   const loaded = await loadDay(req, res);
   if (!loaded) return;
   const { day, user, entries } = loaded;

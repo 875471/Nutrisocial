@@ -26,6 +26,7 @@ import com.example.nutrisocial.data.NotificationsPage
 import com.example.nutrisocial.data.OcrRecipeProposal
 import com.example.nutrisocial.data.PantryItem
 import com.example.nutrisocial.data.PantrySearchResult
+import com.example.nutrisocial.data.Plan
 import com.example.nutrisocial.data.ParseOcrRequest
 import com.example.nutrisocial.data.Profile
 import com.example.nutrisocial.data.Recipe
@@ -35,6 +36,8 @@ import com.example.nutrisocial.data.ResetPasswordRequest
 import com.example.nutrisocial.data.SaveState
 import com.example.nutrisocial.data.ShareRecipeRequest
 import com.example.nutrisocial.data.ShareRecipeResponse
+import com.example.nutrisocial.data.SubscribeRequest
+import com.example.nutrisocial.data.SubscriptionStatus
 import com.example.nutrisocial.data.RegisterRequest
 import com.example.nutrisocial.data.UpdateLogEntryRequest
 import com.example.nutrisocial.data.UpdateProfileRequest
@@ -177,6 +180,7 @@ interface ApiService {
     @GET("foods/search")
     suspend fun searchFoods(@Query("q") query: String): Response<List<FoodSuggestion>>
 
+    // 403 sin Premium.
     @POST("recipes/parse-ocr")
     suspend fun parseOcr(@Body request: ParseOcrRequest): Response<OcrRecipeProposal>
 
@@ -196,6 +200,7 @@ interface ApiService {
     @GET("log/calendar")
     suspend fun getCalendar(@Query("month") month: String): Response<CalendarMonth>
 
+    // 403 sin Premium.
     @GET("log/recommendations")
     suspend fun getRecommendations(@Query("date") date: String): Response<DailyRecommendations>
 
@@ -219,4 +224,18 @@ interface ApiService {
 
     @DELETE("pantry/{id}")
     suspend fun deletePantryItem(@Path("id") id: Int): Response<Unit>
+
+    // Suscripción Premium simulada. Los planes llegan como mapa por id ("monthly", "annual").
+    @GET("subscription/plans")
+    suspend fun getPlans(): Response<Map<String, Plan>>
+
+    @GET("subscription")
+    suspend fun getSubscriptionStatus(): Response<SubscriptionStatus>
+
+    @POST("subscription/subscribe")
+    suspend fun subscribe(@Body request: SubscribeRequest): Response<SubscriptionStatus>
+
+    // 404 si no hay ninguna suscripción activa que cancelar.
+    @POST("subscription/cancel")
+    suspend fun cancelSubscription(): Response<SubscriptionStatus>
 }

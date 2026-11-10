@@ -25,6 +25,7 @@ const pantryRoutes = require('./routes/pantry');
 const commentRoutes = require('./routes/comments');
 const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notifications');
+const subscriptionRoutes = require('./routes/subscription');
 app.use('/auth', authRoutes);
 app.use('/recipes', recipeRoutes);
 app.use('/foods', foodRoutes);
@@ -34,6 +35,7 @@ app.use('/pantry', pantryRoutes);
 app.use('/comments', commentRoutes);
 app.use('/users', userRoutes);
 app.use('/notifications', notificationRoutes);
+app.use('/subscription', subscriptionRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 

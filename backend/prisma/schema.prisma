@@ -49,6 +49,8 @@ model User {
   // Notificaciones que recibe y las que ha provocado en otros (ver model Notification).
   notifications             Notification[] @relation("NotificationRecipient")
   notificationsCaused       Notification[] @relation("NotificationActor")
+  // Suscripción Premium simulada (ver model Subscription); null si nunca se ha suscrito.
+  subscription              Subscription?
 }
 
 model Recipe {
@@ -238,4 +240,20 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+}
+
+// Suscripción Premium SIMULADA: no hay pasarela de pago, la llamada a POST /subscription/subscribe
+// hace de "pago". Una fila por usuario como mucho; suscribirse otra vez la reutiliza (upsert).
+// Premium solo desbloquea el escaneo OCR y las recomendaciones del diario (ver middleware/premium.js).
+model Subscription {
+  id               Int       @id @default(autoincrement())
+  userId           Int       @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // "monthly" | "annual" (ver src/billing/plans.js)
+  plan             String
+  // "active" | "canceled". Cancelar quita el acceso al momento, sin esperar a currentPeriodEnd.
+  status           String    @default("active")
+  startedAt        DateTime  @default(now())
+  currentPeriodEnd DateTime
+  canceledAt       DateTime?
 }

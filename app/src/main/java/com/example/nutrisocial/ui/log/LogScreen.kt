@@ -52,6 +52,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,6 +86,7 @@ import com.example.nutrisocial.ui.recipes.InitialBadge
 import com.example.nutrisocial.ui.recipes.LoadingBox
 import com.example.nutrisocial.ui.recipes.RecipeListUiState
 import com.example.nutrisocial.ui.recipes.formatNumber
+import com.example.nutrisocial.ui.subscription.PremiumGate
 import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.CardElevation
 import com.example.nutrisocial.ui.theme.CardShape
@@ -116,7 +118,9 @@ data class LogActions(
     val onCalendarDayClick: (String) -> Unit = {},
     val onRetryCalendar: () -> Unit = {},
     // Nueva cantidad de una entrada: (id, raciones, gramos); solo uno de los dos no es null.
-    val onUpdateEntry: (Int, Double?, Double?) -> Unit = { _, _, _ -> }
+    val onUpdateEntry: (Int, Double?, Double?) -> Unit = { _, _, _ -> },
+    // Las recomendaciones son Premium: lleva a la pantalla de planes.
+    val onUpgrade: () -> Unit = {}
 )
 
 /** Pestaña "Diario": registro de lo que se ha comido cada día frente al objetivo calórico. */
@@ -133,7 +137,9 @@ fun LogScreen(
     actions: LogActions,
     viewMode: LogViewMode = LogViewMode.DAY,
     month: String = "",
-    calendarState: CalendarUiState = CalendarUiState.Loading
+    calendarState: CalendarUiState = CalendarUiState.Loading,
+    // null mientras se comprueba la suscripción (ver PremiumGate).
+    isPremium: Boolean? = true
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(message) {
@@ -214,6 +220,7 @@ fun LogScreen(
                     log = dayState.log,
                     recommendationsState = recommendationsState,
                     addingRecommendationId = addingRecommendationId,
+                    isPremium = isPremium,
                     onDelete = { entryToDelete = it },
                     onEdit = { entryToEdit = it },
                     actions = actions
@@ -304,6 +311,7 @@ private fun DayContent(
     log: DailyLog,
     recommendationsState: RecommendationsUiState,
     addingRecommendationId: Int?,
+    isPremium: Boolean?,
     onDelete: (LogEntry) -> Unit,
     onEdit: (LogEntry) -> Unit,
     actions: LogActions
@@ -342,6 +350,7 @@ private fun DayContent(
         recommendationsSection(
             state = recommendationsState,
             addingRecipeId = addingRecommendationId,
+            isPremium = isPremium,
             actions = actions
         )
     }
@@ -473,59 +482,69 @@ private fun SectionTitle(text: String) {
 
 /**
  * "Recomendado para completar tu día": recetas que encajan con lo que queda o, si no hay, el
- * motivo (perfil incompleto u objetivo ya cubierto). Las claves llevan prefijo para no chocar
- * con los ids de las entradas del diario, que comparten la misma lista.
+ * motivo (perfil incompleto u objetivo ya cubierto). Es una función Premium: sin suscripción, en
+ * su lugar va la tarjeta bloqueada y el resto del diario sigue igual. Todo va en un único
+ * elemento de la lista (son cinco tarjetas como mucho) para poder envolverlo en [PremiumGate];
+ * sus claves llevan prefijo para no chocar con los ids de las entradas del diario.
  */
 private fun LazyListScope.recommendationsSection(
     state: RecommendationsUiState,
     addingRecipeId: Int?,
+    isPremium: Boolean?,
     actions: LogActions
 ) {
     item(key = "recommendations-title") { SectionTitle("Recomendado para completar tu día") }
-    when (state) {
-        RecommendationsUiState.Loading -> item(key = "recommendations-loading") {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
+    item(key = "recommendations") {
+        PremiumGate(
+            isPremium = isPremium,
+            onUpgrade = actions.onUpgrade,
+            description = "Hazte Premium para recibir recetas que encajan con las kcal y los macros que te quedan cada día."
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                RecommendationsContent(state = state, addingRecipeId = addingRecipeId, actions = actions)
             }
         }
-        is RecommendationsUiState.Error -> item(key = "recommendations-error") {
-            NoticeCard(
-                title = "No se pudieron cargar las recomendaciones",
-                message = state.message,
-                actionLabel = "Reintentar",
-                onAction = actions.onRetryRecommendations
-            )
+    }
+}
+
+@Composable
+private fun RecommendationsContent(state: RecommendationsUiState, addingRecipeId: Int?, actions: LogActions) {
+    when (state) {
+        RecommendationsUiState.Loading -> Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
         }
+        is RecommendationsUiState.Error -> NoticeCard(
+            title = "No se pudieron cargar las recomendaciones",
+            message = state.message,
+            actionLabel = "Reintentar",
+            onAction = actions.onRetryRecommendations
+        )
         is RecommendationsUiState.Success -> {
             val data = state.data
             when {
-                data.reason == DailyRecommendations.REASON_INCOMPLETE_PROFILE -> item(key = "recommendations-profile") {
-                    NoticeCard(
-                        title = "Completa tu perfil",
-                        message = "Con tu objetivo calórico podremos sugerirte recetas que encajen con lo que te queda cada día.",
-                        actionLabel = "Ir al perfil",
-                        onAction = actions.onOpenProfile
-                    )
-                }
-                data.reason == DailyRecommendations.REASON_GOAL_COVERED -> item(key = "recommendations-covered") {
-                    GoalCoveredCard()
-                }
-                data.recommendations.isEmpty() -> item(key = "recommendations-empty") {
-                    InlineEmptyState(
-                        icon = rememberVectorPainter(Icons.Filled.Search),
-                        text = "Ninguna receta encaja ahora con lo que te queda" +
-                            (data.remaining?.let { " (${formatKcal(it.kcal)} kcal)" } ?: "") +
-                            ". Prueba con una receta más ligera o añade un alimento suelto."
-                    )
-                }
-                else -> items(data.recommendations, key = { "recommendation-${it.id}" }) { recommendation ->
-                    RecommendationCard(
-                        recommendation = recommendation,
-                        isAdding = addingRecipeId == recommendation.id,
-                        enabled = addingRecipeId == null,
-                        onAdd = { actions.onAddRecommendation(recommendation) },
-                        onOpen = { actions.onOpenRecipe(recommendation.id) }
-                    )
+                data.reason == DailyRecommendations.REASON_INCOMPLETE_PROFILE -> NoticeCard(
+                    title = "Completa tu perfil",
+                    message = "Con tu objetivo calórico podremos sugerirte recetas que encajen con lo que te queda cada día.",
+                    actionLabel = "Ir al perfil",
+                    onAction = actions.onOpenProfile
+                )
+                data.reason == DailyRecommendations.REASON_GOAL_COVERED -> GoalCoveredCard()
+                data.recommendations.isEmpty() -> InlineEmptyState(
+                    icon = rememberVectorPainter(Icons.Filled.Search),
+                    text = "Ninguna receta encaja ahora con lo que te queda" +
+                        (data.remaining?.let { " (${formatKcal(it.kcal)} kcal)" } ?: "") +
+                        ". Prueba con una receta más ligera o añade un alimento suelto."
+                )
+                else -> data.recommendations.forEach { recommendation ->
+                    key(recommendation.id) {
+                        RecommendationCard(
+                            recommendation = recommendation,
+                            isAdding = addingRecipeId == recommendation.id,
+                            enabled = addingRecipeId == null,
+                            onAdd = { actions.onAddRecommendation(recommendation) },
+                            onOpen = { actions.onOpenRecipe(recommendation.id) }
+                        )
+                    }
                 }
             }
         }

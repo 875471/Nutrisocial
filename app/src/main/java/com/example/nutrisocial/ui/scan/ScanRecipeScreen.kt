@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.example.nutrisocial.R
 import com.example.nutrisocial.data.OcrRecipeProposal
 import com.example.nutrisocial.ui.rememberPhotoPicker
+import com.example.nutrisocial.ui.subscription.PremiumGate
 import com.example.nutrisocial.ui.theme.ButtonShape
 import com.example.nutrisocial.ui.theme.CardElevation
 import com.example.nutrisocial.ui.theme.CardShape
@@ -59,7 +60,10 @@ fun ScanRecipeScreen(
     onProcessAnyway: () -> Unit = {},
     onDiscardPhoto: () -> Unit = {},
     onProposalReady: (OcrRecipeProposal) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    // Función Premium: sin suscripción, la cámara y la galería se sustituyen por la tarjeta bloqueada.
+    isPremium: Boolean? = true,
+    onUpgrade: () -> Unit = {}
 ) {
     var notice by rememberSaveable { mutableStateOf<String?>(null) }
     val photoPicker = rememberPhotoPicker(
@@ -101,64 +105,72 @@ fun ScanRecipeScreen(
                 style = MaterialTheme.typography.bodyLarge
             )
 
-            TipsCard()
-
-            Button(
-                onClick = {
-                    notice = null
-                    photoPicker.takePhoto()
-                },
-                enabled = !busy,
-                shape = ButtonShape,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
+            PremiumGate(
+                isPremium = isPremium,
+                onUpgrade = onUpgrade,
+                description = "Hazte Premium para escanear recetas en papel y pasarlas al formulario sin teclearlas."
             ) {
-                Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null, modifier = Modifier.size(20.dp))
-                Text("Hacer una foto", modifier = Modifier.padding(start = Spacing.sm))
-            }
-            OutlinedButton(
-                onClick = {
-                    notice = null
-                    photoPicker.pickFromGallery()
-                },
-                enabled = !busy,
-                shape = ButtonShape,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null, modifier = Modifier.size(20.dp))
-                Text("Elegir de la galería", modifier = Modifier.padding(start = Spacing.sm))
-            }
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    TipsCard()
 
-            notice?.let { StatusCard(message = it) }
+                    Button(
+                        onClick = {
+                            notice = null
+                            photoPicker.takePhoto()
+                        },
+                        enabled = !busy,
+                        shape = ButtonShape,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_photo_camera), contentDescription = null, modifier = Modifier.size(20.dp))
+                        Text("Hacer una foto", modifier = Modifier.padding(start = Spacing.sm))
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            notice = null
+                            photoPicker.pickFromGallery()
+                        },
+                        enabled = !busy,
+                        shape = ButtonShape,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_photo_library), contentDescription = null, modifier = Modifier.size(20.dp))
+                        Text("Elegir de la galería", modifier = Modifier.padding(start = Spacing.sm))
+                    }
 
-            when (state) {
-                ScanUiState.Recognizing -> ProgressRow("Leyendo el texto de la foto…")
-                ScanUiState.Analyzing, is ScanUiState.Ready -> ProgressRow("Identificando ingredientes y pasos…")
-                ScanUiState.NoText -> StatusCard(
-                    title = "No se ha reconocido texto",
-                    message = "Prueba con más luz, acercando la cámara a la hoja o con otra imagen.",
-                    isError = true
-                )
-                is ScanUiState.Error -> StatusCard(
-                    title = "No se pudo completar el escaneo",
-                    message = state.message,
-                    isError = true,
-                    actionLabel = if (state.canRetrySameImage) "Reintentar" else null,
-                    onAction = onRetry
-                )
-                is ScanUiState.LowQuality -> LowQualityCard(
-                    message = state.message,
-                    onProcessAnyway = onProcessAnyway,
-                    onRetake = {
-                        onDiscardPhoto()
-                        photoPicker.takePhoto()
-                    },
-                    onDiscard = onDiscardPhoto
-                )
-                ScanUiState.Idle -> Unit
+                    notice?.let { StatusCard(message = it) }
+
+                    when (state) {
+                        ScanUiState.Recognizing -> ProgressRow("Leyendo el texto de la foto…")
+                        ScanUiState.Analyzing, is ScanUiState.Ready -> ProgressRow("Identificando ingredientes y pasos…")
+                        ScanUiState.NoText -> StatusCard(
+                            title = "No se ha reconocido texto",
+                            message = "Prueba con más luz, acercando la cámara a la hoja o con otra imagen.",
+                            isError = true
+                        )
+                        is ScanUiState.Error -> StatusCard(
+                            title = "No se pudo completar el escaneo",
+                            message = state.message,
+                            isError = true,
+                            actionLabel = if (state.canRetrySameImage) "Reintentar" else null,
+                            onAction = onRetry
+                        )
+                        is ScanUiState.LowQuality -> LowQualityCard(
+                            message = state.message,
+                            onProcessAnyway = onProcessAnyway,
+                            onRetake = {
+                                onDiscardPhoto()
+                                photoPicker.takePhoto()
+                            },
+                            onDiscard = onDiscardPhoto
+                        )
+                        ScanUiState.Idle -> Unit
+                    }
+                }
             }
         }
     }
