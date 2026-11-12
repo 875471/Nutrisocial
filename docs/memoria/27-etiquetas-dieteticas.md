@@ -55,6 +55,8 @@ La función es gratuita. Premium sigue limitado al escáner OCR y a las recomend
 
 El Prisma en memoria aplica `hasEvery` de verdad, así que si la ruta no pasara la condición, las pruebas de filtro fallarían. Como un Prisma falso no prueba la consulta real, también se ejecutó el backend contra un PostgreSQL local temporal con los alimentos de BEDCA cargados. Allí se comprobaron el filtro con una y con dos etiquetas en el feed, el buscador y la despensa, el `400`, y la edición de etiquetas. En la aplicación, `DietTagsAndShoppingListTest` comprueba que los identificadores coinciden con los del backend y que el parámetro se construye en el orden de la lista.
 
+**Datos de demostración.** `prisma/seedDemoData.js` (informe 22) asigna ahora etiquetas a sus recetas. Se eligieron con criterio realista para que la demostración sea coherente: la avena y el chorizo no se marcan sin gluten, la miel y el huevo excluyen «vegano», y lo que lleva nueces, almendra o pesto no es «sin frutos secos». Además, el script añade siete recetas pensadas para enseñar combinaciones distintas: un hummus y un curry con las cinco etiquetas, un bizcocho de almendra sin gluten pero con frutos secos, una pasta al pesto solo vegetariana, un brownie vegano con trigo, unos tacos de lechuga sin gluten pero con carne y unas gachas veganas de avena que no son sin gluten. En las recetas que ya existían, las etiquetas solo se ponen si no tenían ninguna, así que el script no pisa una edición. En producción quedaron 40 recetas: 12 veganas, 25 vegetarianas, 26 sin gluten, 28 sin lactosa y 34 sin frutos secos, y nueve cumplen a la vez «vegano» y «sin gluten».
+
 ## Limitaciones
 
 - **Las etiquetas no se verifican.** Una receta etiquetada «sin gluten» puede llevar harina de trigo si su autor se equivoca o miente. El aviso lo deja claro, pero no lo impide. Una versión futura podría avisar cuando una etiqueta contradice un ingrediente evidente («vegano» con «huevo» o «mantequilla»), con una lista de palabras clave por etiqueta. Solo serviría para detectar errores claros, nunca para garantizar que una receta es apta.
@@ -69,6 +71,7 @@ El Prisma en memoria aplica `hasEvery` de verdad, así que si la ruta no pasara 
 - `backend/prisma/migrations/20261112120000_add_diet_tags_and_shopping_list/migration.sql` (nuevo, compartido con el informe 28).
 - `backend/src/routes/recipes.js`: validación en `POST`/`PUT`, `dietTags` en las respuestas y filtro en `/feed`, `/feed/friends`, `/search` y `/by-pantry`.
 - `backend/test/dietTags.test.js` (nuevo).
+- `backend/prisma/seedDemoData.js`: etiquetas de las recetas de demostración y siete recetas nuevas.
 - `app/.../data/DietTags.kt` (nuevo): enum `DietTag` y texto del aviso.
 - `app/.../data/RecipeModels.kt`, `PantryModels.kt`, `FeedRepository.kt`, `PantryRepository.kt`, `ApiService.kt`: campo `dietTags` y parámetro de filtro.
 - `app/.../ui/recipes/DietTagComponents.kt` (nuevo): chips seleccionables, chips de solo lectura y aviso.

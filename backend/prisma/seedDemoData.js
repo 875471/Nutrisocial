@@ -12,7 +12,8 @@
 //
 // Es idempotente: los usuarios se buscan por email, las recetas por autor y título, y los
 // likes y follows usan sus índices únicos (usuario, receta) y (seguidor, seguido). Ejecutarlo
-// dos veces no duplica nada.
+// dos veces no duplica nada. Las etiquetas dietéticas (DIET_TAGS_BY_TITLE) se ponen al crear la
+// receta y, en las que ya existían, solo si todavía no tenían ninguna: no pisa una edición.
 //
 // Los emails usan el dominio reservado ".example" (RFC 2606): no existen ni pueden recibir
 // correo, así que nunca se escribirá a una persona real. Todos comparten la contraseña
@@ -30,6 +31,7 @@ globalThis.fetch = async () => { throw new Error('Open Food Facts desactivado en
 
 const prisma = require('../src/prismaClient');
 const { resolveIngredients } = require('../src/nutrition/calculate');
+const { cleanDietTags } = require('../src/nutrition/dietTags');
 
 const DRY_RUN = process.argv.includes('--dry-run');
 const FOLLOW_AS = (process.argv.find((a) => a.startsWith('--follow-as=')) || '').slice('--follow-as='.length).trim();
@@ -153,7 +155,82 @@ const RECIPES = [
   ['Macedonia de frutas', 2, 4, 15,
     [['naranja', 2, 'unidad'], ['manzana', 1, 'unidad'], ['plátano', 2, 'unidad'], ['fresa', 200, 'g']],
     ['Pelar y trocear toda la fruta.', 'Mezclarla con el zumo de una de las naranjas y servir fría.']],
+  // ---- Pensadas para enseñar las etiquetas dietéticas (informe 27) ----
+  ['Hummus casero con crudités', 11, 4, 15,
+    [['garbanzo hervido', 400, 'g'], ['zumo de limón', 3, 'cucharada'], ['ajo', 1, 'unidad'], ['aceite de oliva', 4, 'cucharada'], ['comino', 1, 'cucharadita'], ['zanahoria', 2, 'unidad'], ['pepino', 1, 'unidad']],
+    ['Triturar los garbanzos con el limón, el ajo, el comino y el aceite, añadiendo agua hasta que quede cremoso.', 'Cortar la zanahoria y el pepino en bastones.', 'Servir el hummus con un hilo de aceite y las crudités.']],
+  ['Curry de garbanzos con leche de coco', 6, 4, 30,
+    [['garbanzo hervido', 400, 'g'], ['leche de coco', 400, 'ml'], ['tomate triturado', 200, 'g'], ['cebolla', 1, 'unidad'], ['espinacas', 150, 'g'], ['arroz', 250, 'g'], ['aceite de oliva', 2, 'cucharada']],
+    ['Pochar la cebolla en el aceite.', 'Añadir el tomate y la leche de coco y cocer 10 minutos.', 'Incorporar los garbanzos y las espinacas y cocinar 5 minutos más.', 'Servir con el arroz cocido.']],
+  ['Bizcocho de almendra sin gluten', 4, 8, 45,
+    [['almendra', 200, 'g'], ['huevo', 4, 'unidad'], ['azúcar', 150, 'g'], ['zumo de limón', 1, 'cucharada']],
+    ['Precalentar el horno a 175 ºC.', 'Batir los huevos con el azúcar hasta que blanqueen.', 'Añadir la almendra molida y el limón con movimientos envolventes.', 'Hornear 35 minutos en un molde forrado con papel.']],
+  ['Pasta al pesto de albahaca y nueces', 9, 4, 20,
+    [['pasta', 400, 'g'], ['albahaca', 40, 'g'], ['nuez', 50, 'g'], ['queso parmesano', 50, 'g'], ['aceite de oliva', 6, 'cucharada'], ['ajo', 1, 'unidad']],
+    ['Cocer la pasta según el paquete.', 'Triturar la albahaca con las nueces, el queso, el ajo y el aceite.', 'Mezclar el pesto con la pasta escurrida.']],
+  ['Brownie vegano de cacao y plátano', 13, 8, 35,
+    [['harina de trigo', 150, 'g'], ['cacao en polvo', 40, 'g'], ['azúcar', 120, 'g'], ['plátano', 2, 'unidad'], ['aceite de girasol', 80, 'ml']],
+    ['Precalentar el horno a 180 ºC.', 'Machacar los plátanos y mezclarlos con el aceite y el azúcar.', 'Añadir la harina y el cacao tamizados.', 'Hornear 25 minutos y dejar enfriar antes de cortar.']],
+  ['Tacos de lechuga con pollo', 1, 2, 20,
+    [['pechuga de pollo', 300, 'g'], ['lechuga', 150, 'g'], ['tomate', 1, 'unidad'], ['aguacate', 1, 'unidad'], ['zumo de limón', 1, 'cucharada'], ['aceite de oliva', 1, 'cucharada']],
+    ['Hacer el pollo a la plancha en tiras con el aceite.', 'Picar el tomate y el aguacate con el limón.', 'Servir el pollo y el picadillo sobre hojas de lechuga.']],
+  ['Gachas de avena con frutos rojos', 10, 1, 10,
+    [['avena', 50, 'g'], ['bebida de avena', 200, 'ml'], ['fresa', 80, 'g'], ['plátano', 0.5, 'unidad']],
+    ['Cocer la avena en la bebida de avena 5 minutos removiendo.', 'Servir con las fresas y el plátano en rodajas.']],
 ];
+
+// Etiquetas dietéticas que "declara" el autor de cada receta (ver src/nutrition/dietTags.js).
+// Puestas con criterio realista para que la demostración sea coherente: la avena y el chorizo
+// no se marcan sin gluten (pueden llevarlo o tener trazas), la miel y el huevo excluyen
+// "vegano", y lo que lleva nueces, almendra o pesto no es "sin frutos secos".
+const ALL_FREE = ['vegano', 'vegetariano', 'sin_gluten', 'sin_lactosa', 'sin_frutos_secos'];
+const DIET_TAGS_BY_TITLE = {
+  'Porridge de avena con plátano': ['vegetariano', 'sin_frutos_secos'],
+  'Tostadas con tomate y aceite': ['vegano', 'vegetariano', 'sin_lactosa', 'sin_frutos_secos'],
+  'Yogur griego con fresas y nueces': ['vegetariano', 'sin_gluten'],
+  'Tortitas de avena y huevo': ['vegetariano', 'sin_frutos_secos'],
+  'Tostada de aguacate y huevo': ['vegetariano', 'sin_lactosa', 'sin_frutos_secos'],
+  'Batido de plátano y avena': ['vegetariano', 'sin_frutos_secos'],
+  'Lentejas con verduras': ALL_FREE,
+  'Garbanzos con espinacas': ALL_FREE,
+  'Arroz con pollo y verduras': ['sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Merluza al horno con patatas': ['sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Macarrones con tomate y atún': ['sin_frutos_secos'],
+  'Pollo al limón con arroz': ['sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Ensalada de quinoa y garbanzos': ALL_FREE,
+  'Espaguetis a la boloñesa': ['sin_lactosa', 'sin_frutos_secos'],
+  'Salmón a la plancha con verduras': ['sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Alubias blancas con chorizo': ['sin_lactosa', 'sin_frutos_secos'],
+  'Pollo al curry con arroz': ['sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Crema de calabaza': ALL_FREE,
+  'Tortilla de patatas': ['vegetariano', 'sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Revuelto de champiñones y ajos tiernos': ['vegetariano', 'sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Ensalada mediterránea': ['sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Sopa de verduras': ALL_FREE,
+  'Pechuga de pavo con pisto': ['sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Calabacín relleno de atún': ['sin_gluten', 'sin_frutos_secos'],
+  'Gambas al ajillo': ['sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Tofu salteado con verduras': ALL_FREE,
+  'Bizcocho de yogur': ['vegetariano', 'sin_frutos_secos'],
+  'Manzanas asadas con canela': ['vegetariano', 'sin_gluten', 'sin_lactosa'],
+  'Arroz con leche': ['vegetariano', 'sin_gluten', 'sin_frutos_secos'],
+  'Mousse de chocolate': ['vegetariano', 'sin_gluten', 'sin_frutos_secos'],
+  'Macedonia de frutas': ALL_FREE,
+  'Hummus casero con crudités': ALL_FREE,
+  'Curry de garbanzos con leche de coco': ALL_FREE,
+  'Bizcocho de almendra sin gluten': ['vegetariano', 'sin_gluten', 'sin_lactosa'],
+  'Pasta al pesto de albahaca y nueces': ['vegetariano'],
+  'Brownie vegano de cacao y plátano': ['vegano', 'vegetariano', 'sin_lactosa', 'sin_frutos_secos'],
+  'Tacos de lechuga con pollo': ['sin_gluten', 'sin_lactosa', 'sin_frutos_secos'],
+  'Gachas de avena con frutos rojos': ['vegano', 'vegetariano', 'sin_lactosa', 'sin_frutos_secos'],
+};
+
+// Etiquetas validadas contra la lista fija; un error aquí es un fallo del propio script.
+function dietTagsFor(title) {
+  const result = cleanDietTags(DIET_TAGS_BY_TITLE[title] ?? []);
+  if (result.error) throw new Error(`${title}: ${result.error}`);
+  return result.tags;
+}
 
 // Reparte los likes de forma determinista (el mismo resultado en cada ejecución): cada
 // usuario da like a las recetas cuyo (índice de usuario + índice de receta) cae en ciertas
@@ -211,20 +288,28 @@ async function main() {
   const DAY = 24 * 60 * 60 * 1000;
   const recipes = [];
   let createdRecipes = 0;
+  let taggedRecipes = 0;
   for (const [i, [title, authorIndex, servings, prepMinutes, ingredients, steps]] of RECIPES.entries()) {
     const author = users[authorIndex];
-    const existing = author && await prisma.recipe.findFirst({ where: { authorId: author.id, title }, select: { id: true } });
+    const existing = author && await prisma.recipe.findFirst({ where: { authorId: author.id, title }, select: { id: true, dietTags: true } });
+    const dietTags = dietTagsFor(title);
     const input = ingredients.map(([name, quantity, unit]) => ({ name, quantity, unit, foodId: null }));
     const { ingredients: resolved, totals } = await resolveIngredients(input);
 
     if (DRY_RUN) {
       const unmatched = resolved.filter((r) => r.foodId == null).map((r) => r.name);
       const kcal = Math.round(totals.kcal / servings);
-      console.log(`${existing ? '(ya existe) ' : ''}${title}: ${kcal} kcal/ración` +
+      const tagNote = existing && existing.dietTags.length > 0 ? ' (ya tiene etiquetas: no se tocan)' : '';
+      console.log(`${existing ? '(ya existe) ' : ''}${title}: ${kcal} kcal/ración · [${dietTags.join(', ')}]${tagNote}` +
         (unmatched.length ? ` · sin datos: ${unmatched.join(', ')}` : ''));
       continue;
     }
     if (existing) {
+      // Receta de una ejecución anterior a las etiquetas: se le ponen si no tiene ninguna.
+      if (existing.dietTags.length === 0 && dietTags.length > 0) {
+        await prisma.recipe.update({ where: { id: existing.id }, data: { dietTags } });
+        taggedRecipes++;
+      }
       recipes.push({ id: existing.id, authorIndex });
       continue;
     }
@@ -234,6 +319,7 @@ async function main() {
         steps: JSON.stringify(steps),
         servings,
         prepMinutes,
+        dietTags,
         ...totals,
         authorId: author.id,
         createdAt: new Date(now - (RECIPES.length - i) * DAY + (i % 7) * 3600 * 1000),
@@ -302,7 +388,8 @@ async function main() {
   const createdFollows = (await prisma.follow.count()) - followsBefore;
 
   console.log(`Usuarios: ${createdUsers} creados, ${USERS.length - createdUsers} ya existían.`);
-  console.log(`Recetas: ${createdRecipes} creadas, ${RECIPES.length - createdRecipes} ya existían.`);
+  console.log(`Recetas: ${createdRecipes} creadas, ${RECIPES.length - createdRecipes} ya existían ` +
+    `(${taggedRecipes} de ellas han recibido ahora sus etiquetas dietéticas).`);
   console.log(`Me gusta: ${likes} (los que ya existían no se duplican).`);
   console.log(`Follows: ${createdFollows} creados, ${followPairs.length - createdFollows} ya existían` +
     (followAsUser ? ` (${followAsTargets.length} de ellos son de ${followAsUser.email}).` : '.'));
