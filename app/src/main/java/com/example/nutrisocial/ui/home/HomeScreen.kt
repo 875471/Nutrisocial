@@ -75,6 +75,12 @@ import com.example.nutrisocial.ui.subscription.SubscriptionActions
 import com.example.nutrisocial.ui.subscription.SubscriptionRow
 import com.example.nutrisocial.ui.subscription.SubscriptionScreen
 import com.example.nutrisocial.ui.subscription.SubscriptionViewModel
+import androidx.annotation.DrawableRes
+import androidx.compose.ui.res.painterResource
+import com.example.nutrisocial.R
+import com.example.nutrisocial.ui.shopping.ShoppingListActions
+import com.example.nutrisocial.ui.shopping.ShoppingListScreen
+import com.example.nutrisocial.ui.shopping.ShoppingListViewModel
 import kotlinx.coroutines.launch
 import com.example.nutrisocial.ui.theme.Spacing
 
@@ -82,6 +88,7 @@ private object HomeRoutes {
     const val INICIO = "inicio"
     const val DIARIO = "diario"
     const val DESPENSA = "despensa"
+    const val COMPRA = "compra"
     // Con "Mis recetas" y "Guardadas"; los datos personales están en PERFIL_DATOS.
     const val PERFIL = "perfil"
     const val PERFIL_DATOS = "perfil/datos"
@@ -97,11 +104,14 @@ private object HomeRoutes {
     const val SUSCRIPCION = "suscripcion"
 }
 
-private enum class HomeTab(val route: String, val label: String, val icon: ImageVector) {
+// Cada pestaña tiene un icono de Material ([icon]) o uno de res/drawable ([iconRes]).
+private enum class HomeTab(val route: String, val label: String, val icon: ImageVector? = null, @DrawableRes val iconRes: Int? = null) {
     INICIO(HomeRoutes.INICIO, "Inicio", Icons.Filled.Home),
     // Etiquetas de una palabra, para que no se corten en pantallas estrechas.
     DIARIO(HomeRoutes.DIARIO, "Diario", Icons.Filled.DateRange),
-    DESPENSA(HomeRoutes.DESPENSA, "Despensa", Icons.Filled.ShoppingCart),
+    // El carrito es de la lista de la compra; la despensa lleva una nevera.
+    DESPENSA(HomeRoutes.DESPENSA, "Despensa", iconRes = R.drawable.ic_kitchen),
+    COMPRA(HomeRoutes.COMPRA, "Compra", Icons.Filled.ShoppingCart),
     PERFIL(HomeRoutes.PERFIL, "Perfil", Icons.Filled.Person)
 }
 
@@ -130,6 +140,8 @@ fun HomeScreen(
     notificationsViewModel: NotificationsViewModel = viewModel(),
     // Suscripción Premium: el Diario, el escáner y el perfil comprueban aquí si es Premium.
     subscriptionViewModel: SubscriptionViewModel = viewModel(),
+    // Lista de la compra: el detalle de una receta le añade lo que falta y la pestaña lo ve al momento.
+    shoppingListViewModel: ShoppingListViewModel = viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
     // Listas de tarjetas que deben reflejar lo que cambie en el detalle, en los comentarios o al
@@ -171,7 +183,10 @@ fun HomeScreen(
                         NavigationBarItem(
                             selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true,
                             onClick = { navController.navigateToTab(tab.route) },
-                            icon = { Icon(tab.icon, contentDescription = null) },
+                            icon = {
+                                if (tab.icon != null) Icon(tab.icon, contentDescription = null)
+                                else Icon(painterResource(tab.iconRes!!), contentDescription = null)
+                            },
                             label = { Text(tab.label) }
                         )
                     }
@@ -221,7 +236,8 @@ fun HomeScreen(
                             snackbarHostState = snackbarHostState,
                             searchExpanded = searchExpanded,
                             onCloseSearch = closeSearch,
-                            onFindPeople = { navController.navigate(HomeRoutes.BUSCAR_PERSONAS) }
+                            onFindPeople = { navController.navigate(HomeRoutes.BUSCAR_PERSONAS) },
+                            onDietTagToggle = recipeSearchViewModel::onDietTagToggle
                         )
                     },
                     friendsContent = { snackbarHostState ->
@@ -400,8 +416,10 @@ fun HomeScreen(
                 val searchState by pantryViewModel.searchState.collectAsStateWithLifecycle()
                 val message by pantryViewModel.message.collectAsStateWithLifecycle()
                 val pantryRefreshing by pantryViewModel.isRefreshing.collectAsStateWithLifecycle()
+                val pantryDietTags by pantryViewModel.dietTags.collectAsStateWithLifecycle()
                 PantryScreen(
                     isRefreshing = pantryRefreshing,
+                    dietTags = pantryDietTags,
                     itemsState = itemsState,
                     input = input,
                     searchState = searchState,
@@ -418,7 +436,30 @@ fun HomeScreen(
                             // Las recetas pueden ser de otros usuarios: el detalle las carga por id.
                             onRecipeClick = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) },
                             onMessageShown = pantryViewModel::onMessageShown,
-                            onRefresh = pantryViewModel::refresh
+                            onRefresh = pantryViewModel::refresh,
+                            onDietTagToggle = pantryViewModel::onDietTagToggle
+                        )
+                    }
+                )
+            }
+
+            composable(HomeRoutes.COMPRA) {
+                LaunchedEffect(Unit) { shoppingListViewModel.open() }
+                val shoppingState by shoppingListViewModel.state.collectAsStateWithLifecycle()
+                ShoppingListScreen(
+                    state = shoppingState,
+                    actions = remember(shoppingListViewModel) {
+                        ShoppingListActions(
+                            onRetry = shoppingListViewModel::load,
+                            onRefresh = shoppingListViewModel::refresh,
+                            onNewLabelChange = shoppingListViewModel::onNewLabelChange,
+                            onNewQuantityChange = shoppingListViewModel::onNewQuantityChange,
+                            onAdd = shoppingListViewModel::addItem,
+                            onToggle = shoppingListViewModel::toggleChecked,
+                            onDelete = shoppingListViewModel::deleteItem,
+                            onClearChecked = shoppingListViewModel::clearChecked,
+                            onOpenRecipe = { id -> navController.navigate(HomeRoutes.detalleReceta(id)) },
+                            onMessageShown = shoppingListViewModel::onMessageShown
                         )
                     }
                 )
@@ -559,6 +600,7 @@ fun HomeScreen(
                 val commentDraft by recipeViewModel.commentDraft.collectAsStateWithLifecycle()
                 // El LogViewModel compartido: al añadir la receta hoy, el diario se actualiza.
                 val quickAddState by logViewModel.quickAddState.collectAsStateWithLifecycle()
+                val shoppingState by shoppingListViewModel.state.collectAsStateWithLifecycle()
                 RecipeDetailScreen(
                     state = detailState,
                     onBack = { navController.popBackStack() },
@@ -581,13 +623,17 @@ fun HomeScreen(
                             onOpenComments = { navController.navigate(HomeRoutes.comentarios(id)) },
                             onCommentDraftChange = recipeViewModel::onCommentDraftChange,
                             onSendComment = recipeViewModel::sendComment,
-                            onToggleSave = recipeViewModel::toggleSave
+                            onToggleSave = recipeViewModel::toggleSave,
+                            onAddMissingToShoppingList = { shoppingListViewModel.addMissingFromRecipe(id) }
                         )
                     },
                     actionState = detailActionState,
                     currentUserName = user?.name.orEmpty(),
                     commentDraft = commentDraft,
-                    onFindPeople = { navController.navigate(HomeRoutes.BUSCAR_PERSONAS) }
+                    onFindPeople = { navController.navigate(HomeRoutes.BUSCAR_PERSONAS) },
+                    isAddingToShoppingList = shoppingState.addingFromRecipeId == id,
+                    shoppingListMessage = shoppingState.fromRecipeMessage,
+                    onShoppingListMessageShown = shoppingListViewModel::onFromRecipeMessageShown
                 )
             }
 
@@ -656,7 +702,8 @@ private fun RecipeFormDestination(recipeViewModel: RecipeViewModel, onSaved: () 
         onSaved = onSaved,
         onBack = onBack,
         onDismissOcrNotice = recipeViewModel::dismissOcrNotice,
-        onPhotoChange = recipeViewModel::onPhotoChange
+        onPhotoChange = recipeViewModel::onPhotoChange,
+        onDietTagToggle = recipeViewModel::onDietTagToggle
     )
 }
 

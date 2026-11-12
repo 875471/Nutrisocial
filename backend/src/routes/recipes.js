@@ -8,6 +8,7 @@ const { matchFood } = require('../nutrition/matchFood');
 const { parseRecipeText } = require('../ocr/parseRecipeText');
 const { estimatePrepMinutes } = require('../ocr/estimatePrepTime');
 const { matchRecipesToPantry } = require('../nutrition/pantryMatch');
+const { cleanDietTags, parseDietTagsQuery, dietTagsWhere } = require('../nutrition/dietTags');
 const {
   validateImageBase64, likeFields, likeSummary, socialFields, socialSummary, authorFields, canEditRecipe,
 } = require('../social/recipeSocial');
@@ -84,6 +85,7 @@ function toRecipeResponse(recipe, likers) {
     nutrition: nutritionSummary(recipe, recipe.ingredients),
     imageBase64: recipe.imageBase64,
     aiGenerated: recipe.aiGenerated,
+    dietTags: recipe.dietTags ?? [],
     authorId: recipe.authorId,
     authorName: recipe.author.name,
     ...socialSummary(recipe),
@@ -101,6 +103,7 @@ function toFeedItem(recipe, likers) {
     description: recipe.description,
     imageBase64: recipe.imageBase64,
     aiGenerated: recipe.aiGenerated,
+    dietTags: recipe.dietTags ?? [],
     authorId: recipe.authorId,
     authorName: recipe.author.name,
     servings: recipe.servings,
@@ -120,7 +123,7 @@ function toFeedItem(recipe, likers) {
 // Lo comparten el feed, el de amigos, el buscador y las recetas guardadas.
 function feedSelect(userId) {
   return {
-    id: true, title: true, description: true, imageBase64: true, aiGenerated: true, authorId: true, servings: true,
+    id: true, title: true, description: true, imageBase64: true, aiGenerated: true, dietTags: true, authorId: true, servings: true,
     prepMinutes: true, kcal: true, protein: true, steps: true, createdAt: true,
     ingredients: { orderBy: { position: 'asc' }, select: { name: true, quantity: true, unit: true } },
     ...authorFields(userId), ...socialFields(userId), ...commentsPreviewField(),
@@ -209,7 +212,7 @@ function cleanIngredients(value) {
  * contra la tabla Food, o { error } para un 400. La foto se valida aparte (validateImageBase64).
  */
 async function buildRecipeData(body) {
-  const { title, description, ingredients, steps, servings, prepMinutes } = body;
+  const { title, description, ingredients, steps, servings, prepMinutes, dietTags } = body;
 
   const cleanTitle = typeof title === 'string' ? title.trim() : '';
   if (!cleanTitle) return { error: 'El título no puede estar vacío' };
@@ -230,6 +233,13 @@ async function buildRecipeData(body) {
   if (prepMinutes != null && (!Number.isInteger(prepMinutes) || prepMinutes < 0)) {
     return { error: 'El tiempo de preparación debe ser un número entero de minutos' };
   }
+  // Opcional: sin el campo (o con null) no se toca. Al crear queda [] por defecto y al editar se
+  // conservan las que hubiera, como la foto (una versión antigua de la app no las manda).
+  let tags = null;
+  if (dietTags != null) {
+    tags = cleanDietTags(dietTags);
+    if (tags.error) return { error: tags.error };
+  }
 
   // Cálculo nutricional al guardar: los totales quedan guardados y no cambian aunque
   // después se actualice la tabla Food (al editar la receta se recalculan).
@@ -241,6 +251,7 @@ async function buildRecipeData(body) {
       steps: JSON.stringify(cleanSteps),
       servings,
       prepMinutes: prepMinutes ?? null,
+      ...(tags && { dietTags: tags.tags }),
       ...totals,
     },
     ingredients: resolved,
@@ -397,14 +408,17 @@ router.get('/mine', async (req, res) => {
 // Paginación por cursor: `cursor` es el id de la última receta recibida y la respuesta
 // trae `nextCursor` (null si no hay más).
 // Página del feed (ver GET /feed) con las recetas que cumplen `where`.
+// `?dietTags=` (ver nutrition/dietTags.js) filtra además por etiquetas: tienen que estar todas.
 async function feedPage(req, res, where) {
   const pageQuery = parsePage(req.query, FEED_PAGE_SIZE, FEED_MAX_PAGE_SIZE);
   if (pageQuery.error) return res.status(400).json({ error: pageQuery.error });
   const { cursor, limit } = pageQuery;
+  const diet = parseDietTagsQuery(req.query.dietTags);
+  if (diet.error) return res.status(400).json({ error: diet.error });
 
   // Se pide una de más para saber si hay página siguiente sin otra consulta.
   const recipes = await prisma.recipe.findMany({
-    where,
+    where: { ...where, ...dietTagsWhere(diet.tags) },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: limit + 1,
     ...(cursor != null && { cursor: { id: cursor }, skip: 1 }),
@@ -427,6 +441,8 @@ router.get('/feed/friends', async (req, res) => {
     // Se validan igualmente el cursor y el límite, para responder igual que con seguidos.
     const pageQuery = parsePage(req.query, FEED_PAGE_SIZE, FEED_MAX_PAGE_SIZE);
     if (pageQuery.error) return res.status(400).json({ error: pageQuery.error });
+    const diet = parseDietTagsQuery(req.query.dietTags);
+    if (diet.error) return res.status(400).json({ error: diet.error });
     return res.json({ recipes: [], nextCursor: null });
   }
   return feedPage(req, res, { authorId: { in: follows.map((f) => f.followingId) } });
@@ -443,8 +459,12 @@ router.get('/search', async (req, res) => {
   if (search.error) return res.status(400).json({ error: search.error });
   const pageQuery = parsePage(req.query, FEED_PAGE_SIZE, FEED_MAX_PAGE_SIZE);
   if (pageQuery.error) return res.status(400).json({ error: pageQuery.error });
+  const diet = parseDietTagsQuery(req.query.dietTags);
+  if (diet.error) return res.status(400).json({ error: diet.error });
 
+  // Las etiquetas sí se filtran en la base de datos: es una comparación exacta, sin tildes.
   const candidates = await prisma.recipe.findMany({
+    where: dietTagsWhere(diet.tags),
     select: { id: true, title: true, prepMinutes: true, createdAt: true, ingredients: { select: { name: true } } },
   });
   const result = searchRecipes(candidates, { ...search, ...pageQuery });
@@ -486,7 +506,10 @@ router.get('/saved', async (req, res) => {
 
 // Recetas de cualquier autor que se pueden cocinar con la despensa del usuario, ya separadas
 // en las que tienen todos los ingredientes y en las que les falta alguno (ver pantryMatch.js).
+// `?dietTags=` filtra igual que en el feed: solo las recetas con todas las etiquetas pedidas.
 router.get('/by-pantry', async (req, res) => {
+  const diet = parseDietTagsQuery(req.query.dietTags);
+  if (diet.error) return res.status(400).json({ error: diet.error });
   const pantry = await prisma.pantryItem.findMany({
     where: { userId: req.userId },
     select: { name: true, foodId: true },
@@ -495,15 +518,18 @@ router.get('/by-pantry', async (req, res) => {
     return res.json({ pantrySize: 0, readyToCook: [], almostReady: [] });
   }
   const recipes = await prisma.recipe.findMany({
+    where: dietTagsWhere(diet.tags),
     select: {
-      id: true, title: true, imageBase64: true, authorId: true,
+      id: true, title: true, imageBase64: true, authorId: true, dietTags: true,
       ingredients: { select: { name: true, foodId: true } }, ...AUTHOR_NAME,
     },
   });
   const byId = new Map(recipes.map((r) => [r.id, r]));
   const matches = matchRecipesToPantry(pantry, recipes).map((match) => {
     const recipe = byId.get(match.id);
-    return { ...match, imageBase64: recipe.imageBase64, authorId: recipe.authorId, authorName: recipe.author.name };
+    return {
+      ...match, imageBase64: recipe.imageBase64, dietTags: recipe.dietTags, authorId: recipe.authorId, authorName: recipe.author.name,
+    };
   });
   res.json({
     pantrySize: pantry.length,

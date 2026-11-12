@@ -7,6 +7,7 @@ import com.example.nutrisocial.data.ApiResult
 import com.example.nutrisocial.data.Comment
 import com.example.nutrisocial.data.CommentRepository
 import com.example.nutrisocial.data.CreateRecipeRequest
+import com.example.nutrisocial.data.DietTag
 import com.example.nutrisocial.data.FoodRef
 import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.IngredientInput
@@ -63,6 +64,8 @@ data class RecipeFormState(
     val steps: List<String> = listOf(""),
     val servings: String = "",
     val prepMinutes: String = "",
+    // Etiquetas dietéticas que declara el autor (no se verifican: ver DIET_TAGS_DISCLAIMER).
+    val dietTags: Set<DietTag> = emptySet(),
     // Foto ya comprimida en Base64 (ver ui/ImageUtils.kt), o null si no se ha elegido.
     val photoBase64: String? = null,
     // Sugerencias de alimentos para el ingrediente que se está escribiendo.
@@ -397,6 +400,7 @@ class RecipeViewModel(
             steps = recipe.steps.ifEmpty { listOf("") },
             servings = recipe.servings.toString(),
             prepMinutes = recipe.prepMinutes?.toString().orEmpty(),
+            dietTags = DietTag.fromIds(recipe.dietTags).toSet(),
             photoBase64 = recipe.imageBase64,
             editingRecipeId = recipe.id,
             originalPhotoBase64 = recipe.imageBase64
@@ -415,6 +419,10 @@ class RecipeViewModel(
 
     fun onPrepMinutesChange(value: String) =
         _formState.update { it.copy(prepMinutes = value.filter(Char::isDigit).take(4), prepMinutesEstimated = false, error = null) }
+
+    fun onDietTagToggle(tag: DietTag) = _formState.update {
+        it.copy(dietTags = if (tag in it.dietTags) it.dietTags - tag else it.dietTags + tag, error = null)
+    }
 
     // -- Ingredientes --
 
@@ -543,13 +551,17 @@ class RecipeViewModel(
         if (editingId != null) {
             // La foto no va en el PUT: si ha cambiado se guarda después con PUT /image, que
             // además permite quitarla (Gson no enviaría un null en el cuerpo).
-            val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes, description = description)
+            val request = CreateRecipeRequest(
+                title, ingredients, steps, servings!!, prepMinutes, description = description, dietTags = DietTag.toIds(form.dietTags)
+            )
             viewModelScope.launch { saveEdit(editingId, request, form) }
             return
         }
         logPhoto("Creando receta", form.photoBase64)
         viewModelScope.launch {
-            val request = CreateRecipeRequest(title, ingredients, steps, servings!!, prepMinutes, form.photoBase64, description)
+            val request = CreateRecipeRequest(
+                title, ingredients, steps, servings!!, prepMinutes, form.photoBase64, description, dietTags = DietTag.toIds(form.dietTags)
+            )
             when (val result = repository.createRecipe(request)) {
                 is ApiResult.Success -> {
                     logPhoto("Receta ${result.data.id} creada", result.data.imageBase64)

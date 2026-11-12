@@ -17,9 +17,12 @@ class PantryRepository(
             api.deletePantryItem(id)
         }
 
-    /** Recetas de cualquier usuario que se pueden cocinar con la despensa actual. */
-    suspend fun findRecipes(): ApiResult<PantrySearchResult> =
-        safeApiCall { api.getRecipesByPantry() }
+    /**
+     * Recetas de cualquier usuario que se pueden cocinar con la despensa actual. Con [dietTags],
+     * solo las que tienen todas esas etiquetas.
+     */
+    suspend fun findRecipes(dietTags: Set<DietTag> = emptySet()): ApiResult<PantrySearchResult> =
+        safeApiCall { api.getRecipesByPantry(DietTag.toQuery(dietTags)) }
 
     suspend fun searchFoods(query: String): ApiResult<List<FoodSuggestion>> =
         safeApiCall { api.searchFoods(query) }

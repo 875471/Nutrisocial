@@ -20,17 +20,17 @@ Todas las rutas se sirven bajo la URL base del backend desplegado en Render y de
 
 | Método y ruta | Descripción |
 | --- | --- |
-| POST /recipes | Crea una receta con ingredientes estructurados; calcula y guarda los macronutrientes totales. |
+| POST /recipes | Crea una receta con ingredientes estructurados; calcula y guarda los macronutrientes totales. Acepta `dietTags` opcional (etiquetas dietéticas autodeclaradas de una lista fija; 400 si alguna no existe). |
 | POST /recipes/parse-ocr | Estructura un texto bruto reconocido por OCR en título, ingredientes y pasos. |
 | POST /recipes/generate | Genera una propuesta de receta (sin guardarla) a partir de una lista de ingredientes, usando un modelo de lenguaje; los macronutrientes se calculan con el mismo cálculo que una receta normal, nunca por el modelo. Limitada a 10 peticiones cada 15 minutos. |
 | GET /recipes/mine | Lista las recetas publicadas por la persona autenticada. |
-| GET /recipes/feed | Feed general de recetas, paginado. |
+| GET /recipes/feed | Feed general de recetas, paginado. Con `?dietTags=a,b`, solo las recetas que tienen todas esas etiquetas (igual en /feed/friends, /search y /by-pantry). |
 | GET /recipes/feed/friends | Feed de recetas de las personas seguidas. |
 | GET /recipes/search | Búsqueda de recetas por texto. |
 | GET /recipes/saved | Recetas guardadas por la persona autenticada. |
 | GET /recipes/by-pantry | Recetas ordenadas por ajuste a la despensa actual, con sustitutos entre ingredientes afines (núcleo 3.3). |
 | GET /recipes/:id | Detalle de una receta. |
-| PUT /recipes/:id | Edita una receta propia; recalcula los macronutrientes. |
+| PUT /recipes/:id | Edita una receta propia; recalcula los macronutrientes. Sin `dietTags` en el cuerpo conserva las etiquetas que tuviera. |
 | DELETE /recipes/:id | Borra una receta propia. |
 | PUT /recipes/:id/image | Sustituye la fotografía de una receta propia. |
 | POST, DELETE /recipes/:id/like | Da o retira un «me gusta»; genera notificación al autor. |
@@ -51,8 +51,9 @@ Todas las rutas se sirven bajo la URL base del backend desplegado en Render y de
 | /comments | DELETE /:id | Borrado de un comentario propio. |
 | /users | GET /search, POST/DELETE /:id/follow, GET /following | Búsqueda de personas, gestión de seguimiento y lista de personas a las que se sigue (para elegir con quién compartir una receta). |
 | /notifications | GET /, POST /read-all | Notificaciones no leídas y su marcado como leídas. |
+| /shopping-list | GET, POST /, POST /from-recipe/:recipeId, PATCH/DELETE /:id, DELETE /?checked=true | Lista de la compra: elementos sueltos, los ingredientes de una receta que faltan en la despensa (misma comparación que el núcleo 3.3), marcar como comprado y vaciar lo comprado. |
 
-**Tabla B.3.** *Resto de la API: alimentos, perfil, diario, despensa y capa social.*
+**Tabla B.3.** *Resto de la API: alimentos, perfil, diario, despensa, capa social y lista de la compra.*
 
 ## B.4. Ejemplos de petición y respuesta
 

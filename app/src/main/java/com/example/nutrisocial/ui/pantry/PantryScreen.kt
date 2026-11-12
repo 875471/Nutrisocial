@@ -58,6 +58,9 @@ import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.PantryItem
 import com.example.nutrisocial.data.PantryRecipeMatch
 import com.example.nutrisocial.data.PantrySearchResult
+import com.example.nutrisocial.data.DietTag
+import com.example.nutrisocial.ui.recipes.DietTagBadges
+import com.example.nutrisocial.ui.recipes.DietTagChips
 import com.example.nutrisocial.ui.recipes.FoodSuggestionList
 import com.example.nutrisocial.ui.recipes.InfoPill
 import com.example.nutrisocial.ui.recipes.RecipeThumbnail
@@ -78,7 +81,8 @@ data class PantryActions(
     val onSearchRecipes: () -> Unit,
     val onRecipeClick: (Int) -> Unit,
     val onMessageShown: () -> Unit,
-    val onRefresh: () -> Unit = {}
+    val onRefresh: () -> Unit = {},
+    val onDietTagToggle: (DietTag) -> Unit = {}
 ) {
     companion object {
         val Noop = PantryActions({}, {}, {}, {}, {}, {}, {}, {}, {})
@@ -93,7 +97,8 @@ fun PantryScreen(
     searchState: PantrySearchState,
     message: String?,
     actions: PantryActions,
-    isRefreshing: Boolean = false
+    isRefreshing: Boolean = false,
+    dietTags: Set<DietTag> = emptySet()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(message) {
@@ -133,6 +138,12 @@ fun PantryScreen(
                 item(key = "search") {
                     val hasItems = (itemsState as? PantryItemsState.Success)?.items?.isNotEmpty() == true
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        Text(
+                            text = "Solo recetas con estas etiquetas (todas a la vez):",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        DietTagChips(selected = dietTags, onToggle = actions.onDietTagToggle)
                         Button(
                             onClick = actions.onSearchRecipes,
                             enabled = hasItems && searchState != PantrySearchState.Loading,
@@ -370,6 +381,7 @@ private fun PantryRecipeCard(recipe: PantryRecipeMatch, onClick: () -> Unit) {
                         )
                     }
                 }
+                DietTagBadges(recipe.dietTags)
                 val complete = recipe.missingIngredients.isEmpty()
                 InfoPill(
                     text = "Tienes ${recipe.matchedCount} de ${recipe.totalIngredients} ingredientes",

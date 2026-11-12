@@ -19,10 +19,18 @@ class FeedRepository(
 
     /**
      * Búsqueda de recetas de cualquier autor por texto en el título y los ingredientes. Sin
-     * texto, todas. [sortBy] es "createdAt" o "prepMinutes"; [order], "asc" o "desc".
+     * texto, todas. [sortBy] es "createdAt" o "prepMinutes"; [order], "asc" o "desc". Con
+     * [dietTags], solo las recetas que tienen todas esas etiquetas.
      */
-    suspend fun search(query: String, sortBy: String, order: String, cursor: Int? = null, limit: Int = PAGE_SIZE): ApiResult<FeedPage> =
-        safeApiCall { api.searchRecipes(query.trim().ifEmpty { null }, sortBy, order, cursor, limit) }
+    suspend fun search(
+        query: String,
+        sortBy: String,
+        order: String,
+        cursor: Int? = null,
+        limit: Int = PAGE_SIZE,
+        dietTags: Set<DietTag> = emptySet()
+    ): ApiResult<FeedPage> =
+        safeApiCall { api.searchRecipes(query.trim().ifEmpty { null }, sortBy, order, cursor, limit, DietTag.toQuery(dietTags)) }
 
     companion object {
         const val PAGE_SIZE = 20

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
@@ -85,7 +86,11 @@ fun RecipeDetailScreen(
     currentUserName: String = "",
     commentDraft: CommentDraft = CommentDraft(),
     // Para ir a buscar personas desde la hoja de compartir si no se sigue a nadie.
-    onFindPeople: (() -> Unit)? = null
+    onFindPeople: (() -> Unit)? = null,
+    // "Añadir lo que falta a la lista de la compra": en curso y aviso con el resultado.
+    isAddingToShoppingList: Boolean = false,
+    shoppingListMessage: String? = null,
+    onShoppingListMessageShown: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val shareViewModel: ShareRecipeViewModel = viewModel()
@@ -94,6 +99,12 @@ fun RecipeDetailScreen(
         quickAddState.message?.let {
             snackbarHostState.showSnackbar(it)
             onQuickAddMessageShown()
+        }
+    }
+    LaunchedEffect(shoppingListMessage) {
+        shoppingListMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            onShoppingListMessageShown()
         }
     }
     LaunchedEffect(actionState.message) {
@@ -174,6 +185,7 @@ fun RecipeDetailScreen(
                 actions = actions,
                 actionState = actionState,
                 onShare = { shareViewModel.open(state.recipe.id) },
+                isAddingToShoppingList = isAddingToShoppingList,
                 modifier = contentModifier
             )
         }
@@ -242,7 +254,9 @@ data class RecipeDetailActions(
     val onOpenComments: () -> Unit = {},
     val onCommentDraftChange: (String) -> Unit = {},
     val onSendComment: () -> Unit = {},
-    val onToggleSave: () -> Unit = {}
+    val onToggleSave: () -> Unit = {},
+    // Añade a la lista de la compra los ingredientes que no cubre la despensa.
+    val onAddMissingToShoppingList: () -> Unit = {}
 ) {
     companion object {
         val Noop = RecipeDetailActions({}, {}, {}, {}, {}, {})
@@ -262,6 +276,7 @@ private fun RecipeDetailContent(
     actions: RecipeDetailActions,
     actionState: RecipeDetailActionState,
     onShare: () -> Unit,
+    isAddingToShoppingList: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -289,6 +304,23 @@ private fun RecipeDetailContent(
             expandLists = true,
             showCommentsPreview = false
         )
+
+        // Las etiquetas las declara el autor: el aviso se repite aquí, junto a los ingredientes.
+        if (recipe.dietTags.isNotEmpty()) DietTagDisclaimer()
+
+        OutlinedButton(
+            onClick = actions.onAddMissingToShoppingList,
+            enabled = !isAddingToShoppingList,
+            shape = ButtonShape,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (isAddingToShoppingList) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+            } else {
+                Icon(Icons.Filled.ShoppingCart, contentDescription = null, modifier = Modifier.size(18.dp))
+            }
+            Text("Añadir lo que falta a la lista de la compra", modifier = Modifier.padding(start = Spacing.sm))
+        }
 
         if (isOwner) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {

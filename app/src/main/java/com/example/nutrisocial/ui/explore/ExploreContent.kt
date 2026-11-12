@@ -52,7 +52,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nutrisocial.R
+import com.example.nutrisocial.data.DietTag
 import com.example.nutrisocial.data.FeedRecipe
+import com.example.nutrisocial.ui.recipes.DietTagChips
 import com.example.nutrisocial.ui.home.FeedActions
 import com.example.nutrisocial.ui.home.FeedUiState
 import com.example.nutrisocial.ui.home.feedCardItems
@@ -83,7 +85,8 @@ fun ExploreContent(
     snackbarHostState: SnackbarHostState,
     searchExpanded: Boolean = true,
     onCloseSearch: () -> Unit = {},
-    onFindPeople: (() -> Unit)? = null
+    onFindPeople: (() -> Unit)? = null,
+    onDietTagToggle: (DietTag) -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
@@ -130,6 +133,12 @@ fun ExploreContent(
                 )
             }
         }
+        // Filtro por etiquetas dietéticas: las elegidas se exigen todas a la vez.
+        DietTagChips(
+            selected = params.dietTags,
+            onToggle = onDietTagToggle,
+            contentPadding = PaddingValues(horizontal = Spacing.md)
+        )
         FeedTabList(
             state = state,
             userName = userName,
@@ -145,8 +154,13 @@ fun ExploreContent(
             CenteredMessage(
                 icon = rememberVectorPainter(Icons.Filled.Search),
                 title = "Sin resultados",
-                message = if (params.query.isBlank()) "Todavía no hay recetas publicadas."
-                else "Ninguna receta tiene «${params.query.trim()}» en el nombre o en los ingredientes.",
+                message = when {
+                    params.dietTags.isNotEmpty() ->
+                        "Ninguna receta${if (params.query.isBlank()) "" else " con «${params.query.trim()}»"} tiene " +
+                            "todas las etiquetas elegidas: ${DietTag.entries.filter { it in params.dietTags }.joinToString(", ") { it.label.lowercase() }}."
+                    params.query.isBlank() -> "Todavía no hay recetas publicadas."
+                    else -> "Ninguna receta tiene «${params.query.trim()}» en el nombre o en los ingredientes."
+                },
                 modifier = listStateModifier()
             )
         }

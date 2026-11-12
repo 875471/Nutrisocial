@@ -98,7 +98,9 @@ data class RecipeCardData(
     val commentsCount: Int,
     val commentsPreview: List<CommentPreview>,
     val savedByMe: Boolean = false,
-    val isFollowedByMe: Boolean = false
+    val isFollowedByMe: Boolean = false,
+    // Identificadores de las etiquetas dietéticas declaradas por el autor.
+    val dietTags: List<String> = emptyList()
 )
 
 /** Ingrediente del carrusel: "200 g · Harina de trigo" y, en el detalle, un aviso del cálculo. */
@@ -127,7 +129,8 @@ fun FeedRecipe.toCardData() = RecipeCardData(
     commentsCount = commentsCount,
     commentsPreview = commentsPreview,
     savedByMe = savedByMe,
-    isFollowedByMe = isFollowedByMe
+    isFollowedByMe = isFollowedByMe,
+    dietTags = dietTags
 )
 
 /** [ingredientNote] añade a cada ingrediente lo que haya que saber de su cálculo nutricional. */
@@ -151,7 +154,8 @@ fun Recipe.toCardData(ingredientNote: (RecipeIngredient) -> String? = { null }) 
     // El detalle no trae vista previa: se enlaza a la lista completa.
     commentsPreview = emptyList(),
     savedByMe = savedByMe,
-    isFollowedByMe = isFollowedByMe
+    isFollowedByMe = isFollowedByMe,
+    dietTags = dietTags
 )
 
 /** Texto del campo de comentario de una tarjeta y si se está enviando. */
@@ -220,6 +224,7 @@ fun RecipeFeedCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                DietTagBadges(recipe.dietTags)
                 RecipeStatsBar(recipe, modifier = Modifier.padding(vertical = Spacing.xs))
             }
             RecipeCarousel(

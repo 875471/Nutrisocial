@@ -53,6 +53,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.nutrisocial.data.DietTag
 import com.example.nutrisocial.data.FoodRef
 import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.IngredientUnits
@@ -77,7 +78,8 @@ fun RecipeFormScreen(
     onBack: () -> Unit,
     onDismissOcrNotice: () -> Unit = {},
     onPhotoChange: (String?) -> Unit = {},
-    onDescriptionChange: (String) -> Unit = {}
+    onDescriptionChange: (String) -> Unit = {},
+    onDietTagToggle: (DietTag) -> Unit = {}
 ) {
     LaunchedEffect(state.saved) {
         if (state.saved) onSaved()
@@ -168,6 +170,8 @@ fun RecipeFormScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
+
+            DietTagFormSection(selected = state.dietTags, onToggle = onDietTagToggle, enabled = enabled)
 
             PhotoSection(photoBase64 = state.photoBase64, enabled = enabled, onPhotoChange = onPhotoChange)
 

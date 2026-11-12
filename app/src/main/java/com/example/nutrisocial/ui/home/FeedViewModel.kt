@@ -280,7 +280,8 @@ abstract class FeedViewModel(
             likedByMe = recipe.likedByMe,
             likersPreview = recipe.likersPreview,
             savedByMe = recipe.savedByMe,
-            isFollowedByMe = recipe.isFollowedByMe
+            isFollowedByMe = recipe.isFollowedByMe,
+            dietTags = recipe.dietTags
         )
     }
 

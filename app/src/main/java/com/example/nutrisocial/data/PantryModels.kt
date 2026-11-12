@@ -19,7 +19,8 @@ data class PantryRecipeMatch(
     val missingIngredients: List<String> = emptyList(),
     val coverage: Double,
     val imageBase64: String? = null,
-    val authorName: String = ""
+    val authorName: String = "",
+    val dietTags: List<String> = emptyList()
 )
 
 /** Respuesta de GET /recipes/by-pantry, ya separada por el servidor. */

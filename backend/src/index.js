@@ -26,6 +26,7 @@ const commentRoutes = require('./routes/comments');
 const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notifications');
 const subscriptionRoutes = require('./routes/subscription');
+const shoppingListRoutes = require('./routes/shoppingList');
 app.use('/auth', authRoutes);
 app.use('/recipes', recipeRoutes);
 app.use('/foods', foodRoutes);
@@ -36,6 +37,7 @@ app.use('/comments', commentRoutes);
 app.use('/users', userRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/subscription', subscriptionRoutes);
+app.use('/shopping-list', shoppingListRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 

@@ -3,6 +3,7 @@ package com.example.nutrisocial.ui.pantry
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nutrisocial.data.ApiResult
+import com.example.nutrisocial.data.DietTag
 import com.example.nutrisocial.data.FoodSuggestion
 import com.example.nutrisocial.data.PantryItem
 import com.example.nutrisocial.data.PantryRepository
@@ -49,6 +50,10 @@ class PantryViewModel(
 
     private val _searchState = MutableStateFlow<PantrySearchState>(PantrySearchState.Idle)
     val searchState: StateFlow<PantrySearchState> = _searchState.asStateFlow()
+
+    // Filtro de la búsqueda de recetas: solo las que tienen TODAS estas etiquetas.
+    private val _dietTags = MutableStateFlow<Set<DietTag>>(emptySet())
+    val dietTags: StateFlow<Set<DietTag>> = _dietTags.asStateFlow()
 
     // "Tirar para refrescar".
     private val _isRefreshing = MutableStateFlow(false)
@@ -183,11 +188,17 @@ class PantryViewModel(
         searchJob?.cancel()
         _searchState.value = PantrySearchState.Loading
         searchJob = viewModelScope.launch {
-            _searchState.value = when (val result = repository.findRecipes()) {
+            _searchState.value = when (val result = repository.findRecipes(_dietTags.value)) {
                 is ApiResult.Success -> PantrySearchState.Success(result.data)
                 is ApiResult.Error -> PantrySearchState.Error(result.message)
             }
         }
+    }
+
+    /** Cambia el filtro de etiquetas; si ya había resultados, se vuelven a buscar con él. */
+    fun onDietTagToggle(tag: DietTag) {
+        _dietTags.update { if (tag in it) it - tag else it + tag }
+        onPantryChanged()
     }
 
     /** Si ya se estaban mostrando resultados, se recalculan con la despensa nueva. */

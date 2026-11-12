@@ -25,7 +25,9 @@ data class Recipe(
     // Si el usuario sigue al autor (siempre false en las recetas propias).
     val isFollowedByMe: Boolean = false,
     // Si se guardó a partir de una propuesta generada por IA (ver [GeneratedRecipeProposal]).
-    val aiGenerated: Boolean = false
+    val aiGenerated: Boolean = false,
+    // Identificadores de [DietTag] declarados por el autor (no verificados).
+    val dietTags: List<String> = emptyList()
 )
 
 /** Ingrediente guardado: cantidad tal como se escribió, peso estimado y alimento asociado (BEDCA u Open Food Facts). */
@@ -74,7 +76,9 @@ data class CreateRecipeRequest(
     // Opcional; como Gson omite los null, al editar vaciarla la borra.
     val description: String? = null,
     // true al guardar una propuesta de POST /recipes/generate. Solo cuenta al crear; null no se envía.
-    val aiGenerated: Boolean? = null
+    val aiGenerated: Boolean? = null,
+    // Identificadores de [DietTag]. Al editar se envía siempre (vacía quita todas); null no se envía.
+    val dietTags: List<String>? = null
 )
 
 /** Ingrediente enviado al crear una receta. Sin cantidad ("sal al gusto") no suma en el cálculo. */
@@ -176,7 +180,8 @@ data class FeedRecipe(
     val likersPreview: List<String> = emptyList(),
     val savedByMe: Boolean = false,
     val isFollowedByMe: Boolean = false,
-    val aiGenerated: Boolean = false
+    val aiGenerated: Boolean = false,
+    val dietTags: List<String> = emptyList()
 )
 
 /**

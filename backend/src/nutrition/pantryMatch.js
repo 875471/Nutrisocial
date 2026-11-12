@@ -19,6 +19,35 @@ function findSubstitute(pantry, ingredient) {
   return pantry.find((item) => areSubstitutes(item.words, ingredient.words)) ?? null;
 }
 
+function toPantry(pantryItems) {
+  return pantryItems.map((item) => ({ name: item.name, foodId: item.foodId ?? null, words: words(item.name) }));
+}
+
+// Compara una receta con la despensa ya preparada por toPantry: los ingredientes que faltan (los
+// objetos originales de la receta) y los cubiertos por un sustituto.
+function compareRecipe(pantry, recipe) {
+  const missing = [];
+  const substitutions = [];
+  for (const ing of recipe.ingredients) {
+    const ingredient = { foodId: ing.foodId ?? null, words: words(ing.name) };
+    if (pantry.some((item) => covers(item, ingredient))) continue;
+    const substitute = findSubstitute(pantry, ingredient);
+    if (substitute) substitutions.push({ recipeIngredient: ing.name, pantryItem: substitute.name });
+    else missing.push(ing);
+  }
+  return { missing, substitutions };
+}
+
+/**
+ * Ingredientes de UNA receta que la despensa no cubre, ni directamente ni con un sustituto. Es la
+ * misma comparación que hace matchRecipesToPantry, pero sin el corte de cobertura mínima: la usa
+ * la lista de la compra, donde interesa lo que falta aunque falte casi todo. `recipe.ingredients`
+ * son objetos con al menos { name, foodId }; se devuelven los mismos objetos, en su orden.
+ */
+function missingIngredients(pantryItems, recipe) {
+  return compareRecipe(toPantry(pantryItems), recipe).missing;
+}
+
 /**
  * Cruza la despensa con las recetas. `pantryItems`: [{ name, foodId }]; `recipes`:
  * [{ id, title, ingredients: [{ name, foodId }] }]. Devuelve las recetas con al menos la
@@ -27,22 +56,15 @@ function findSubstitute(pantry, ingredient) {
  * cubierto, y queda anotado en `substitutions` ({ recipeIngredient, pantryItem }).
  */
 function matchRecipesToPantry(pantryItems, recipes) {
-  const pantry = pantryItems.map((item) => ({ name: item.name, foodId: item.foodId ?? null, words: words(item.name) }));
+  const pantry = toPantry(pantryItems);
 
   const results = [];
   for (const recipe of recipes) {
     const totalIngredients = recipe.ingredients.length;
     if (totalIngredients === 0) continue;
 
-    const missingIngredients = [];
-    const substitutions = [];
-    for (const ing of recipe.ingredients) {
-      const ingredient = { foodId: ing.foodId ?? null, words: words(ing.name) };
-      if (pantry.some((item) => covers(item, ingredient))) continue;
-      const substitute = findSubstitute(pantry, ingredient);
-      if (substitute) substitutions.push({ recipeIngredient: ing.name, pantryItem: substitute.name });
-      else missingIngredients.push(ing.name);
-    }
+    const { missing, substitutions } = compareRecipe(pantry, recipe);
+    const missingIngredients = missing.map((ing) => ing.name);
     const matchedCount = totalIngredients - missingIngredients.length;
     const coverage = matchedCount / totalIngredients;
     if (coverage < MIN_COVERAGE) continue;
@@ -58,4 +80,4 @@ function matchRecipesToPantry(pantryItems, recipes) {
     || a.substitutions.length - b.substitutions.length);
 }
 
-module.exports = { matchRecipesToPantry, MIN_COVERAGE };
+module.exports = { matchRecipesToPantry, missingIngredients, MIN_COVERAGE };

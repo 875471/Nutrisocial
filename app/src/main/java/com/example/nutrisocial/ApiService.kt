@@ -37,6 +37,11 @@ import com.example.nutrisocial.data.SaveState
 import com.example.nutrisocial.data.ShareRecipeRequest
 import com.example.nutrisocial.data.ShareRecipeResponse
 import com.example.nutrisocial.data.SubscribeRequest
+import com.example.nutrisocial.data.AddShoppingListItemRequest
+import com.example.nutrisocial.data.ClearCheckedResult
+import com.example.nutrisocial.data.FromRecipeResult
+import com.example.nutrisocial.data.ShoppingListItem
+import com.example.nutrisocial.data.UpdateShoppingListItemRequest
 import com.example.nutrisocial.data.SubscriptionStatus
 import com.example.nutrisocial.data.RegisterRequest
 import com.example.nutrisocial.data.UpdateLogEntryRequest
@@ -50,6 +55,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.HTTP
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -86,9 +92,10 @@ interface ApiService {
     @GET("recipes/mine")
     suspend fun getMyRecipes(): Response<List<Recipe>>
 
-    // Recetas de cualquier autor que se pueden cocinar con la despensa del usuario.
+    // Recetas de cualquier autor que se pueden cocinar con la despensa del usuario. dietTags:
+    // identificadores separados por comas (todas obligatorias); null, sin filtro.
     @GET("recipes/by-pantry")
-    suspend fun getRecipesByPantry(): Response<PantrySearchResult>
+    suspend fun getRecipesByPantry(@Query("dietTags") dietTags: String?): Response<PantrySearchResult>
 
     @GET("recipes/{id}")
     suspend fun getRecipe(@Path("id") id: Int): Response<Recipe>
@@ -112,7 +119,8 @@ interface ApiService {
         @Query("sortBy") sortBy: String,
         @Query("order") order: String,
         @Query("cursor") cursor: Int?,
-        @Query("limit") limit: Int
+        @Query("limit") limit: Int,
+        @Query("dietTags") dietTags: String?
     ): Response<FeedPage>
 
     // Cuerpo JSON escrito a mano: Gson omite los null y para quitar la foto hay que mandar
@@ -238,4 +246,26 @@ interface ApiService {
     // 404 si no hay ninguna suscripción activa que cancelar.
     @POST("subscription/cancel")
     suspend fun cancelSubscription(): Response<SubscriptionStatus>
+
+    // Lista de la compra: sin marcar primero y después los marcados.
+    @GET("shopping-list")
+    suspend fun getShoppingList(): Response<List<ShoppingListItem>>
+
+    @POST("shopping-list")
+    suspend fun addShoppingListItem(@Body request: AddShoppingListItemRequest): Response<ShoppingListItem>
+
+    // Los ingredientes de la receta que no cubre la despensa (201 si añade alguno, 200 si no).
+    @POST("shopping-list/from-recipe/{recipeId}")
+    suspend fun addMissingFromRecipe(@Path("recipeId") recipeId: Int): Response<FromRecipeResult>
+
+    @PATCH("shopping-list/{id}")
+    suspend fun updateShoppingListItem(@Path("id") id: Int, @Body request: UpdateShoppingListItemRequest): Response<ShoppingListItem>
+
+    // 204 sin cuerpo.
+    @DELETE("shopping-list/{id}")
+    suspend fun deleteShoppingListItem(@Path("id") id: Int): Response<Unit>
+
+    // Borra los marcados (el servidor exige checked=true).
+    @DELETE("shopping-list")
+    suspend fun clearCheckedShoppingList(@Query("checked") checked: Boolean = true): Response<ClearCheckedResult>
 }

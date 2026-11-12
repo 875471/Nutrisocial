@@ -13,11 +13,11 @@ datasource db {
 }
 
 model User {
-  id                        Int            @id @default(autoincrement())
-  email                     String         @unique
+  id                        Int                @id @default(autoincrement())
+  email                     String             @unique
   password                  String
   name                      String
-  createdAt                 DateTime       @default(now())
+  createdAt                 DateTime           @default(now())
   // Datos de perfil para el objetivo calórico (ver src/nutrition/calorieGoal.js). Opcionales:
   // un usuario recién registrado todavía no los ha rellenado.
   birthDate                 DateTime?
@@ -31,11 +31,11 @@ model User {
   goal                      String?
   // Verificación del email (ver src/routes/auth.js). Los tokens se guardan hasheados
   // (SHA-256): el enlace o el código que recibe el usuario no está en la base de datos.
-  emailVerified             Boolean        @default(false)
-  verificationTokenHash     String?        @unique
+  emailVerified             Boolean            @default(false)
+  verificationTokenHash     String?            @unique
   verificationTokenExpires  DateTime?
   // Recuperación de contraseña: código de un solo uso con caducidad corta.
-  passwordResetTokenHash    String?        @unique
+  passwordResetTokenHash    String?            @unique
   passwordResetTokenExpires DateTime?
   recipes                   Recipe[]
   logEntries                LogEntry[]
@@ -44,13 +44,14 @@ model User {
   comments                  Comment[]
   savedRecipes              SavedRecipe[]
   // A quién sigue este usuario y quién le sigue a él (ver model Follow).
-  following                 Follow[]       @relation("Following")
-  followers                 Follow[]       @relation("Followers")
+  following                 Follow[]           @relation("Following")
+  followers                 Follow[]           @relation("Followers")
   // Notificaciones que recibe y las que ha provocado en otros (ver model Notification).
-  notifications             Notification[] @relation("NotificationRecipient")
-  notificationsCaused       Notification[] @relation("NotificationActor")
+  notifications             Notification[]     @relation("NotificationRecipient")
+  notificationsCaused       Notification[]     @relation("NotificationActor")
   // Suscripción Premium simulada (ver model Subscription); null si nunca se ha suscrito.
   subscription              Subscription?
+  shoppingListItems         ShoppingListItem[]
 }
 
 model Recipe {
@@ -76,6 +77,9 @@ model Recipe {
   // true si se guardó desde una propuesta de POST /recipes/generate (modelo de lenguaje). Los
   // macros se calculan igual que en el resto de recetas, no los propone el modelo.
   aiGenerated      Boolean            @default(false)
+  // Etiquetas dietéticas AUTODECLARADAS por el autor (ver src/nutrition/dietTags.js): no se
+  // deducen de los ingredientes ni se verifican.
+  dietTags         String[]           @default([])
   authorId         Int
   author           User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
   ingredients      RecipeIngredient[]
@@ -84,6 +88,7 @@ model Recipe {
   comments         Comment[]
   saves            SavedRecipe[]
   notifications    Notification[]
+  shoppingItems    ShoppingListItem[]
   createdAt        DateTime           @default(now())
 
   @@index([authorId])
@@ -256,4 +261,23 @@ model Subscription {
   startedAt        DateTime  @default(now())
   currentPeriodEnd DateTime
   canceledAt       DateTime?
+}
+
+// Elemento de la lista de la compra de un usuario: suelto (lo escribe él) o de una receta
+// (POST /shopping-list/from-recipe, con los ingredientes que le faltan en la despensa). Sin
+// fusión: el mismo ingrediente añadido dos veces son dos filas, y la cantidad es texto libre
+// ("200 g") porque no se suman ni se convierten unidades. Marcarlo no lo pasa a la despensa.
+model ShoppingListItem {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label          String
+  quantity       String?
+  checked        Boolean  @default(false)
+  // Receta de la que salió; null si se añadió a mano o si la receta se ha borrado.
+  sourceRecipeId Int?
+  sourceRecipe   Recipe?  @relation(fields: [sourceRecipeId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+
+  @@index([userId, checked, createdAt])
 }
