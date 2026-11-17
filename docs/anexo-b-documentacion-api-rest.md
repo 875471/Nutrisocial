@@ -47,7 +47,7 @@ Todas las rutas se sirven bajo la URL base del backend desplegado en Render y de
 | --- | --- | --- |
 | /foods | GET /search, GET /units | Búsqueda de alimentos de referencia y catálogo de unidades admitidas. |
 | /profile | GET, PUT /, GET /export | Lectura y actualización del perfil físico y objetivo nutricional; exportación de todos los datos de la cuenta en JSON (descarga como archivo, 5 cada 15 minutos). |
-| /log | GET, POST /, PUT/DELETE /:id, GET /calendar, GET /recommendations | Diario nutricional: altas, ediciones, consulta por calendario y recomendaciones del día (núcleo 3.4). |
+| /log | GET, POST /, PUT/DELETE /:id, GET /calendar, GET /stats, GET /recommendations | Diario nutricional: altas, ediciones, consulta por calendario, estadísticas de los últimos 7 o 30 días (`?days=7&end=AAAA-MM-DD`) y recomendaciones del día (núcleo 3.4). |
 | /pantry | GET, POST /, DELETE /:id | Alta, baja y consulta de la despensa personal. |
 | /comments | DELETE /:id, PUT /:id/hidden | Borrado de un comentario propio; ocultarlo o mostrarlo (su autor, el autor de la receta o un administrador). |
 | /users | GET /search, POST/DELETE /:id/follow, GET /following | Búsqueda de personas, gestión de seguimiento y lista de personas a las que se sigue (para elegir con quién compartir una receta). |

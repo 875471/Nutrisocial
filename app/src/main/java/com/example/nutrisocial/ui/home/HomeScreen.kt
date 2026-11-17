@@ -52,6 +52,8 @@ import com.example.nutrisocial.ui.comments.CommentsViewModel
 import com.example.nutrisocial.ui.log.AddEntryActions
 import com.example.nutrisocial.ui.log.LogActions
 import com.example.nutrisocial.ui.log.LogScreen
+import com.example.nutrisocial.ui.log.LogStatsScreen
+import com.example.nutrisocial.ui.log.LogStatsViewModel
 import com.example.nutrisocial.ui.log.LogViewModel
 import com.example.nutrisocial.ui.notifications.NotificationsActions
 import com.example.nutrisocial.ui.notifications.NotificationsScreen
@@ -102,6 +104,7 @@ private object HomeRoutes {
     const val COMENTARIOS = "recetas/comentarios/{id}"
     fun comentarios(id: Int) = "recetas/comentarios/$id"
     const val SUSCRIPCION = "suscripcion"
+    const val ESTADISTICAS = "diario/estadisticas"
 }
 
 // Cada pestaña tiene un icono de Material ([icon]) o uno de res/drawable ([iconRes]).
@@ -404,9 +407,24 @@ fun HomeScreen(
                             onCalendarDayClick = logViewModel::openCalendarDay,
                             onRetryCalendar = logViewModel::loadCalendar,
                             onUpdateEntry = logViewModel::updateEntry,
-                            onUpgrade = openSubscription
+                            onUpgrade = openSubscription,
+                            onOpenStats = { navController.navigate(HomeRoutes.ESTADISTICAS) }
                         )
                     }
+                )
+            }
+
+            composable(HomeRoutes.ESTADISTICAS) {
+                // Con ámbito en esta pantalla: se recarga cada vez que se abre.
+                val statsViewModel: LogStatsViewModel = viewModel()
+                val period by statsViewModel.period.collectAsStateWithLifecycle()
+                val statsState by statsViewModel.state.collectAsStateWithLifecycle()
+                LogStatsScreen(
+                    period = period,
+                    state = statsState,
+                    onPeriodChange = statsViewModel::selectPeriod,
+                    onRetry = statsViewModel::load,
+                    onBack = { navController.popBackStack() }
                 )
             }
 

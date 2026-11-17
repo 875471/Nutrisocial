@@ -10,6 +10,7 @@ const {
 const { getMacroTargets } = require('../nutrition/macroTargets');
 const { recommendRecipes } = require('../nutrition/recommend');
 const { parseDay, parseMonth, formatDay } = require('../utils/day');
+const { STATS_PERIODS, periodDays, statsSeries } = require('../nutrition/dailyStats');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -161,6 +162,38 @@ router.get('/calendar', async (req, res) => {
     dailyCalorieGoal,
     days: calendarDays(entries, dailyCalorieGoal, formatDay),
     missingProfileFields: missingFields,
+  });
+});
+
+// Estadísticas de los últimos 7 o 30 días (?days=7|30) que terminan en ?end=AAAA-MM-DD (el "hoy"
+// del cliente, que es quien conoce su zona horaria): kcal y macros de cada día, también los días
+// sin entradas, medias por día con registro y los objetivos actuales del perfil para la línea de
+// referencia del gráfico (ver nutrition/dailyStats.js).
+router.get('/stats', async (req, res) => {
+  const days = Number(req.query.days ?? 7);
+  if (!STATS_PERIODS.includes(days)) {
+    return res.status(400).json({ error: `El periodo debe ser de ${STATS_PERIODS.join(' o ')} días` });
+  }
+  const end = parseDay(req.query.end);
+  if (!end) return res.status(400).json({ error: 'Indica el último día con ?end=AAAA-MM-DD' });
+
+  const period = periodDays(end, days);
+  const [user, entries] = await Promise.all([
+    prisma.user.findUnique({ where: { id: req.userId } }),
+    prisma.logEntry.findMany({
+      where: { userId: req.userId, date: { gte: period.start, lt: period.endExclusive } },
+      select: { date: true, kcal: true, protein: true, carbs: true, fat: true },
+    }),
+  ]);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  const { dailyCalorieGoal } = calculateCalorieGoal(user);
+  res.json({
+    from: formatDay(period.start),
+    to: formatDay(end),
+    ...statsSeries(entries, period.dates, formatDay),
+    dailyCalorieGoal,
+    macroTargets: getMacroTargets(user),
   });
 });
 

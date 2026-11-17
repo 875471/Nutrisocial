@@ -120,7 +120,9 @@ data class LogActions(
     // Nueva cantidad de una entrada: (id, raciones, gramos); solo uno de los dos no es null.
     val onUpdateEntry: (Int, Double?, Double?) -> Unit = { _, _, _ -> },
     // Las recomendaciones son Premium: lleva a la pantalla de planes.
-    val onUpgrade: () -> Unit = {}
+    val onUpgrade: () -> Unit = {},
+    // Pantalla de estadísticas (calorías y macros de los últimos 7 o 30 días).
+    val onOpenStats: () -> Unit = {}
 )
 
 /** Pestaña "Diario": registro de lo que se ha comido cada día frente al objetivo calórico. */
@@ -158,6 +160,9 @@ fun LogScreen(
                 actions = {
                     if (viewMode == LogViewMode.DAY && date != todayIso()) {
                         TextButton(onClick = actions.onToday) { Text("Hoy") }
+                    }
+                    IconButton(onClick = actions.onOpenStats) {
+                        Icon(painterResource(R.drawable.ic_bar_chart), contentDescription = "Ver estadísticas")
                     }
                     // Alterna entre la vista del día y el calendario del mes.
                     if (viewMode == LogViewMode.DAY) {

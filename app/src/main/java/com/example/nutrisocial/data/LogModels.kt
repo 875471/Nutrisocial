@@ -127,3 +127,30 @@ data class DailyRecommendations(
         const val REASON_GOAL_COVERED = "objetivo_cubierto"
     }
 }
+
+/** Un día de GET /log/stats: totales del día (todo a cero si no se apuntó nada). */
+data class LogStatsDay(
+    val date: String,
+    val kcal: Int,
+    val protein: Double,
+    val carbs: Double,
+    val fat: Double,
+    val entries: Int
+)
+
+/** Medias por día CON registro (los días sin entradas no cuentan). */
+data class LogStatsAverages(val kcal: Int, val protein: Double, val carbs: Double, val fat: Double)
+
+/** Gramos objetivo de cada macronutriente, del perfil actual. */
+data class MacroTargets(val proteinG: Double, val carbsG: Double, val fatG: Double)
+
+/** Estadísticas de los últimos 7 o 30 días (GET /log/stats). */
+data class LogStats(
+    val from: String,
+    val to: String,
+    val days: List<LogStatsDay> = emptyList(),
+    val daysLogged: Int = 0,
+    val averages: LogStatsAverages? = null,
+    val dailyCalorieGoal: Int? = null,
+    val macroTargets: MacroTargets? = null
+)

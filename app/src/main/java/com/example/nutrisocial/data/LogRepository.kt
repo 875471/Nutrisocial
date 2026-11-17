@@ -18,6 +18,10 @@ class LogRepository(
     suspend fun getCalendar(month: String): ApiResult<CalendarMonth> =
         safeApiCall { api.getCalendar(month) }
 
+    /** Estadísticas de los últimos [days] días hasta [end] ("AAAA-MM-DD"), incluido. */
+    suspend fun getStats(days: Int, end: String): ApiResult<LogStats> =
+        safeApiCall { api.getLogStats(days, end) }
+
     suspend fun addRecipe(date: String, recipeId: Int, servings: Double): ApiResult<LogEntry> =
         safeApiCall { api.createLogEntry(CreateLogEntryRequest(date = date, recipeId = recipeId, servings = servings)) }
 

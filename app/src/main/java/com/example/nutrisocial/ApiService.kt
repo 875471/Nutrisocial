@@ -19,6 +19,7 @@ import com.example.nutrisocial.data.GenerateRecipeRequest
 import com.example.nutrisocial.data.GeneratedRecipeProposal
 import com.example.nutrisocial.data.LikeState
 import com.example.nutrisocial.data.LogEntry
+import com.example.nutrisocial.data.LogStats
 import com.example.nutrisocial.data.LoginRequest
 import com.example.nutrisocial.data.LoginResponse
 import com.example.nutrisocial.data.MessageResponse
@@ -215,6 +216,10 @@ interface ApiService {
     // Solo los días del mes con alguna entrada.
     @GET("log/calendar")
     suspend fun getCalendar(@Query("month") month: String): Response<CalendarMonth>
+
+    // Serie de los últimos [days] (7 o 30) días que terminan en [end] ("AAAA-MM-DD").
+    @GET("log/stats")
+    suspend fun getLogStats(@Query("days") days: Int, @Query("end") end: String): Response<LogStats>
 
     // 403 sin Premium.
     @GET("log/recommendations")
