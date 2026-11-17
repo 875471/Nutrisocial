@@ -22,7 +22,7 @@ router.get('/search', async (req, res) => {
     select: {
       id: true,
       name: true,
-      _count: { select: { recipes: true } },
+      _count: { select: { recipes: { where: { hidden: false } } } },
       followers: { where: { followerId: req.userId }, select: { id: true }, take: 1 },
     },
   });

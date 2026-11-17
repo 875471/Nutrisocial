@@ -37,6 +37,7 @@ Todas las rutas se sirven bajo la URL base del backend desplegado en Render y de
 | POST, DELETE /recipes/:id/save | Guarda o quita una receta de la lista personal. |
 | GET, POST /recipes/:id/comments | Lista o añade comentarios; al añadir, genera notificación al autor. |
 | POST /recipes/:id/share | Comparte una receta con una persona a la que se sigue; genera una notificación que enlaza a la receta. |
+| PUT /recipes/:id/hidden | Moderación: oculta (`{ "hidden": true }`) o vuelve a mostrar una receta. Su autor o un administrador. Una receta oculta no aparece en feed, búsqueda, guardadas ni despensa, y su detalle da 404 a los demás. |
 
 **Tabla B.2.** *Rutas de recetas (incluye OCR, generación por IA, feed, búsqueda por despensa y compartir).*
 
@@ -48,7 +49,7 @@ Todas las rutas se sirven bajo la URL base del backend desplegado en Render y de
 | /profile | GET, PUT / | Lectura y actualización del perfil físico y objetivo nutricional. |
 | /log | GET, POST /, PUT/DELETE /:id, GET /calendar, GET /recommendations | Diario nutricional: altas, ediciones, consulta por calendario y recomendaciones del día (núcleo 3.4). |
 | /pantry | GET, POST /, DELETE /:id | Alta, baja y consulta de la despensa personal. |
-| /comments | DELETE /:id | Borrado de un comentario propio. |
+| /comments | DELETE /:id, PUT /:id/hidden | Borrado de un comentario propio; ocultarlo o mostrarlo (su autor, el autor de la receta o un administrador). |
 | /users | GET /search, POST/DELETE /:id/follow, GET /following | Búsqueda de personas, gestión de seguimiento y lista de personas a las que se sigue (para elegir con quién compartir una receta). |
 | /notifications | GET /, POST /read-all | Notificaciones no leídas y su marcado como leídas. |
 | /shopping-list | GET, POST /, POST /from-recipe/:recipeId, PATCH/DELETE /:id, DELETE /?checked=true | Lista de la compra: elementos sueltos, los ingredientes de una receta que faltan en la despensa (misma comparación que el núcleo 3.3), marcar como comprado y vaciar lo comprado. |

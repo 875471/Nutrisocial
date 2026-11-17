@@ -89,7 +89,7 @@ function fakePrisma() {
       create: async ({ data }) => {
         const { ingredients, ...fields } = data;
         const row = {
-          id: nextId++, dietTags: [], aiGenerated: false, imageBase64: null, createdAt: new Date(clock += 1000),
+          id: nextId++, dietTags: [], aiGenerated: false, hidden: false, imageBase64: null, createdAt: new Date(clock += 1000),
           ...fields, ingredients: ingredients.create,
         };
         recipes.push(row);

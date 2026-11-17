@@ -40,6 +40,7 @@ function toCommentResponse(comment) {
 function commentsPreviewField() {
   return {
     comments: {
+      where: { hidden: false },
       orderBy: NEWEST_FIRST,
       take: COMMENTS_PREVIEW,
       select: { id: true, text: true, user: { select: { name: true } } },

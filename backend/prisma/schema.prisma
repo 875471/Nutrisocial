@@ -52,6 +52,9 @@ model User {
   // Suscripción Premium simulada (ver model Subscription); null si nunca se ha suscrito.
   subscription              Subscription?
   shoppingListItems         ShoppingListItem[]
+  // Puede ocultar recetas y comentarios de cualquiera (ver src/social/moderation.js). Solo se
+  // activa a mano con scripts/setAdmin.js.
+  isAdmin                   Boolean            @default(false)
 }
 
 model Recipe {
@@ -80,6 +83,9 @@ model Recipe {
   // Etiquetas dietéticas AUTODECLARADAS por el autor (ver src/nutrition/dietTags.js): no se
   // deducen de los ingredientes ni se verifican.
   dietTags         String[]           @default([])
+  // Moderación (ver src/social/moderation.js): oculta para todos salvo su autor y los
+  // administradores. No es un borrado: se puede volver a mostrar.
+  hidden           Boolean            @default(false)
   authorId         Int
   author           User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
   ingredients      RecipeIngredient[]
@@ -185,6 +191,7 @@ model RecipeLike {
 }
 
 // Comentario de un usuario en una receta. Solo su autor puede borrarlo; no se editan.
+// Se puede ocultar sin borrarlo (moderación, campo `hidden`).
 model Comment {
   id        Int      @id @default(autoincrement())
   text      String
@@ -192,6 +199,8 @@ model Comment {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   recipeId  Int
   recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  // Oculto por su autor, por el autor de la receta o por un administrador (ver moderation.js).
+  hidden    Boolean  @default(false)
   createdAt DateTime @default(now())
 
   @@index([recipeId, createdAt])

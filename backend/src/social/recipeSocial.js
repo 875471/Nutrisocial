@@ -58,13 +58,14 @@ function likeSummary(recipe) {
   };
 }
 
-// Como likeFields, contando además los comentarios de la receta y con, como mucho, el guardado
+// Como likeFields, contando además los comentarios visibles de la receta (sin los ocultos por
+// moderación) y con, como mucho, el guardado
 // del propio usuario (para savedByMe).
 function socialFields(userId) {
   const fields = likeFields(userId);
   return {
     ...fields,
-    _count: { select: { ...fields._count.select, comments: true } },
+    _count: { select: { ...fields._count.select, comments: { where: { hidden: false } } } },
     saves: { where: { userId }, select: { id: true }, take: 1 },
   };
 }

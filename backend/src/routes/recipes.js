@@ -19,6 +19,7 @@ const {
 const { parseSearchQuery, searchRecipes } = require('../social/recipeSearch');
 const { notify, notifyRecipeAuthor } = require('../social/notifications');
 const { findOtherUserId } = require('../social/otherUser');
+const { VISIBLE, parseHiddenBody, canModerateRecipe, canSeeRecipe } = require('../social/moderation');
 const {
   generateRecipe, cleanInputIngredients, isConfigured: isGenerationConfigured, GenerationError,
 } = require('../ai/generateRecipe');
@@ -86,6 +87,7 @@ function toRecipeResponse(recipe, likers) {
     imageBase64: recipe.imageBase64,
     aiGenerated: recipe.aiGenerated,
     dietTags: recipe.dietTags ?? [],
+    hidden: recipe.hidden ?? false,
     authorId: recipe.authorId,
     authorName: recipe.author.name,
     ...socialSummary(recipe),
@@ -154,15 +156,26 @@ function parsePage(query, defaultSize, maxSize) {
   return { cursor, limit: Math.min(requested, maxSize) };
 }
 
-// Id de la ruta si es válido y la receta existe. Si no, responde 400/404 y devuelve null.
+// Quien hace la petición, con lo que necesita la moderación (ver social/moderation.js).
+function currentUser(req) {
+  return prisma.user.findUnique({ where: { id: req.userId }, select: { id: true, isAdmin: true } });
+}
+
+// ¿Puede quien pregunta ver esta receta? Solo hace falta consultar si es admin cuando está oculta.
+async function canSee(req, recipe) {
+  return !recipe.hidden || canSeeRecipe(recipe, await currentUser(req));
+}
+
+// Id de la ruta si es válido y la receta existe (y quien pregunta puede verla: una receta oculta
+// es un 404 para los demás). Si no, responde 400/404 y devuelve null.
 async function findRecipeId(req, res) {
   const id = parseId(req.params.id);
   if (id == null) {
     res.status(400).json({ error: 'Id de receta no válido' });
     return null;
   }
-  const exists = await prisma.recipe.findUnique({ where: { id }, select: { id: true } });
-  if (!exists) {
+  const recipe = await prisma.recipe.findUnique({ where: { id }, select: { id: true, authorId: true, hidden: true } });
+  if (!recipe || !(await canSee(req, recipe))) {
     res.status(404).json({ error: 'Esta receta ya no existe' });
     return null;
   }
@@ -418,7 +431,7 @@ async function feedPage(req, res, where) {
 
   // Se pide una de más para saber si hay página siguiente sin otra consulta.
   const recipes = await prisma.recipe.findMany({
-    where: { ...where, ...dietTagsWhere(diet.tags) },
+    where: { ...VISIBLE, ...where, ...dietTagsWhere(diet.tags) },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: limit + 1,
     ...(cursor != null && { cursor: { id: cursor }, skip: 1 }),
@@ -464,7 +477,7 @@ router.get('/search', async (req, res) => {
 
   // Las etiquetas sí se filtran en la base de datos: es una comparación exacta, sin tildes.
   const candidates = await prisma.recipe.findMany({
-    where: dietTagsWhere(diet.tags),
+    where: { ...VISIBLE, ...dietTagsWhere(diet.tags) },
     select: { id: true, title: true, prepMinutes: true, createdAt: true, ingredients: { select: { name: true } } },
   });
   const result = searchRecipes(candidates, { ...search, ...pageQuery });
@@ -491,7 +504,8 @@ router.get('/saved', async (req, res) => {
     return res.status(400).json({ error: 'Cursor no válido: vuelve a cargar tus guardadas' });
   }
   const saves = await prisma.savedRecipe.findMany({
-    where: { userId: req.userId },
+    // Una receta guardada que después se oculta desaparece de la lista (vuelve si se muestra).
+    where: { userId: req.userId, recipe: VISIBLE },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: limit + 1,
     ...(cursorKey && { cursor: cursorKey, skip: 1 }),
@@ -518,7 +532,7 @@ router.get('/by-pantry', async (req, res) => {
     return res.json({ pantrySize: 0, readyToCook: [], almostReady: [] });
   }
   const recipes = await prisma.recipe.findMany({
-    where: dietTagsWhere(diet.tags),
+    where: { ...VISIBLE, ...dietTagsWhere(diet.tags) },
     select: {
       id: true, title: true, imageBase64: true, authorId: true, dietTags: true,
       ingredients: { select: { name: true, foodId: true } }, ...AUTHOR_NAME,
@@ -544,10 +558,30 @@ router.get('/:id', async (req, res) => {
     return res.status(400).json({ error: 'Id de receta no válido' });
   }
   const recipe = await prisma.recipe.findUnique({ where: { id }, include: recipeInclude(req.userId) });
-  if (!recipe) {
+  if (!recipe || !(await canSee(req, recipe))) {
     return res.status(404).json({ error: 'Esta receta ya no existe' });
   }
   res.json(await toDetailResponse(recipe));
+});
+
+// Moderación: oculta ({ hidden: true }) o vuelve a mostrar (false) una receta. Su autor o un
+// administrador. No borra nada: likes, comentarios y entradas del diario se conservan.
+router.put('/:id/hidden', async (req, res) => {
+  const hidden = parseHiddenBody(req.body);
+  if (hidden.error) return res.status(400).json({ error: hidden.error });
+  const id = parseId(req.params.id);
+  if (id == null) return res.status(400).json({ error: 'Id de receta no válido' });
+  const recipe = await prisma.recipe.findUnique({ where: { id }, select: { id: true, authorId: true, hidden: true } });
+  if (!recipe) return res.status(404).json({ error: 'Esta receta ya no existe' });
+  const user = await currentUser(req);
+  if (!canModerateRecipe(recipe, user)) {
+    // A quien no la ve, una receta oculta no le existe; a quien la ve, se le dice que no puede.
+    return recipe.hidden
+      ? res.status(404).json({ error: 'Esta receta ya no existe' })
+      : res.status(403).json({ error: 'Solo el autor o un administrador pueden ocultar la receta' });
+  }
+  await prisma.recipe.update({ where: { id }, data: { hidden: hidden.value } });
+  res.json({ id, hidden: hidden.value });
 });
 
 // Edita una receta propia con los mismos campos que POST /recipes. Los ingredientes se
@@ -689,14 +723,14 @@ router.get('/:id/comments', async (req, res) => {
 
   const [comments, total] = await Promise.all([
     prisma.comment.findMany({
-      where: { recipeId: id },
+      where: { recipeId: id, ...VISIBLE },
       orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor != null && { cursor: { id: cursor }, skip: 1 }),
       select: COMMENT_SELECT,
     }),
     // El total va en cada página: la app lo usa para el contador de la tarjeta del feed.
-    prisma.comment.count({ where: { recipeId: id } }),
+    prisma.comment.count({ where: { recipeId: id, ...VISIBLE } }),
   ]);
   const page = comments.slice(0, limit);
   res.json({
