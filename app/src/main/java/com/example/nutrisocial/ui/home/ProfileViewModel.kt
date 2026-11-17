@@ -34,6 +34,8 @@ data class ProfileUiState(
     val saveError: String? = null,
     // Aviso puntual tras guardar; la pantalla lo muestra y llama a onSavedMessageShown.
     val savedMessage: String? = null,
+    // Descargando "Descargar mis datos" (GET /profile/export).
+    val isExporting: Boolean = false,
     val accountDeletion: AccountDeletionState = AccountDeletionState()
 )
 
@@ -152,6 +154,22 @@ class ProfileViewModel(
         }
     }
 
+    /**
+     * "Descargar mis datos": guarda la exportación JSON de la cuenta en el archivo que ha elegido
+     * el usuario ([openOutput] lo abre). El resultado se avisa con el mismo snackbar que al guardar.
+     */
+    fun exportData(openOutput: () -> java.io.OutputStream?) {
+        if (_state.value.isExporting) return
+        _state.update { it.copy(isExporting = true) }
+        viewModelScope.launch {
+            val message = when (val result = repository.exportAccount(openOutput)) {
+                is ApiResult.Success -> "Tus datos se han guardado (${formatSize(result.data)})"
+                is ApiResult.Error -> result.message
+            }
+            _state.update { it.copy(isExporting = false, savedMessage = message) }
+        }
+    }
+
     /** Al cerrar el diálogo se olvida el error anterior. */
     fun onDeleteAccountDismissed() = _state.update {
         if (it.accountDeletion.isDeleting) it else it.copy(accountDeletion = AccountDeletionState())
@@ -166,6 +184,16 @@ class ProfileViewModel(
         activityLevel = profile.activityLevel,
         goal = profile.goal
     )
+}
+
+/** 900 → "900 B", 5730 → "5,6 KB", 2_400_000 → "2,3 MB". */
+internal fun formatSize(bytes: Long): String {
+    val spanish = java.util.Locale("es", "ES")
+    return when {
+        bytes < 1024 -> "$bytes B"
+        bytes < 1024 * 1024 -> "%.1f KB".format(spanish, bytes / 1024.0)
+        else -> "%.1f MB".format(spanish, bytes / (1024.0 * 1024.0))
+    }
 }
 
 /** Perfil con todos los datos necesarios para calcular el objetivo calórico. */

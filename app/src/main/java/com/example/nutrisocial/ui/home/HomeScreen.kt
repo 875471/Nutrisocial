@@ -534,7 +534,8 @@ fun HomeScreen(
                             onSavedMessageShown = profileViewModel::onSavedMessageShown,
                             onEditToggle = profileViewModel::onEditToggle,
                             onDeleteAccount = profileViewModel::deleteAccount,
-                            onDeleteAccountDismissed = profileViewModel::onDeleteAccountDismissed
+                            onDeleteAccountDismissed = profileViewModel::onDeleteAccountDismissed,
+                            onExportData = profileViewModel::exportData
                         )
                     },
                     onLogout = onLogout,

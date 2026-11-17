@@ -78,6 +78,7 @@ import com.example.nutrisocial.data.User
 import com.example.nutrisocial.data.profileFieldLabel
 import com.example.nutrisocial.ui.InitialsAvatar
 import com.example.nutrisocial.ui.displayDate
+import com.example.nutrisocial.ui.todayIso
 import com.example.nutrisocial.ui.isoToPickerMillis
 import com.example.nutrisocial.ui.pickerMillisToIso
 import com.example.nutrisocial.ui.recipes.CenteredMessage
@@ -87,6 +88,11 @@ import com.example.nutrisocial.ui.theme.CardElevation
 import com.example.nutrisocial.ui.theme.CardShape
 import com.example.nutrisocial.ui.theme.NutriSocialTheme
 import com.example.nutrisocial.ui.theme.Spacing
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.platform.LocalContext
+import java.io.OutputStream
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
@@ -105,7 +111,9 @@ data class ProfileActions(
     // "Modificar" en modo vista y "Cancelar" en modo edición.
     val onEditToggle: () -> Unit,
     val onDeleteAccount: (password: String) -> Unit = {},
-    val onDeleteAccountDismissed: () -> Unit = {}
+    val onDeleteAccountDismissed: () -> Unit = {},
+    // "Descargar mis datos": recibe cómo abrir el archivo elegido por el usuario.
+    val onExportData: (openOutput: () -> OutputStream?) -> Unit = {}
 )
 
 /**
@@ -190,6 +198,7 @@ fun ProfileScreen(
                 } else {
                     ProfileSummary(profile = state.profile, onEdit = actions.onEditToggle)
                 }
+                DataExportCard(isExporting = state.isExporting, onExport = actions.onExportData)
                 OutlinedButton(
                     onClick = onLogout,
                     shape = ButtonShape,
@@ -203,6 +212,44 @@ fun ProfileScreen(
                     actions = actions,
                     modifier = Modifier.padding(top = Spacing.lg, bottom = Spacing.lg)
                 )
+            }
+        }
+    }
+}
+
+/**
+ * "Descargar mis datos": el sistema pregunta dónde guardar el archivo (selector de documentos, sin
+ * pedir permisos de almacenamiento) y después se descarga ahí la exportación JSON de la cuenta.
+ */
+@Composable
+private fun DataExportCard(isExporting: Boolean, onExport: (() -> OutputStream?) -> Unit) {
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) onExport { context.contentResolver.openOutputStream(uri) }
+    }
+    Surface(
+        shape = CardShape,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            Text("Tus datos", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "Descarga en un archivo JSON tu perfil, tus recetas, tu diario, tu despensa, " +
+                    "tus comentarios y tu lista de la compra.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            OutlinedButton(
+                onClick = { launcher.launch("nutrisocial-mis-datos-${todayIso()}.json") },
+                enabled = !isExporting,
+                shape = ButtonShape
+            ) {
+                if (isExporting) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    Text("Descargando…", modifier = Modifier.padding(start = Spacing.sm))
+                } else {
+                    Text("Descargar mis datos")
+                }
             }
         }
     }

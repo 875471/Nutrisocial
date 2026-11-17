@@ -50,6 +50,7 @@ import com.example.nutrisocial.data.User
 import com.example.nutrisocial.data.UserSearchResult
 import com.example.nutrisocial.data.UserSummary
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -60,6 +61,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 
 interface ApiService {
     @GET("health")
@@ -200,6 +202,12 @@ interface ApiService {
 
     @PUT("profile")
     suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<Profile>
+
+    // Todos los datos de la cuenta en JSON. @Streaming: el cuerpo (con las fotos de las recetas)
+    // se copia al archivo a trozos, sin cargarlo entero en memoria.
+    @Streaming
+    @GET("profile/export")
+    suspend fun exportAccount(): Response<ResponseBody>
 
     @GET("log")
     suspend fun getDailyLog(@Query("date") date: String): Response<DailyLog>

@@ -5,6 +5,8 @@ const {
   SEXES, ACTIVITY_LEVELS, GOALS, LIMITS, ageFromBirthDate, calculateCalorieGoal,
 } = require('../nutrition/calorieGoal');
 const { parseDay, formatDay } = require('../utils/day');
+const { loadAccountExport } = require('../account/export');
+const { createAuthLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -96,6 +98,19 @@ router.get('/', async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.userId } });
   if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
   res.json(toProfileResponse(user));
+});
+
+// Exportación de todos los datos de la cuenta en JSON (ver account/export.js). Se descarga como
+// archivo (Content-Disposition). Es una consulta pesada (recetas con sus fotos), así que tiene
+// un tope de 5 por conexión cada 15 minutos.
+const exportLimiter = createAuthLimiter({ limit: 5 });
+router.get('/export', exportLimiter, async (req, res) => {
+  const data = await loadAccountExport(prisma, req.userId);
+  if (!data) return res.status(404).json({ error: 'Usuario no encontrado' });
+  const filename = `nutrisocial-mis-datos-${data.exportedAt.slice(0, 10)}.json`;
+  res.set('Content-Disposition', `attachment; filename="${filename}"`);
+  res.set('Cache-Control', 'no-store');
+  res.json(data);
 });
 
 router.put('/', async (req, res) => {
