@@ -29,4 +29,12 @@ function periodEnd(planId, start) {
   return addMonths(start, PLANS[planId].periodMonths);
 }
 
-module.exports = { PLANS, isValidPlan, addMonths, periodEnd };
+/**
+ * ¿Da acceso Premium esta suscripción en `now`? Tiene que estar activa y dentro de su periodo: la
+ * suscripción simulada no se renueva sola, así que al pasar currentPeriodEnd deja de valer.
+ */
+function isSubscriptionActive(subscription, now = new Date()) {
+  return subscription?.status === 'active' && new Date(subscription.currentPeriodEnd) > now;
+}
+
+module.exports = { PLANS, isValidPlan, addMonths, periodEnd, isSubscriptionActive };

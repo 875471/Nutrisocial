@@ -2,7 +2,7 @@
 const express = require('express');
 const prisma = require('../prismaClient');
 const requireAuth = require('../middleware/auth');
-const { PLANS, isValidPlan, periodEnd } = require('../billing/plans');
+const { PLANS, isValidPlan, periodEnd, isSubscriptionActive } = require('../billing/plans');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -10,7 +10,7 @@ router.use(requireAuth);
 function toStatusResponse(subscription) {
   if (!subscription) return { isPremium: false };
   return {
-    isPremium: subscription.status === 'active',
+    isPremium: isSubscriptionActive(subscription),
     plan: subscription.plan,
     status: subscription.status,
     startedAt: subscription.startedAt,

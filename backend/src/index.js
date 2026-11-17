@@ -9,12 +9,20 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
+// No anunciar "X-Powered-By: Express": no aporta nada al cliente y da pistas a un atacante.
+app.disable('x-powered-by');
 // Render pone un proxy delante: sin esto, req.ip sería la IP del proxy y el límite de intentos
 // de login (middleware/rateLimit.js) se repartiría entre todos los usuarios a la vez.
 app.set('trust proxy', 1);
 // Las fotos de receta viajan en Base64 dentro del JSON: 2 MB de imagen son unos 2,7 MB
 // de texto. La ruta valida después el tamaño real de la foto (ver social/recipeSocial.js).
 app.use(express.json({ limit: '3mb' }));
+
+// Límite general de peticiones por usuario o IP (ver middleware/rateLimit.js). /health queda fuera:
+// lo usa Render para saber si el servicio está vivo.
+const { createApiLimiter } = require('./middleware/rateLimit');
+const apiLimiter = createApiLimiter();
+app.use((req, res, next) => (req.path === '/health' ? next() : apiLimiter(req, res, next)));
 
 const authRoutes = require('./routes/auth');
 const recipeRoutes = require('./routes/recipes');

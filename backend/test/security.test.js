@@ -337,3 +337,46 @@ test('el servidor no arranca sin JWT_SECRET', () => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /JWT_SECRET/);
 });
+
+// --- Checklist OWASP API Security Top 10 (informe 36) ---
+
+test('Premium: una suscripción activa deja de valer al pasar currentPeriodEnd', () => {
+  const { isSubscriptionActive } = require('../src/billing/plans');
+  const now = new Date('2026-11-17T12:00:00Z');
+  assert.equal(isSubscriptionActive({ status: 'active', currentPeriodEnd: new Date('2026-12-17T00:00:00Z') }, now), true);
+  assert.equal(isSubscriptionActive({ status: 'active', currentPeriodEnd: new Date('2026-11-17T11:59:59Z') }, now), false);
+  assert.equal(isSubscriptionActive({ status: 'canceled', currentPeriodEnd: new Date('2027-01-01T00:00:00Z') }, now), false);
+  assert.equal(isSubscriptionActive(null, now), false);
+});
+
+test('límite general: cuenta por usuario con token válido y por IP sin él', () => {
+  process.env.JWT_SECRET = SECRET;
+  const { apiLimiterKey } = require('../src/middleware/rateLimit');
+  const withAuth = (authorization) => ({ headers: { authorization }, ip: '203.0.113.7' });
+  assert.equal(apiLimiterKey(withAuth(`Bearer ${jwt.sign({ userId: 5 }, SECRET)}`)), 'user:5');
+  assert.equal(apiLimiterKey(withAuth(`Bearer ${jwt.sign({ userId: 5 }, 'otro-secreto')}`)), 'ip:203.0.113.7');
+  assert.equal(apiLimiterKey(withAuth(undefined)), 'ip:203.0.113.7');
+});
+
+test('límite general: a partir de la petición N+1 en un minuto responde 429 en JSON', async () => {
+  process.env.JWT_SECRET = SECRET;
+  const express = require('express');
+  const { createApiLimiter } = require('../src/middleware/rateLimit');
+  const app = express();
+  app.use(createApiLimiter({ limit: 3 }));
+  app.get('/x', (req, res) => res.json({ ok: true }));
+  const server = await new Promise((resolve) => { const s = app.listen(0, () => resolve(s)); });
+  const url = `http://127.0.0.1:${server.address().port}/x`;
+  try {
+    const statuses = [];
+    for (let i = 0; i < 4; i++) statuses.push((await fetchReal(url)).status);
+    assert.deepEqual(statuses, [200, 200, 200, 429]);
+    // Otro usuario (con su token) tiene su propio cupo.
+    const other = await fetchReal(url, { headers: { authorization: `Bearer ${jwt.sign({ userId: 9 }, SECRET)}` } });
+    assert.equal(other.status, 200);
+    const blocked = await fetchReal(url);
+    assert.match((await blocked.json()).error, /Demasiadas peticiones/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});

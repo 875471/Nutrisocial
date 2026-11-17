@@ -120,7 +120,8 @@ function validateGeneratedRecipe(text) {
 // Cliente creado al primer uso, para que el servidor arranque (y los tests corran) sin clave.
 let client = null;
 function getClient() {
-  client ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  // 60 s como máximo (el SDK espera 10 min por defecto): la app no va a esperar más que eso.
+  client ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 60 * 1000 });
   return client;
 }
 

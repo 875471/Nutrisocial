@@ -1,4 +1,6 @@
-// Deja pasar solo a usuarios con una suscripción Premium activa. Va después de requireAuth,
+const { isSubscriptionActive } = require('../billing/plans');
+
+// Deja pasar solo a usuarios con una suscripción Premium activa y sin caducar. Va después de requireAuth,
 // que es quien deja el id en req.userId. Una suscripción cancelada no da acceso aunque su
 // currentPeriodEnd no haya llegado: cancelar revoca Premium al momento (simplificación del
 // modelo simulado, ver informe 26).
@@ -7,9 +9,9 @@ async function requirePremium(req, res, next) {
   const prisma = require('../prismaClient');
   const subscription = await prisma.subscription.findUnique({
     where: { userId: req.userId },
-    select: { status: true },
+    select: { status: true, currentPeriodEnd: true },
   });
-  if (subscription?.status !== 'active') {
+  if (!isSubscriptionActive(subscription)) {
     return res.status(403).json({ error: 'Esta función es solo para usuarias Premium.' });
   }
   next();
